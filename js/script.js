@@ -64,6 +64,7 @@ function initTimeSelect() {
   shiftEnd2.disabled = true;
   mealStart.disabled = true;
 
+  // 默认全部隐藏
   document.getElementById('normal-time-row').style.display = 'none';
   document.getElementById('normal-end-row').style.display = 'none';
   document.getElementById('part2-start-row').style.display = 'none';
@@ -74,70 +75,149 @@ function initTimeSelect() {
     mealStart.disabled = !shiftEnd.value;
   }
 
+  // 自动填充下班 + 补贴（按上班时间+9小时）
   function autoFillEndAndAllowance(startEl, endEl) {
     if (!startEl.value) return;
     const startHour = parseInt(startEl.value.split(':')[0]);
     const endHour = (startHour + 9) % 24;
     endEl.value = `${String(endHour).padStart(2, '0')}:00`;
-    allowanceInput.value = endHour === 21 ? 15 : endHour === 22 ? 20 : endHour === 23 ? 25 : 0;
+    setAllowanceByEndHour(endHour);
   }
 
+  // 手动改下班时，只改补贴
+  function updateAllowanceByEndTime(endEl) {
+    if (!endEl.value) return;
+    const endHour = parseInt(endEl.value.split(':')[0]);
+    setAllowanceByEndHour(endHour);
+  }
+
+  // 补贴规则统一放这里
+  function setAllowanceByEndHour(endHour) {
+    if (endHour === 21) allowanceInput.value = 15;
+    else if (endHour === 22) allowanceInput.value = 20;
+    else if (endHour === 23) allowanceInput.value = 25;
+    else allowanceInput.value = 0;
+  }
+
+  // 计算工时 + 工资
   function calcWorkHours() {
     let totalHour = 0;
+
+    // 第一段
     if (shiftStart.value && shiftEnd.value) {
       let s = parseInt(shiftStart.value.split(':')[0]);
       let e = parseInt(shiftEnd.value.split(':')[0]);
-      totalHour += e > s ? e - s : 0;
+      if (e > s) totalHour += e - s;
     }
+
+    // 拼班第二段
     if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
       let s2 = parseInt(shiftStart2.value.split(':')[0]);
       let e2 = parseInt(shiftEnd2.value.split(':')[0]);
-      totalHour += e2 > s2 ? e2 - s2 : 0;
+      if (e2 > s2) totalHour += e2 - s2;
     }
-    if (shiftSelect.value !== '拼班' && mealStart.value) totalHour = Math.max(0, totalHour - 1);
+
+    // 非拼班且有饭点：减1小时
+    if (shiftSelect.value !== '拼班' && mealStart.value) {
+      totalHour = Math.max(0, totalHour - 1);
+    }
+
     workHoursTip.textContent = `有效工时：${totalHour} 小时`;
     moneyInput.value = (totalHour * HOURLY_WAGE).toFixed(2);
   }
 
+  // ========== 班次切换：核心修复拼班/早班/中班/晚班显隐 ==========
   shiftSelect.addEventListener('change', () => {
     const val = shiftSelect.value;
-    const show = !!val && val !== '休息';
-    document.getElementById('normal-time-row').style.display = show ? 'flex' : 'none';
-    document.getElementById('normal-end-row').style.display = show ? 'flex' : 'none';
-    document.getElementById('part2-start-row').style.display = val === '拼班' ? 'flex' : 'none';
-    document.getElementById('part2-end-row').style.display = val === '拼班' ? 'flex' : 'none';
-    document.getElementById('meal-wrap').style.display = (val !== '拼班' && show) ? 'block' : 'none';
+
+    // 先全部隐藏
+    document.getElementById('normal-time-row').style.display = 'none';
+    document.getElementById('normal-end-row').style.display = 'none';
+    document.getElementById('part2-start-row').style.display = 'none';
+    document.getElementById('part2-end-row').style.display = 'none';
+    document.getElementById('meal-wrap').style.display = 'none';
+
     if (val === '休息') {
-      shiftStart.value = ''; shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
-      shiftStart2.value = ''; shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
-      mealStart.value = ''; mealStart.innerHTML = defaultOpt; mealStart.disabled = true;
-      moneyInput.value = ''; allowanceInput.value = 0;
+      shiftStart.value = '';
+      shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
+      shiftStart2.value = '';
+      shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
+      mealStart.value = ''; mealStart.disabled = true;
+      moneyInput.value = '';
+      allowanceInput.value = 0;
+      calcWorkHours();
+      return;
     }
+
+    // ✅ 早班/中班/晚班：显示【第一段时间 + 饭点】
+    if (val === '早班' || val === '中班' || val === '晚班') {
+      document.getElementById('normal-time-row').style.display = 'flex';
+      document.getElementById('normal-end-row').style.display = 'flex';
+      document.getElementById('meal-wrap').style.display = 'block';
+    }
+
+    // ✅ 拼班：显示【两段时间】，隐藏饭点
+    if (val === '拼班') {
+      document.getElementById('normal-time-row').style.display = 'flex';
+      document.getElementById('normal-end-row').style.display = 'flex';
+      document.getElementById('part2-start-row').classList.remove('hidden'); // 移除hidden类
+      document.getElementById('part2-start-row').style.display = 'flex';
+      document.getElementById('part2-end-row').classList.remove('hidden'); // 移除hidden类
+      document.getElementById('part2-end-row').style.display = 'flex';
+    }
+
     calcWorkHours();
   });
 
+  // ========== 第一段上班时间 ==========
   shiftStart.addEventListener('change', () => {
     if (!shiftStart.value) {
       shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
       mealStart.innerHTML = defaultOpt; mealStart.disabled = true;
-      calcWorkHours(); return;
+      calcWorkHours();
+      return;
     }
     const startH = parseInt(shiftStart.value.split(':')[0]);
-    const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH).map(h => `<option value="${h}">${h}</option>`).join('');
-    shiftEnd.innerHTML = defaultOpt + afterOpts; shiftEnd.disabled = false;
+    const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH)
+                                .map(h => `<option value="${h}">${h}</option>`).join('');
+    shiftEnd.innerHTML = defaultOpt + afterOpts;
+    shiftEnd.disabled = false;
     mealStart.innerHTML = defaultOpt + afterOpts;
     autoFillEndAndAllowance(shiftStart, shiftEnd);
-    updateMealStartState(); calcWorkHours();
+    updateMealStartState();
+    calcWorkHours();
   });
 
-  shiftEnd.addEventListener('change', () => { updateMealStartState(); calcWorkHours(); });
-  shiftStart2.addEventListener('change', () => {
-    if (!shiftStart2.value) { shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true; calcWorkHours(); return; }
-    const startH = parseInt(shiftStart2.value.split(':')[0]);
-    const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH).map(h => `<option value="${h}">${h}</option>`).join('');
-    shiftEnd2.innerHTML = defaultOpt + afterOpts; shiftEnd2.disabled = false;
-    autoFillEndAndAllowance(shiftStart2, shiftEnd2); calcWorkHours();
+  // ========== 第一段下班时间（手动改 → 重算补贴） ==========
+  shiftEnd.addEventListener('change', () => {
+    updateMealStartState();
+    updateAllowanceByEndTime(shiftEnd);
+    calcWorkHours();
   });
+
+  // ========== 拼班第二段上班时间 ==========
+  shiftStart2.addEventListener('change', () => {
+    if (!shiftStart2.value) {
+      shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
+      calcWorkHours();
+      return;
+    }
+    const startH = parseInt(shiftStart2.value.split(':')[0]);
+    const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH)
+                                .map(h => `<option value="${h}">${h}</option>`).join('');
+    shiftEnd2.innerHTML = defaultOpt + afterOpts;
+    shiftEnd2.disabled = false;
+    autoFillEndAndAllowance(shiftStart2, shiftEnd2);
+    calcWorkHours();
+  });
+
+  // ========== 拼班第二段下班时间 ==========
+  shiftEnd2.addEventListener('change', () => {
+    updateAllowanceByEndTime(shiftEnd2);
+    calcWorkHours();
+  });
+
+  // ========== 饭点改变 → 重算工时 ==========
   mealStart.addEventListener('change', calcWorkHours);
 }
 
@@ -201,7 +281,6 @@ function renderData(list) {
       const shiftSelect = document.getElementById('record-shift');
       if (dateInput) dateInput.value = this.dataset.date;
       if (shiftSelect) shiftSelect.value = this.dataset.shift;
-      handleShiftChange();
 
       const shiftStart = document.getElementById('shift-start');
       const shiftEnd = document.getElementById('shift-end');
@@ -270,33 +349,6 @@ function clearForm() {
   handleShiftChange();
 }
 
-// ========== 班次切换 ==========
-function handleShiftChange() {
-  const shiftSelect = document.getElementById('record-shift');
-  const mealWrap = document.getElementById('meal-wrap');
-  const part2StartRow = document.getElementById('part2-start-row');
-  const part2EndRow = document.getElementById('part2-end-row');
-  if (!shiftSelect || !mealWrap || !part2StartRow || !part2EndRow) return;
-  const val = shiftSelect.value;
-  mealWrap.classList.remove('hidden');
-  part2StartRow.classList.add('hidden');
-  part2EndRow.classList.add('hidden');
-  if (val === '休息') {
-    document.getElementById('shift-start').value = '';
-    document.getElementById('shift-end').value = '';
-    document.getElementById('shift-start2').value = '';
-    document.getElementById('shift-end2').value = '';
-    document.getElementById('meal-start').value = '';
-    document.getElementById('record-money').value = '';
-    document.getElementById('record-allowance').value = '0';
-    return;
-  }
-  if (val === '拼班') {
-    mealWrap.classList.add('hidden');
-    part2StartRow.classList.remove('hidden');
-    part2EndRow.classList.remove('hidden');
-  }
-}
 
 // ========== 日历渲染 ==========
 // ========== 日历渲染（自动显示班次） ==========
