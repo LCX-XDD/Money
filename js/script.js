@@ -352,7 +352,7 @@ function renderSalaryCalendar() {
     cycleEnd = new Date(currentYear, currentMonth, 25);
   }
 
-  calendarTitle.innerText = `${formatDate(cycleStart)} ~ ${formatDate(cycleEnd)}`;
+  currentCycle.innerHTML = cycleText.replace(' ~ ', '<br>');
   calendarBody.innerHTML = '';
 
   const days = [];
