@@ -340,10 +340,14 @@ function renderSalaryCalendar() {
   const calendarBody = document.getElementById('calendar-body');
   const calendarTitle = document.getElementById('calendar-title');
   const currentCycle = document.getElementById('current-cycle');
+  
+  // 先判断 DOM 是否存在，避免其他报错
   if (!calendarBody || !calendarTitle || !currentCycle) return;
 
   const today = new Date();
   let cycleStart, cycleEnd;
+
+  // 计算计薪周期
   if (today.getDate() >= 26) {
     cycleStart = new Date(currentYear, currentMonth, 26);
     cycleEnd = new Date(currentYear, currentMonth + 1, 25);
@@ -352,16 +356,16 @@ function renderSalaryCalendar() {
     cycleEnd = new Date(currentYear, currentMonth, 25);
   }
 
-  // 拼接成 2026-05-26~2026-06-25（中间没有空格）
+  // 格式化日期，拼接成你要的格式（2026-05-26~2026-06-25）
   const startStr = formatDate(cycleStart);
   const endStr = formatDate(cycleEnd);
-  const cycleText = startStr + '~' + endStr;
+  const cycleDisplayText = startStr + '~' + endStr;
 
-  calendarTitle.innerText = cycleText;
-  // 直接文本赋值，不替换任何东西
-  currentCycle.innerText = cycleText;
+  // 给日历标题和计薪周期赋值
+  calendarTitle.innerText = cycleDisplayText;
+  currentCycle.innerText = cycleDisplayText;
 
-  // 后面日历代码不变……
+  // 下面是原有的日历渲染逻辑，完全不变
   calendarBody.innerHTML = '';
 
   const days = [];
