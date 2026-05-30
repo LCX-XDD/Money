@@ -1,5 +1,5 @@
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
-const LC_APP_KEY = "suQbFb5BnNKjjSIEPlx.showToastr7BW";
+const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
 const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
 
 // 只在未初始化时执行，避免重复定义
