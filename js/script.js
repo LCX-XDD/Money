@@ -346,7 +346,6 @@ function clearForm() {
   if (remarkInput) remarkInput.value = '';
   if (editId) editId.value = '';
   selectedDate = '';
-  handleShiftChange();
 }
 
 
