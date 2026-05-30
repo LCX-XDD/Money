@@ -418,7 +418,7 @@ function renderSalaryCalendar() {
   currentCycle.innerText = calendarTitle.innerText;
 }
 
-// ========== 统计（修复：全用 .get()，不报错） ==========
+// ========== 统计（只算当前计薪周期：上月26 ～ 本月25） ==========
 function renderTotalAndStat() {
   const totalWageNum = document.getElementById('total-wage-num');
   const statWorkHours = document.getElementById('stat-work-hours');
@@ -432,27 +432,36 @@ function renderTotalAndStat() {
 
   if (!totalWageNum || !statWorkHours || !statWorkDays || !stat21hDays || !stat22hDays || !stat23hDays || !statBaseMoney || !statAllowance || !cycleGroupList) return;
 
+  // ---------- 1. 先算出【当前计薪周期】的起止日期 ----------
+  const now = new Date();
+  let cycleStart, cycleEnd;
+  if (now.getDate() >= 26) {
+    // 本月26～下月25
+    cycleStart = new Date(now.getFullYear(), now.getMonth(), 26);
+    cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+  } else {
+    // 上月26～本月25
+    cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, 26);
+    cycleEnd = new Date(now.getFullYear(), now.getMonth(), 25);
+  }
+  const cycleStartStr = formatDate(cycleStart);
+  const cycleEndStr = formatDate(cycleEnd);
+
+  // ---------- 2. 只保留当前周期内的记录 ----------
+  const currentCycleList = allBillList.filter(item => {
+    const d = item.get('date') || '';
+    return d >= cycleStartStr && d <= cycleEndStr;
+  });
+
+  // ---------- 3. 统计当前周期数据 ----------
   let totalWage = 0, totalWorkHours = 0, workDays = 0;
   let day21 = 0, day22 = 0, day23 = 0;
   let totalBase = 0, totalAllow = 0;
   const cycleMap = {};
 
-  allBillList.forEach(item => {
+  currentCycleList.forEach(item => {
     const dateStr = item.get('date') || '';
     if (!dateStr) return;
-
-    const d = new Date(dateStr);
-    let cycleStart, cycleEnd;
-    if (d.getDate() >= 26) {
-      cycleStart = new Date(d.getFullYear(), d.getMonth(), 26);
-      cycleEnd = new Date(d.getFullYear(), d.getMonth() + 1, 25);
-    } else {
-      cycleStart = new Date(d.getFullYear(), d.getMonth() - 1, 26);
-      cycleEnd = new Date(d.getFullYear(), d.getMonth(), 25);
-    }
-    const cycleKey = `${formatDate(cycleStart)} ~ ${formatDate(cycleEnd)}`;
-    if (!cycleMap[cycleKey]) cycleMap[cycleKey] = [];
-    cycleMap[cycleKey].push(item);
 
     const shift = item.get('shift') || '';
     const money = parseFloat(item.get('money')) || 0;
@@ -466,6 +475,7 @@ function renderTotalAndStat() {
     totalAllow += allow;
     totalWage += money + allow;
 
+    // 计算工时
     let h = 0;
     let s = parseInt((item.get('shiftStart') || '00:00').split(':')[0]);
     let e = parseInt((sEnd || '00:00').split(':')[0]);
@@ -478,10 +488,29 @@ function renderTotalAndStat() {
     if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
     totalWorkHours += h;
 
+    // 几点下班统计
     const endHour = parseInt(sEnd.split(':')[0]);
     if (endHour === 21) day21++;
     if (endHour === 22) day22++;
     if (endHour === 23) day23++;
+  });
+
+  // ---------- 4. 周期分组列表（保留原功能） ----------
+  allBillList.forEach(item => {
+    const dateStr = item.get('date') || '';
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    let cStart, cEnd;
+    if (d.getDate() >= 26) {
+      cStart = new Date(d.getFullYear(), d.getMonth(), 26);
+      cEnd = new Date(d.getFullYear(), d.getMonth() + 1, 25);
+    } else {
+      cStart = new Date(d.getFullYear(), d.getMonth() - 1, 26);
+      cEnd = new Date(d.getFullYear(), d.getMonth(), 25);
+    }
+    const cycleKey = `${formatDate(cStart)} ~ ${formatDate(cEnd)}`;
+    if (!cycleMap[cycleKey]) cycleMap[cycleKey] = [];
+    cycleMap[cycleKey].push(item);
   });
 
   cycleGroupList.innerHTML = '';
@@ -500,6 +529,7 @@ function renderTotalAndStat() {
     });
   });
 
+  // ---------- 5. 首页显示：只显示当前周期总工资 ----------
   totalWageNum.innerText = totalWage.toFixed(2);
   statWorkHours.innerText = totalWorkHours.toFixed(1);
   statWorkDays.innerText = workDays;
@@ -519,12 +549,80 @@ function openCycleDetailPopup(cycleKey, records) {
   if (!cycleDetailTitle || !list || !cycleDetailOverlay) return;
 
   cycleDetailTitle.innerText = cycleKey;
-  list.innerHTML = ''; // 先清空列表
+  list.innerHTML = '';
 
+  // ==============================================
+  // 顶部【查看本期总工资】按钮
+  // ==============================================
+  const btnBox = document.createElement('div');
+  btnBox.style.textAlign = 'center';
+  btnBox.style.marginBottom = '10px';
+  
+  const calcBtn = document.createElement('button');
+  calcBtn.innerText = '查看本期总工资';
+  calcBtn.className = 'btn-primary';
+  calcBtn.style.padding = '6px 14px';
+  calcBtn.style.borderRadius = '4px';
+  calcBtn.style.cursor = 'pointer';
+  
+  // ========== 点击打开【页面内置弹窗】 ==========
+  calcBtn.onclick = function () {
+    let totalHours = 0;
+    let totalBase = 0;
+    let totalAllow = 0;
+    let totalWage = 0;
+    let workDays = 0;
+
+    records.forEach(item => {
+      const shift = item.get('shift') || '';
+      if (shift === '休息') return;
+
+      workDays++;
+      const money = parseFloat(item.get('money')) || 0;
+      const allow = parseFloat(item.get('allowance')) || 0;
+      totalBase += money;
+      totalAllow += allow;
+      totalWage += money + allow;
+
+      let h = 0;
+      const s = parseInt((item.get('shiftStart') || '00:00').split(':')[0]);
+      const e = parseInt((item.get('shiftEnd') || '00:00').split(':')[0]);
+      if (e > s) h += e - s;
+
+      if (shift === '拼班') {
+        const s2 = parseInt((item.get('shiftStart2') || '00:00').split(':')[0]);
+        const e2 = parseInt((item.get('shiftEnd2') || '00:00').split(':')[0]);
+        if (e2 > s2) h += e2 - s2;
+      }
+
+      const meal = item.get('mealStart') || '';
+      if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
+      totalHours += h;
+    });
+
+    // 填充弹窗内容
+    document.getElementById('cycle-total-title').innerText = `${cycleKey} 工资统计`;
+    document.getElementById('cycle-total-info').innerHTML = `
+      出勤天数：${workDays} 天<br>
+      总工时：${totalHours.toFixed(1)} 小时<br>
+      总基本工资：¥${totalBase.toFixed(2)}<br>
+      总加班补贴：¥${totalAllow.toFixed(2)}<br>
+      <hr style="margin:8px 0">
+      <strong>本期总工资：¥${totalWage.toFixed(2)}</strong>
+    `;
+
+    // 打开弹窗
+    document.getElementById('cycle-total-overlay').classList.add('show');
+  };
+
+  btnBox.appendChild(calcBtn);
+  list.appendChild(btnBox);
+
+  // 原有记录列表
   records.forEach(item => {
     const workDate = item.get('date') || '';
     const createdTime = new Date(item.createdAt);
-    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2,'0')}:${String(createdTime.getMinutes()).padStart(2,'0')}:${String(createdTime.getSeconds()).padStart(2,'0')}`;
+    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
 
     const shift = item.get('shift') || '';
     const sStart = item.get('shiftStart') || '';
@@ -536,13 +634,12 @@ function openCycleDetailPopup(cycleKey, records) {
     const r = item.get('title') || '无';
 
     let timeInfo = '';
-    if(shift === '拼班'){
+    if (shift === '拼班') {
       timeInfo = `${sStart}-${sEnd} / ${sStart2}-${sEnd2}`;
-    }else{
+    } else {
       timeInfo = `${sStart}-${sEnd}`;
     }
 
-    // 日期单独一行加粗，其他信息分行显示
     list.insertAdjacentHTML('beforeend', `
       <div class="cycle-detail-item">
         <span class="date-text">${timeStr}</span>
@@ -722,6 +819,15 @@ backUserBtn.addEventListener('click', () => {
       cycleDetailOverlay.classList.remove('show');
     });
   }
+
+  // 关闭周期总工资弹窗
+const cycleTotalClose = document.getElementById('cycle-total-close');
+const cycleTotalOverlay = document.getElementById('cycle-total-overlay');
+if (cycleTotalClose && cycleTotalOverlay) {
+  cycleTotalClose.addEventListener('click', () => {
+    cycleTotalOverlay.classList.remove('show');
+  });
+}
 
   // 初始加载数据
   loadData();
