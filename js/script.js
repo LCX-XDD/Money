@@ -1,13 +1,15 @@
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
-const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
-const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com"; // 官方标准域名
+const LC_APP_KEY = "suQbFb5BnNKjjSIEPlx.showToastr7BW";
+const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
 
-// 只初始化一次
-AV.init({
-  appId: LC_APP_ID,
-  appKey: LC_APP_KEY,
-  serverURL: LC_SERVER
-});
+// 只在未初始化时执行，避免重复定义
+if (!AV.applicationId) {
+  AV.init({
+    appId: LC_APP_ID,
+    appKey: LC_APP_KEY,
+    serverURL: LC_SERVER
+  });
+}
 
 const Bill = AV.Object.extend('Bill');
 const HOURLY_WAGE = 2700 / 208; // 基础时薪公式
@@ -390,7 +392,7 @@ function renderSalaryCalendar() {
     });
     calendarBody.appendChild(el);
   });
-  currentCycle.innerText = calendarTitle.innerText;
+  currentCycle.innerHTML = calendarTitle.innerText.replace(' ~ ', '<br>');
 }
 
 function renderTotalAndStat() {
