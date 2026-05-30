@@ -352,7 +352,16 @@ function renderSalaryCalendar() {
     cycleEnd = new Date(currentYear, currentMonth, 25);
   }
 
-  currentCycle.innerHTML = cycleText.replace(' ~ ', '<br>');
+  // 拼接成 2026-05-26~2026-06-25（中间没有空格）
+  const startStr = formatDate(cycleStart);
+  const endStr = formatDate(cycleEnd);
+  const cycleText = startStr + '~' + endStr;
+
+  calendarTitle.innerText = cycleText;
+  // 直接文本赋值，不替换任何东西
+  currentCycle.innerText = cycleText;
+
+  // 后面日历代码不变……
   calendarBody.innerHTML = '';
 
   const days = [];
@@ -368,6 +377,31 @@ function renderSalaryCalendar() {
     el.className = 'calendar-day other';
     calendarBody.appendChild(el);
   }
+
+  days.forEach(date => {
+    const dateStr = formatDate(date);
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
+
+    const record = allBillList.find(item => item.get('date') === dateStr);
+    if (record) {
+      el.classList.add('has-record');
+      const shift = record.get('shift') || '';
+      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+    } else {
+      el.textContent = date.getDate();
+    }
+
+    if (selectedDate === dateStr) el.classList.add('selected');
+    el.addEventListener('click', () => {
+      selectedDate = dateStr;
+      const dateInput = document.getElementById('record-date');
+      if (dateInput) dateInput.value = dateStr;
+      renderSalaryCalendar();
+    });
+    calendarBody.appendChild(el);
+  });
+}
 
   days.forEach(date => {
     const dateStr = formatDate(date);
