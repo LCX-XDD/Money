@@ -336,18 +336,17 @@ function clearForm() {
   selectedDate = '';
 }
 
+// ========== 渲染工资日历和计薪周期 ==========
 function renderSalaryCalendar() {
   const calendarBody = document.getElementById('calendar-body');
   const calendarTitle = document.getElementById('calendar-title');
   const currentCycle = document.getElementById('current-cycle');
   
-  // 先判断 DOM 是否存在，避免其他报错
   if (!calendarBody || !calendarTitle || !currentCycle) return;
 
   const today = new Date();
   let cycleStart, cycleEnd;
 
-  // 计算计薪周期
   if (today.getDate() >= 26) {
     cycleStart = new Date(currentYear, currentMonth, 26);
     cycleEnd = new Date(currentYear, currentMonth + 1, 25);
@@ -356,16 +355,13 @@ function renderSalaryCalendar() {
     cycleEnd = new Date(currentYear, currentMonth, 25);
   }
 
-  // 格式化日期，拼接成你要的格式（2026-05-26~2026-06-25）
   const startStr = formatDate(cycleStart);
   const endStr = formatDate(cycleEnd);
   const cycleDisplayText = startStr + '~' + endStr;
 
-  // 给日历标题和计薪周期赋值
   calendarTitle.innerText = cycleDisplayText;
   currentCycle.innerText = cycleDisplayText;
 
-  // 下面是原有的日历渲染逻辑，完全不变
   calendarBody.innerHTML = '';
 
   const days = [];
@@ -405,32 +401,6 @@ function renderSalaryCalendar() {
     });
     calendarBody.appendChild(el);
   });
-}
-
-  days.forEach(date => {
-    const dateStr = formatDate(date);
-    const el = document.createElement('div');
-    el.className = 'calendar-day';
-
-    const record = allBillList.find(item => item.get('date') === dateStr);
-    if (record) {
-      el.classList.add('has-record');
-      const shift = record.get('shift') || '';
-      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
-    } else {
-      el.textContent = date.getDate();
-    }
-
-    if (selectedDate === dateStr) el.classList.add('selected');
-    el.addEventListener('click', () => {
-      selectedDate = dateStr;
-      const dateInput = document.getElementById('record-date');
-      if (dateInput) dateInput.value = dateStr;
-      renderSalaryCalendar();
-    });
-    calendarBody.appendChild(el);
-  });
-  currentCycle.innerHTML = calendarTitle.innerText.replace(' ~ ', '<br>');
 }
 
 function renderTotalAndStat() {
