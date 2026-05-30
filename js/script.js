@@ -1,13 +1,13 @@
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
-const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
-// 直接初始化，不再需要 try-catch
+const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com"; // 官方标准域名
+
+// 只初始化一次
 AV.init({
   appId: LC_APP_ID,
   appKey: LC_APP_KEY,
   serverURL: LC_SERVER
 });
-
 
 const Bill = AV.Object.extend('Bill');
 const HOURLY_WAGE = 2700 / 208; // 基础时薪公式
