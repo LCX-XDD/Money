@@ -131,41 +131,54 @@ function initTimeSelect() {
 }
 
   shiftSelect.addEventListener('change', () => {
-    const val = shiftSelect.value;
+  const val = shiftSelect.value;
 
-    document.getElementById('normal-time-row').style.display = 'none';
-    document.getElementById('normal-end-row').style.display = 'none';
-    document.getElementById('part2-start-row').style.display = 'none';
-    document.getElementById('part2-end-row').style.display = 'none';
-    document.getElementById('meal-wrap').style.display = 'none';
+  document.getElementById('normal-time-row').style.display = 'none';
+  document.getElementById('normal-end-row').style.display = 'none';
+  document.getElementById('part2-start-row').style.display = 'none';
+  document.getElementById('part2-end-row').style.display = 'none';
+  document.getElementById('meal-wrap').style.display = 'none';
 
-    if (val === '休息') {
-      shiftStart.value = '';
-      shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
-      shiftStart2.value = '';
-      shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
-      mealStart.value = ''; mealStart.disabled = true;
-      moneyInput.value = '';
-      allowanceInput.value = 0;
-      calcWorkHours();
-      return;
-    }
+  // 重置所有输入框的disabled状态
+  shiftEnd.disabled = true;
+  shiftStart2.disabled = true;
+  shiftEnd2.disabled = true;
+  mealStart.disabled = true;
 
-    if (val === '早班' || val === '中班' || val === '晚班') {
-      document.getElementById('normal-time-row').style.display = 'flex';
-      document.getElementById('normal-end-row').style.display = 'flex';
-      document.getElementById('meal-wrap').style.display = 'block';
-    }
-
-    if (val === '拼班') {
-      document.getElementById('normal-time-row').style.display = 'flex';
-      document.getElementById('normal-end-row').style.display = 'flex';
-      document.getElementById('part2-start-row').style.display = 'flex';
-      document.getElementById('part2-end-row').style.display = 'flex';
-    }
-
+  if (val === '休息') {
+    shiftStart.value = '';
+    shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
+    shiftStart2.value = '';
+    shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
+    mealStart.value = ''; mealStart.disabled = true;
+    moneyInput.value = '';
+    allowanceInput.value = 0;
     calcWorkHours();
-  });
+    return;
+  }
+
+  if (val === '早班' || val === '中班' || val === '晚班') {
+    document.getElementById('normal-time-row').style.display = 'flex';
+    document.getElementById('normal-end-row').style.display = 'flex';
+    document.getElementById('meal-wrap').style.display = 'block';
+    // 启用第一段和饭点
+    shiftEnd.disabled = false;
+    mealStart.disabled = false;
+  }
+
+  if (val === '拼班') {
+    document.getElementById('normal-time-row').style.display = 'flex';
+    document.getElementById('normal-end-row').style.display = 'flex';
+    document.getElementById('part2-start-row').style.display = 'flex';
+    document.getElementById('part2-end-row').style.display = 'flex';
+    // 关键！启用第二段时间输入框！
+    shiftEnd.disabled = false;
+    shiftStart2.disabled = false;
+    shiftEnd2.disabled = false;
+  }
+
+  calcWorkHours();
+});
 
   shiftStart.addEventListener('change', () => {
     if (!shiftStart.value) {
