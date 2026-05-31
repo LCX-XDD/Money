@@ -71,11 +71,12 @@ function initTimeSelect() {
   shiftEnd2.disabled = true;
   mealStart.disabled = true;
 
-  document.getElementById('normal-time-row').style.display = 'none';
-  document.getElementById('normal-end-row').style.display = 'none';
-  document.getElementById('part2-start-row').style.display = 'none';
-  document.getElementById('part2-end-row').style.display = 'none';
-  document.getElementById('meal-wrap').style.display = 'none';
+  // 初始化时，所有时间行都隐藏
+  document.getElementById('normal-time-row').classList.add('hidden');
+  document.getElementById('normal-end-row').classList.add('hidden');
+  document.getElementById('part2-start-row').classList.add('hidden');
+  document.getElementById('part2-end-row').classList.add('hidden');
+  document.getElementById('meal-wrap').classList.add('hidden');
 
   function updateMealStartState() {
     mealStart.disabled = !shiftEnd.value;
@@ -103,82 +104,87 @@ function initTimeSelect() {
   }
 
   function calcWorkHours() {
-  let totalHour = 0;
+    let totalHour = 0;
 
-  // 第一段
-  if (shiftStart.value && shiftEnd.value) {
-    let s = parseInt(shiftStart.value.split(':')[0]);
-    let e = parseInt(shiftEnd.value.split(':')[0]);
-    if (e > s) totalHour += e - s;
+    // 第一段
+    if (shiftStart.value && shiftEnd.value) {
+      let s = parseInt(shiftStart.value.split(':')[0]);
+      let e = parseInt(shiftEnd.value.split(':')[0]);
+      if (e > s) totalHour += e - s;
+    }
+
+    // 拼班才加第二段
+    if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
+      let s2 = parseInt(shiftStart2.value.split(':')[0]);
+      let e2 = parseInt(shiftEnd2.value.split(':')[0]);
+      if (e2 > s2) totalHour += e2 - s2;
+    }
+
+    // 非拼班才扣饭点
+    if (shiftSelect.value !== '拼班' && mealStart.value) {
+      totalHour = Math.max(0, totalHour - 1);
+    }
+
+    workHoursTip.textContent = `有效工时：${totalHour} 小时`;
+
+    const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
+    moneyInput.value = dailyWage.toFixed(2);
   }
-
-  // 拼班才加第二段
-  if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
-    let s2 = parseInt(shiftStart2.value.split(':')[0]);
-    let e2 = parseInt(shiftEnd2.value.split(':')[0]);
-    if (e2 > s2) totalHour += e2 - s2;
-  }
-
-  // 非拼班才扣饭点
-  if (shiftSelect.value !== '拼班' && mealStart.value) {
-    totalHour = Math.max(0, totalHour - 1);
-  }
-
-  workHoursTip.textContent = `有效工时：${totalHour} 小时`;
-
-  const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
-  moneyInput.value = dailyWage.toFixed(2);
-}
 
   shiftSelect.addEventListener('change', () => {
-  const val = shiftSelect.value;
+    const val = shiftSelect.value;
 
-  document.getElementById('normal-time-row').style.display = 'none';
-  document.getElementById('normal-end-row').style.display = 'none';
-  document.getElementById('part2-start-row').style.display = 'none';
-  document.getElementById('part2-end-row').style.display = 'none';
-  document.getElementById('meal-wrap').style.display = 'none';
+    // 先隐藏所有时间行
+    document.getElementById('normal-time-row').classList.add('hidden');
+    document.getElementById('normal-end-row').classList.add('hidden');
+    document.getElementById('part2-start-row').classList.add('hidden');
+    document.getElementById('part2-end-row').classList.add('hidden');
+    document.getElementById('meal-wrap').classList.add('hidden');
 
-  // 重置所有输入框的disabled状态
-  shiftEnd.disabled = true;
-  shiftStart2.disabled = true;
-  shiftEnd2.disabled = true;
-  mealStart.disabled = true;
+    // 重置所有输入框的disabled状态
+    shiftEnd.disabled = true;
+    shiftStart2.disabled = true;
+    shiftEnd2.disabled = true;
+    mealStart.disabled = true;
 
-  if (val === '休息') {
-    shiftStart.value = '';
-    shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
-    shiftStart2.value = '';
-    shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
-    mealStart.value = ''; mealStart.disabled = true;
-    moneyInput.value = '';
-    allowanceInput.value = 0;
+    if (val === '休息') {
+      shiftStart.value = '';
+      shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
+      shiftStart2.value = '';
+      shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
+      mealStart.value = ''; mealStart.disabled = true;
+      moneyInput.value = '';
+      allowanceInput.value = 0;
+      calcWorkHours();
+      return;
+    }
+
+    if (val === '早班' || val === '中班' || val === '晚班') {
+      // 显示第一段和饭点
+      document.getElementById('normal-time-row').classList.remove('hidden');
+      document.getElementById('normal-end-row').classList.remove('hidden');
+      document.getElementById('meal-wrap').classList.remove('hidden');
+      
+      // 启用第一段和饭点
+      shiftEnd.disabled = false;
+      mealStart.disabled = false;
+    }
+
+    if (val === '拼班') {
+      // 显示第一段和第二段
+      document.getElementById('normal-time-row').classList.remove('hidden');
+      document.getElementById('normal-end-row').classList.remove('hidden');
+      document.getElementById('part2-start-row').classList.remove('hidden');
+      document.getElementById('part2-end-row').classList.remove('hidden');
+      
+      // 启用所有输入框
+      shiftEnd.disabled = false;
+      shiftStart2.disabled = false;
+      shiftEnd2.disabled = false;
+    }
+
     calcWorkHours();
-    return;
-  }
-
-  if (val === '早班' || val === '中班' || val === '晚班') {
-    document.getElementById('normal-time-row').style.display = 'flex';
-    document.getElementById('normal-end-row').style.display = 'flex';
-    document.getElementById('meal-wrap').style.display = 'block';
-    // 启用第一段和饭点
-    shiftEnd.disabled = false;
-    mealStart.disabled = false;
-  }
-
-  if (val === '拼班') {
-    document.getElementById('normal-time-row').style.display = 'flex';
-    document.getElementById('normal-end-row').style.display = 'flex';
-    document.getElementById('part2-start-row').style.display = 'flex';
-    document.getElementById('part2-end-row').style.display = 'flex';
-    // 关键！启用第二段时间输入框！
-    shiftEnd.disabled = false;
-    shiftStart2.disabled = false;
-    shiftEnd2.disabled = false;
-  }
-
-  calcWorkHours();
-});
+  });
 
   shiftStart.addEventListener('change', () => {
     if (!shiftStart.value) {
