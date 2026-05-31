@@ -251,6 +251,11 @@ async function loadData(retryCount = 0) {
   if (isLoading) return;
   isLoading = true;
 
+  // 显示加载动画
+  document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'inline-block');
+  document.getElementById('total-wage-num').style.opacity = '0.5';
+  document.getElementById('current-cycle').style.opacity = '0.5';
+
   try {
     const query = new AV.Query(Bill);
     query.descending('createdAt');
@@ -261,8 +266,12 @@ async function loadData(retryCount = 0) {
     renderData(res);
     renderSalaryCalendar();
     renderTotalAndStat();
+
+    // 隐藏加载动画
+    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
+    document.getElementById('total-wage-num').style.opacity = '1';
+    document.getElementById('current-cycle').style.opacity = '1';
   } catch (e) {
-    // 自动重试 3 次
     if (retryCount < 3) {
       setTimeout(() => {
         loadData(retryCount + 1);
@@ -270,7 +279,9 @@ async function loadData(retryCount = 0) {
       return;
     }
     showToast('数据加载失败，请刷新', 'error');
-    console.error(e);
+    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
+    document.getElementById('total-wage-num').style.opacity = '1';
+    document.getElementById('current-cycle').style.opacity = '1';
   } finally {
     isLoading = false;
   }
