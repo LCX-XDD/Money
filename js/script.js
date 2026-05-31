@@ -67,6 +67,7 @@ function initTimeSelect() {
   shiftEnd2.innerHTML = defaultOpt;
   mealStart.innerHTML = defaultOpt;
 
+  // 初始化：全部禁用置灰
   shiftEnd.disabled = true;
   shiftEnd2.disabled = true;
   mealStart.disabled = true;
@@ -79,6 +80,7 @@ function initTimeSelect() {
   document.getElementById('meal-wrap').classList.add('hidden');
 
   function updateMealStartState() {
+    // 有下班时间才启用饭点
     mealStart.disabled = !shiftEnd.value;
   }
 
@@ -165,9 +167,9 @@ function initTimeSelect() {
       document.getElementById('normal-end-row').classList.remove('hidden');
       document.getElementById('meal-wrap').classList.remove('hidden');
       
-      // 启用第一段和饭点
-      shiftEnd.disabled = false;
-      mealStart.disabled = false;
+      // 启用上班，下班/饭点仍由「是否选上班」控制
+      shiftEnd.disabled = !shiftStart.value;
+      mealStart.disabled = !shiftEnd.value;
     }
 
     if (val === '拼班') {
@@ -177,27 +179,35 @@ function initTimeSelect() {
       document.getElementById('part2-start-row').classList.remove('hidden');
       document.getElementById('part2-end-row').classList.remove('hidden');
       
-      // 启用所有输入框
-      shiftEnd.disabled = false;
+      // 启用两段上班，下班由对应上班控制
+      shiftEnd.disabled = !shiftStart.value;
       shiftStart2.disabled = false;
-      shiftEnd2.disabled = false;
+      shiftEnd2.disabled = !shiftStart2.value;
     }
 
     calcWorkHours();
   });
 
+  // ========= 核心修复：上班时间改变时联动禁用下班/饭点 =========
   shiftStart.addEventListener('change', () => {
+    // 没选上班时间：清空+禁用下班、饭点
     if (!shiftStart.value) {
-      shiftEnd.innerHTML = defaultOpt; shiftEnd.disabled = true;
-      mealStart.innerHTML = defaultOpt; mealStart.disabled = true;
+      shiftEnd.innerHTML = defaultOpt;
+      shiftEnd.disabled = true;
+
+      mealStart.innerHTML = defaultOpt;
+      mealStart.disabled = true;
+
       calcWorkHours();
       return;
     }
+    // 选了上班时间：生成后续时段 + 启用下班
     const startH = parseInt(shiftStart.value.split(':')[0]);
     const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH)
                                 .map(h => `<option value="${h}">${h}</option>`).join('');
     shiftEnd.innerHTML = defaultOpt + afterOpts;
     shiftEnd.disabled = false;
+
     mealStart.innerHTML = defaultOpt + afterOpts;
     autoFillEndAndAllowance(shiftStart, shiftEnd);
     updateMealStartState();
@@ -210,9 +220,11 @@ function initTimeSelect() {
     calcWorkHours();
   });
 
+  // 第二段上班 → 联动第二段下班
   shiftStart2.addEventListener('change', () => {
     if (!shiftStart2.value) {
-      shiftEnd2.innerHTML = defaultOpt; shiftEnd2.disabled = true;
+      shiftEnd2.innerHTML = defaultOpt;
+      shiftEnd2.disabled = true;
       calcWorkHours();
       return;
     }
