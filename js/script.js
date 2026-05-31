@@ -234,6 +234,12 @@ function renderData(list) {
   adminList.innerHTML = '';
   if (!list.length) return;
 
+ function renderData(list) {
+  const adminList = document.getElementById('admin-list');
+  if (!adminList) return;
+  adminList.innerHTML = '';
+  if (!list.length) return;
+
   list.forEach(item => {
     const d = item.get('date') || '';
     const shift = item.get('shift') || '';
@@ -247,7 +253,16 @@ function renderData(list) {
     const r = item.get('title') || '';
     const id = item.id;
 
-    const timeInfo = shift === '拼班' ? `${sStart}-${sEnd} / ${sStart2}-${sEnd2}` : (sStart && sEnd ? `${sStart}-${sEnd}` : '未设置时间');
+    // 修复拼班时间显示逻辑
+    let timeInfo;
+    if (shift === '拼班') {
+      const part1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const part2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = `${part1} / ${part2}`;
+    } else {
+      timeInfo = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置时间';
+    }
+
     const mealInfo = mStart ? `饭点开始：${mStart}（1小时）` : '未设置饭点';
 
     adminList.innerHTML += `
@@ -263,6 +278,7 @@ function renderData(list) {
         </div>
       </div>`;
   });
+
 
   document.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', function () {
