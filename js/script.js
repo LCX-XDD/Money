@@ -103,29 +103,32 @@ function initTimeSelect() {
   }
 
   function calcWorkHours() {
-    let totalHour = 0;
+  let totalHour = 0;
 
-    if (shiftStart.value && shiftEnd.value) {
-      let s = parseInt(shiftStart.value.split(':')[0]);
-      let e = parseInt(shiftEnd.value.split(':')[0]);
-      if (e > s) totalHour += e - s;
-    }
-
-    if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
-      let s2 = parseInt(shiftStart2.value.split(':')[0]);
-      let e2 = parseInt(shiftEnd2.value.split(':')[0]);
-      if (e2 > s2) totalHour += e2 - s2;
-    }
-
-    if (shiftSelect.value !== '拼班' && mealStart.value) {
-      totalHour = Math.max(0, totalHour - 1);
-    }
-
-    workHoursTip.textContent = `有效工时：${totalHour} 小时`;
-
-    const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
-    moneyInput.value = dailyWage.toFixed(2);
+  // 第一段
+  if (shiftStart.value && shiftEnd.value) {
+    let s = parseInt(shiftStart.value.split(':')[0]);
+    let e = parseInt(shiftEnd.value.split(':')[0]);
+    if (e > s) totalHour += e - s;
   }
+
+  // 拼班才加第二段
+  if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
+    let s2 = parseInt(shiftStart2.value.split(':')[0]);
+    let e2 = parseInt(shiftEnd2.value.split(':')[0]);
+    if (e2 > s2) totalHour += e2 - s2;
+  }
+
+  // 非拼班才扣饭点
+  if (shiftSelect.value !== '拼班' && mealStart.value) {
+    totalHour = Math.max(0, totalHour - 1);
+  }
+
+  workHoursTip.textContent = `有效工时：${totalHour} 小时`;
+
+  const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
+  moneyInput.value = dailyWage.toFixed(2);
+}
 
   shiftSelect.addEventListener('change', () => {
     const val = shiftSelect.value;
@@ -246,12 +249,12 @@ function renderData(list) {
     const r = item.get('title') || '';
     const id = item.id;
 
-    // 拼班显示两个时间段，修复完成
-    let timeInfo;
+    // 拼班强制显示两段，哪怕空
+    let timeInfo = '';
     if (shift === '拼班') {
-      const part1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-      const part2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-      timeInfo = `${part1} / ${part2}`;
+      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = t1 + ' / ' + t2;
     } else {
       timeInfo = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置时间';
     }
@@ -266,7 +269,19 @@ function renderData(list) {
         <div class="item-money">基本工资：¥${money.toFixed(2)}</div>
         <div class="item-remark">备注：${r}</div>
         <div class="item-op">
-          <button class="btn-sm btn-edit" data-id="${id}" data-date="${d}" data-shift="${shift}" data-shiftStart="${sStart}" data-shiftEnd="${sEnd}" data-shiftStart2="${sStart2}" data-shiftEnd2="${sEnd2}" data-mealStart="${mStart}" data-allowance="${allowance}" data-money="${money}" data-remark="${r}">编辑</button>
+          <button class="btn-sm btn-edit" 
+            data-id="${id}" 
+            data-date="${d}" 
+            data-shift="${shift}"
+            data-shiftStart="${sStart}" 
+            data-shiftEnd="${sEnd}"
+            data-shiftStart2="${sStart2}" 
+            data-shiftEnd2="${sEnd2}"
+            data-mealStart="${mStart}"
+            data-allowance="${allowance}"
+            data-money="${money}"
+            data-remark="${r}"
+          >编辑</button>
           <button class="btn-sm btn-del" data-id="${id}">删除</button>
         </div>
       </div>`;
@@ -614,7 +629,9 @@ function openCycleDetailPopup(cycleKey, records) {
 
     let timeInfo = '';
     if (shift === '拼班') {
-      timeInfo = `${sStart}-${sEnd} / ${sStart2}-${sEnd2}`;
+      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = t1 + ' / ' + t2;
     } else {
       timeInfo = `${sStart}-${sEnd}`;
     }
