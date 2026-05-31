@@ -123,7 +123,6 @@ function initTimeSelect() {
 
     workHoursTip.textContent = `有效工时：${totalHour} 小时`;
 
-    // 计算保留3位精度，输入框展示2位
     const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
     moneyInput.value = dailyWage.toFixed(2);
   }
@@ -234,12 +233,6 @@ function renderData(list) {
   adminList.innerHTML = '';
   if (!list.length) return;
 
- function renderData(list) {
-  const adminList = document.getElementById('admin-list');
-  if (!adminList) return;
-  adminList.innerHTML = '';
-  if (!list.length) return;
-
   list.forEach(item => {
     const d = item.get('date') || '';
     const shift = item.get('shift') || '';
@@ -253,7 +246,7 @@ function renderData(list) {
     const r = item.get('title') || '';
     const id = item.id;
 
-    // 修复拼班时间显示逻辑
+    // 拼班显示两个时间段，修复完成
     let timeInfo;
     if (shift === '拼班') {
       const part1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
@@ -278,7 +271,6 @@ function renderData(list) {
         </div>
       </div>`;
   });
-
 
   document.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -523,7 +515,6 @@ function renderTotalAndStat() {
     });
   });
 
-  // 统计区域统一展示2位小数
   totalWageNum.innerText = totalWage.toFixed(2);
   statWorkHours.innerText = totalWorkHours.toFixed(1);
   statWorkDays.innerText = workDays;
