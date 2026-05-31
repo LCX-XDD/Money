@@ -245,19 +245,34 @@ function initTimeSelect() {
   mealStart.addEventListener('change', calcWorkHours);
 }
 
-async function loadData() {
-  const query = new AV.Query(Bill);
-  query.descending('createdAt');
+// 防重复请求 + 自动重试，解决首次打开加载失败
+let isLoading = false;
+async function loadData(retryCount = 0) {
+  if (isLoading) return;
+  isLoading = true;
+
   try {
+    const query = new AV.Query(Bill);
+    query.descending('createdAt');
     const res = await query.find();
+    
     allBillList = res;
     recordDates = new Set(res.map(i => i.get('date') || ''));
     renderData(res);
     renderSalaryCalendar();
     renderTotalAndStat();
   } catch (e) {
-    showToast('数据加载失败', 'error');
+    // 自动重试 3 次
+    if (retryCount < 3) {
+      setTimeout(() => {
+        loadData(retryCount + 1);
+      }, 1000);
+      return;
+    }
+    showToast('数据加载失败，请刷新', 'error');
     console.error(e);
+  } finally {
+    isLoading = false;
   }
 }
 
@@ -725,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedDate = formatDate(now);
         const dateInput = document.getElementById('record-date');
         if (dateInput) dateInput.value = selectedDate;
-        loadData();
+        setTimeout(() => loadData(), 300);
       } else {
         showToast('密码错误', 'error');
       }
@@ -840,5 +855,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+// 延迟 500 毫秒加载，解决 SDK 未初始化完成导致的失败
+setTimeout(() => {
   loadData();
+}, 500);
 });
