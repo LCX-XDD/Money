@@ -478,3 +478,17 @@ body {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
+/* 加载动画 */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
