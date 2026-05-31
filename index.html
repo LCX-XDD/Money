@@ -18,14 +18,20 @@
 
     <!-- 用户页面 -->
     <div id="user-view">
-      <div class="total-wage-box">
-       <div class="cycle-text">
-          当前计薪周期：<br>
-          <span id="current-cycle">--</span>
-        </div>
-        <div class="total-wage-line">总工资：<span id="total-wage-num">¥0.00</span></div>
-        <button id="detail-btn" class="btn-detail">查看详细信息</button>
-      </div>
+<div class="total-wage-box">
+  <div class="cycle-text">
+    当前计薪周期：<br>
+    <span id="current-cycle">
+      <span class="loading-spinner"></span>
+    </span>
+  </div>
+  <div class="total-wage-line">
+    总工资：<span id="total-wage-num">
+      <span class="loading-spinner"></span>
+    </span>
+  </div>
+  <button id="detail-btn" class="btn-detail">查看详细信息</button>
+</div>
     </div>
 
     <!-- 管理员页面 -->
