@@ -750,26 +750,26 @@ document.addEventListener('DOMContentLoaded', function () {
       if (shift !== '休息' && (isNaN(money) || money <= 0)) { showToast('工时或工资异常', 'error'); return; }
 
       try {
-        const bill = editIdVal ? AV.Object.createWithoutData('Bill', editIdVal) : new Bill();
-        bill.set('date', d);
-        bill.set('shift', shift);
-        bill.set('shiftStart', sStart);
-        bill.set('shiftEnd', sEnd);
-        bill.set('shiftStart2', sStart2);
-        bill.set('shiftEnd2', sEnd2);
-        bill.set('mealStart', mStart);
-        bill.set('allowance', allowance);
-        bill.set('money', money);
-        bill.set('title', r);
-        bill.set('type', 'income');
-        await bill.save();
-        clearForm();
-        loadData();
-        showToast('保存成功', 'success');
-      } catch (e) {
-        showToast('保存失败', 'error');
-        console.error(e);
-      }
+  const bill = editIdVal ? AV.Object.createWithoutData('Bill', editIdVal) : new Bill();
+  bill.set('date', d);
+  bill.set('shift', shift);
+  bill.set('shiftStart', sStart);
+  bill.set('shiftEnd', sEnd);
+  bill.set('shiftStart2', sStart2);
+  bill.set('shiftEnd2', sEnd2);   // ✅ 修复这里！
+  bill.set('mealStart', mStart);
+  bill.set('allowance', allowance);
+  bill.set('money', money);
+  bill.set('title', r);
+  bill.set('type', 'income');
+  await bill.save();
+  clearForm();
+  loadData();
+  showToast('保存成功', 'success');
+} catch (e) {
+  showToast('保存失败', 'error');
+  console.error(e);
+}
     });
   }
 
