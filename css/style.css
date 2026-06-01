@@ -12,16 +12,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 10px;
 }
 
 .white-window {
   background: #fff;
   border-radius: 16px;
-  padding: 28px;
+  padding: 16px;
   max-width: 600px;
   width: 100%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  overflow-x: hidden;
 }
 
 /* 主页面文字 */
@@ -29,7 +30,7 @@ body {
   text-align: center;
   font-size: 24px;
   color: #222;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   font-weight: bold;
 }
 
@@ -93,9 +94,10 @@ body {
 /* 日历样式（日期上显示班次） */
 .calendar-wrap {
   background: #fafbfc;
-  padding: 16px;
+  padding: 12px;
   border-radius: 12px;
   margin-bottom: 20px;
+  overflow-x: hidden;
 }
 
 .calendar-head {
@@ -103,6 +105,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  gap: 8px;
 }
 
 .calendar-head button {
@@ -114,6 +117,15 @@ body {
   color: white;
   font-size: 16px;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+#calendar-title {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: clamp(12px, 3.2vw, 16px);
 }
 
 .calendar-week {
@@ -123,12 +135,13 @@ body {
   color: #888;
   font-weight: bold;
   margin-bottom: 8px;
+  font-size: 12px;
 }
 
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .calendar-day {
@@ -141,13 +154,14 @@ body {
   cursor: pointer;
   background: #f1f3f5;
   font-weight: 500;
-  padding: 4px;
+  padding: 2px;
   position: relative;
+  font-size: 13px;
 }
 
 /* 日期上的班次文字：小字号、浅色 */
 .calendar-day .shift-tag {
-  font-size: 11px;
+  font-size: 9px;
   color: #8b939f;
   margin-top: 2px;
   line-height: 1;
@@ -201,8 +215,8 @@ body {
 }
 
 .time-select {
-  flex: 1; /* 让下拉框占满剩余宽度 */
-  height: 44px; /* 和输入框一样高 */
+  flex: 1;
+  height: 44px;
   padding: 0 12px;
   border: 1px solid #e0e0e0;
   border-radius: 10px;
@@ -478,6 +492,7 @@ body {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
+
 /* 加载动画 */
 .loading-spinner {
   display: inline-block;
