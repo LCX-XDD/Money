@@ -1,18 +1,16 @@
-/* 全局基础 */
+/* 全局基础 + 防双击放大 */
 * {
-  touch-action: manipulation; /* 禁用双击放大，保留滚动 */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Microsoft YaHei", sans-serif;
+  touch-action: manipulation;
 }
 
 html, body {
   -webkit-text-size-adjust: 100%;
   -webkit-user-select: none;
   user-select: none;
-}
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Microsoft YaHei", sans-serif;
 }
 
 body {
@@ -320,9 +318,7 @@ body {
   cursor: pointer;
 }
 
-/* ========================== */
 /* 全局轻量弹窗 + 修复动画 */
-/* ========================== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -432,9 +428,7 @@ body {
   align-items: center;
 }
 
-/* ========================== */
 /* 周期明细子弹窗 */
-/* ========================== */
 #cycle-detail-overlay .modal-box {
   border-top: 4px solid #409eff;
   background: #f8fbff;
