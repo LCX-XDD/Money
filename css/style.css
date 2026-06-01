@@ -1,5 +1,14 @@
 /* 全局基础 */
 * {
+  touch-action: manipulation; /* 禁用双击放大，保留滚动 */
+}
+
+html, body {
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+}
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
