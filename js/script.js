@@ -882,9 +882,9 @@ document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
   showToast('数据刷新成功','success');
 })
 // ==============================================
-// 日历滑动 · 完美修复版（不改变大小 · 不空白 · 不回弹）
+// 日历滑动 · 完美最终版（不改变大小 · 不炸布局）
 // ==============================================
-window.addEventListener('load', function() {
+window.addEventListener('load', () => {
   const track = document.getElementById('calTrack');
   if (!track) return;
 
@@ -892,29 +892,26 @@ window.addEventListener('load', function() {
   let moveX = 0;
   let isTouch = false;
 
-  // 触摸开始
   track.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
     track.style.transition = 'none';
     isTouch = true;
   }, { passive: true });
 
-  // 触摸滑动
   track.addEventListener('touchmove', (e) => {
     if (!isTouch) return;
     moveX = e.touches[0].clientX - startX;
     track.style.transform = `translateX(calc(-100% + ${moveX}px))`;
   }, { passive: true });
 
-  // 触摸结束
   track.addEventListener('touchend', () => {
     isTouch = false;
     track.style.transition = 'transform 0.3s ease';
-    const w = document.getElementById('calPageCur').offsetWidth;
+    const pageWidth = document.getElementById('calPageCur').offsetWidth;
 
-    if (moveX > w / 2) {
+    if (moveX > pageWidth / 2) {
       currentMonth--;
-    } else if (moveX < -w / 2) {
+    } else if (moveX < -pageWidth / 2) {
       currentMonth++;
     }
 
