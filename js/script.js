@@ -323,7 +323,7 @@ function renderData(list) {
     group.innerHTML = `
       <div class="cycle-header" data-cycle="${cycleKey}">
         <span>${cycleKey}</span>
-        <span class="arrow">▶</span>
+        <span class="arrow"></span>
         <span style="color:#666;font-size:12px;">${records.length} 条记录</span>
       </div>
     `;
