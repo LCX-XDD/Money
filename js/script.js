@@ -523,21 +523,24 @@ function renderTotalAndStat() {
     cycleMap[cycleKey].push(item);
   });
 
-  cycleGroupList.innerHTML = '';
-  Object.keys(cycleMap).forEach(cycleKey => {
-    const group = document.createElement('div');
-    group.className = 'cycle-group';
-    group.innerHTML = `
-      <div class="cycle-header" data-cycle="${cycleKey}">
-        <span>${cycleKey}</span>
-        <span class="arrow">▶</span>
-      </div>
-    `;
-    cycleGroupList.appendChild(group);
-    group.querySelector('.cycle-header').addEventListener('click', () => {
-      openCycleDetailPopup(cycleKey, cycleMap[cycleKey]);
-    });
+cycleGroupList.innerHTML = '';
+// 按时间倒序排列，最新的周期在最上面（和管理员页一致）
+Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
+  const records = cycleMap[cycleKey];
+  const group = document.createElement('div');
+  group.className = 'cycle-group';
+  group.innerHTML = `
+    <div class="cycle-header" data-cycle="${cycleKey}">
+      <span>${cycleKey}</span>
+      <span class="arrow"></span>
+      <span style="color:#666;font-size:12px;">${records.length} 条记录</span>
+    </div>
+  `;
+  cycleGroupList.appendChild(group);
+  group.querySelector('.cycle-header').addEventListener('click', () => {
+    openCycleDetailPopup(cycleKey, records);
   });
+});
 
   totalWageNum.innerText = totalWage.toFixed(2);
   statWorkHours.innerText = totalWorkHours.toFixed(1);
