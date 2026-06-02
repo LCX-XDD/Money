@@ -882,46 +882,44 @@ document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
   showToast('数据刷新成功','success');
 })
 // ==============================================
-// 最终稳定版 · 日历左右滑动（不空白、不报错、不消失）
+// 日历滑动 · 完美修复版（不改变大小 · 不空白 · 不回弹）
 // ==============================================
-function initCalendarSwipe() {
-  const slider = document.getElementById('calTrack');
-  if (!slider) return;
+window.addEventListener('load', function() {
+  const track = document.getElementById('calTrack');
+  if (!track) return;
 
   let startX = 0;
   let moveX = 0;
   let isTouch = false;
 
-  slider.addEventListener('touchstart', (e) => {
+  // 触摸开始
+  track.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
-    slider.style.transition = 'none';
+    track.style.transition = 'none';
     isTouch = true;
   }, { passive: true });
 
-  slider.addEventListener('touchmove', (e) => {
+  // 触摸滑动
+  track.addEventListener('touchmove', (e) => {
     if (!isTouch) return;
     moveX = e.touches[0].clientX - startX;
-    slider.style.transform = `translateX(calc(-100% + ${moveX}px))`;
+    track.style.transform = `translateX(calc(-100% + ${moveX}px))`;
   }, { passive: true });
 
-  slider.addEventListener('touchend', () => {
+  // 触摸结束
+  track.addEventListener('touchend', () => {
     isTouch = false;
-    slider.style.transition = 'transform 0.3s ease';
-    const w = window.innerWidth / 3;
+    track.style.transition = 'transform 0.3s ease';
+    const w = document.getElementById('calPageCur').offsetWidth;
 
-    if (moveX > w) {
+    if (moveX > w / 2) {
       currentMonth--;
-    } else if (moveX < -w) {
+    } else if (moveX < -w / 2) {
       currentMonth++;
     }
 
     renderSalaryCalendar();
-    slider.style.transform = 'translateX(-100%)';
+    track.style.transform = 'translateX(-100%)';
     moveX = 0;
   });
-}
-
-// 页面加载完成后初始化滑动
-window.addEventListener('load', () => {
-  initCalendarSwipe();
 });
