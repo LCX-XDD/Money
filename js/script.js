@@ -291,104 +291,47 @@ function renderData(list) {
   const adminList = document.getElementById('admin-list');
   if (!adminList) return;
   adminList.innerHTML = '';
-  if (!list.length) return;
+  if (!list.length) {
+    adminList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">暂无记录</div>';
+    return;
+  }
 
+  // 按计薪周期分组（复用用户页相同逻辑）
+  const cycleMap = {};
   list.forEach(item => {
-    const d = item.get('date') || '';
-    const shift = item.get('shift') || '';
-    const sStart = item.get('shiftStart') || '';
-    const sEnd = item.get('shiftEnd') || '';
-    const sStart2 = item.get('shiftStart2') || '';
-    const sEnd2 = item.get('shiftEnd2') || '';
-    const mStart = item.get('mealStart') || '';
-    const allowance = parseFloat(item.get('allowance')) || 0;
-    const money = parseFloat(item.get('money')) || 0;
-    const r = item.get('title') || '';
-    const id = item.id;
-
-    // 拼班强制显示两段，哪怕空
-    let timeInfo = '';
-    if (shift === '拼班') {
-      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-      timeInfo = t1 + ' / ' + t2;
+    const dateStr = item.get('date') || '';
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    let cStart, cEnd;
+    if (d.getDate() >= 26) {
+      cStart = new Date(d.getFullYear(), d.getMonth(), 26);
+      cEnd = new Date(d.getFullYear(), d.getMonth() + 1, 25);
     } else {
-      timeInfo = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置时间';
+      cStart = new Date(d.getFullYear(), d.getMonth() - 1, 26);
+      cEnd = new Date(d.getFullYear(), d.getMonth(), 25);
     }
-
-    const mealInfo = mStart ? `饭点开始：${mStart}（1小时）` : '未设置饭点';
-
-    adminList.innerHTML += `
-      <div class="item">
-        <div class="item-date">${d}</div>
-        <div class="item-extra">班次：${shift}｜时间：${timeInfo}｜${mealInfo}</div>
-        <div class="item-extra">加班补贴：¥${allowance.toFixed(2)}</div>
-        <div class="item-money">基本工资：¥${money.toFixed(2)}</div>
-        <div class="item-remark">备注：${r}</div>
-        <div class="item-op">
-          <button class="btn-sm btn-edit" 
-            data-id="${id}" 
-            data-date="${d}" 
-            data-shift="${shift}"
-            data-shiftStart="${sStart}" 
-            data-shiftEnd="${sEnd}"
-            data-shiftStart2="${sStart2}" 
-            data-shiftEnd2="${sEnd2}"
-            data-mealStart="${mStart}"
-            data-allowance="${allowance}"
-            data-money="${money}"
-            data-remark="${r}"
-          >编辑</button>
-          <button class="btn-sm btn-del" data-id="${id}">删除</button>
-        </div>
-      </div>`;
+    const cycleKey = `${formatDate(cStart)} ~ ${formatDate(cEnd)}`;
+    if (!cycleMap[cycleKey]) cycleMap[cycleKey] = [];
+    cycleMap[cycleKey].push(item);
   });
 
-  document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const dateInput = document.getElementById('record-date');
-      const shiftSelect = document.getElementById('record-shift');
-      if (dateInput) dateInput.value = this.dataset.date;
-      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+  // 渲染周期列表（和用户页样式一致）
+  Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
+    const records = cycleMap[cycleKey];
+    const group = document.createElement('div');
+    group.className = 'cycle-group';
+    group.innerHTML = `
+      <div class="cycle-header" data-cycle="${cycleKey}">
+        <span>${cycleKey}</span>
+        <span class="arrow">▶</span>
+        <span style="color:#666;font-size:12px;">${records.length} 条记录</span>
+      </div>
+    `;
+    adminList.appendChild(group);
 
-      const shiftStart = document.getElementById('shift-start');
-      const shiftEnd = document.getElementById('shift-end');
-      const shiftStart2 = document.getElementById('shift-start2');
-      const shiftEnd2 = document.getElementById('shift-end2');
-      const mealStart = document.getElementById('meal-start');
-      const allowanceInput = document.getElementById('record-allowance');
-      const moneyInput = document.getElementById('record-money');
-      const remarkInput = document.getElementById('record-remark');
-      const editId = document.getElementById('edit-id');
-
-      if (shiftStart) shiftStart.value = this.dataset.shiftStart;
-      if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
-      if (mealStart) mealStart.value = this.dataset.mealStart;
-      if (allowanceInput) allowanceInput.value = this.dataset.allowance;
-      if (moneyInput) moneyInput.value = this.dataset.money;
-      if (remarkInput) remarkInput.value = this.dataset.remark;
-      if (editId) editId.value = this.dataset.id;
-      selectedDate = this.dataset.date;
-      renderSalaryCalendar();
-          // 自动平滑滚动到页面顶部
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    // 显示编辑模式提示
-    showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
-    });
-  });
-
-  document.querySelectorAll('.btn-del').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('确定删除该条记录？')) return;
-      try {
-        await AV.Object.createWithoutData('Bill', btn.dataset.id).destroy();
-        loadData();
-        showToast('删除成功', 'success');
-      } catch (e) {
-        showToast('删除失败', 'error');
-      }
+    // 点击周期打开详情弹窗（带编辑删除）
+    group.querySelector('.cycle-header').addEventListener('click', () => {
+      openAdminCycleDetailPopup(cycleKey, records);
     });
   });
 }
@@ -709,6 +652,184 @@ function openCycleDetailPopup(cycleKey, records) {
         <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
       </div>
     `);
+  });
+
+  cycleDetailOverlay.classList.add('show');
+}
+// 管理员周期详情弹窗（带编辑删除按钮）
+function openAdminCycleDetailPopup(cycleKey, records) {
+  const cycleDetailTitle = document.getElementById('cycle-detail-title');
+  const list = document.getElementById('cycle-detail-record-list');
+  const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
+
+  if (!cycleDetailTitle || !list || !cycleDetailOverlay) return;
+
+  cycleDetailTitle.innerText = cycleKey;
+  list.innerHTML = '';
+
+  // 顶部统计
+  const btnBox = document.createElement('div');
+  btnBox.style.textAlign = 'center';
+  btnBox.style.marginBottom = '10px';
+  
+  const calcBtn = document.createElement('button');
+  calcBtn.innerText = '查看本期总工资';
+  calcBtn.className = 'btn-primary';
+  calcBtn.style.padding = '6px 14px';
+  calcBtn.style.borderRadius = '4px';
+  calcBtn.style.cursor = 'pointer';
+  
+  calcBtn.onclick = function () {
+    let totalHours = 0;
+    let totalBase = 0;
+    let totalAllow = 0;
+    let totalWage = 0;
+    let workDays = 0;
+
+    records.forEach(item => {
+      const shift = item.get('shift') || '';
+      if (shift === '休息') return;
+
+      workDays++;
+      const allow = parseFloat(item.get('allowance')) || 0;
+      totalAllow += allow;
+
+      let h = 0;
+      const s = parseInt((item.get('shiftStart') || '00:00').split(':')[0]);
+      const e = parseInt((item.get('shiftEnd') || '00:00').split(':')[0]);
+      if (e > s) h += e - s;
+
+      if (shift === '拼班') {
+        const s2 = parseInt((item.get('shiftStart2') || '00:00').split(':')[0]);
+        const e2 = parseInt((item.get('shiftEnd2') || '00:00').split(':')[0]);
+        if (e2 > s2) h += e2 - s2;
+      }
+
+      const meal = item.get('mealStart') || '';
+      if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
+      totalHours += h;
+
+      const dayWage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
+      totalBase += dayWage;
+      totalWage += Math.round((dayWage + allow) * 1000) / 1000;
+    });
+
+    document.getElementById('cycle-total-title').innerText = `${cycleKey} 工资统计`;
+    document.getElementById('cycle-total-info').innerHTML = `
+      出勤天数：${workDays} 天<br>
+      总工时：${totalHours.toFixed(2)} 小时<br>
+      总基本工资：¥${totalBase.toFixed(2)}<br>
+      总加班补贴：¥${totalAllow.toFixed(2)}<br>
+      <hr style="margin:8px 0">
+      <strong>本期总工资：¥${totalWage.toFixed(2)}</strong>
+    `;
+
+    document.getElementById('cycle-total-overlay').classList.add('show');
+  };
+
+  btnBox.appendChild(calcBtn);
+  list.appendChild(btnBox);
+
+  // 渲染带编辑删除的记录列表
+  records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
+    const workDate = item.get('date') || '';
+    const createdTime = new Date(item.createdAt);
+    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
+
+    const shift = item.get('shift') || '';
+    const sStart = item.get('shiftStart') || '';
+    const sEnd = item.get('shiftEnd') || '';
+    const sStart2 = item.get('shiftStart2') || '';
+    const sEnd2 = item.get('shiftEnd2') || '';
+    const money = parseFloat(item.get('money')) || 0;
+    const allow = parseFloat(item.get('allowance')) || 0;
+    const r = item.get('title') || '无';
+    const id = item.id;
+
+    let timeInfo = '';
+    if (shift === '拼班') {
+      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = t1 + ' / ' + t2;
+    } else {
+      timeInfo = `${sStart}-${sEnd}`;
+    }
+
+    const itemEl = document.createElement('div');
+    itemEl.className = 'cycle-detail-item';
+    itemEl.innerHTML = `
+      <span class="date-text">${timeStr}</span>
+      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+      <div class="item-op" style="margin-top:8px;gap:8px;">
+        <button class="btn-sm btn-edit" 
+          data-id="${id}" 
+          data-date="${workDate}" 
+          data-shift="${shift}"
+          data-shiftStart="${sStart}" 
+          data-shiftEnd="${sEnd}"
+          data-shiftStart2="${sStart2}" 
+          data-shiftEnd2="${sEnd2}"
+          data-mealStart="${item.get('mealStart') || ''}"
+          data-allowance="${allow}"
+          data-money="${money}"
+          data-remark="${r}"
+        >编辑</button>
+        <button class="btn-sm btn-del" data-id="${id}">删除</button>
+      </div>
+    `;
+    list.appendChild(itemEl);
+
+    // 绑定编辑按钮事件
+    itemEl.querySelector('.btn-edit').addEventListener('click', function () {
+      // 关闭弹窗
+      cycleDetailOverlay.classList.remove('show');
+      
+      // 填充表单
+      const dateInput = document.getElementById('record-date');
+      const shiftSelect = document.getElementById('record-shift');
+      if (dateInput) dateInput.value = this.dataset.date;
+      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+
+      const shiftStart = document.getElementById('shift-start');
+      const shiftEnd = document.getElementById('shift-end');
+      const shiftStart2 = document.getElementById('shift-start2');
+      const shiftEnd2 = document.getElementById('shift-end2');
+      const mealStart = document.getElementById('meal-start');
+      const allowanceInput = document.getElementById('record-allowance');
+      const moneyInput = document.getElementById('record-money');
+      const remarkInput = document.getElementById('record-remark');
+      const editId = document.getElementById('edit-id');
+
+      if (shiftStart) shiftStart.value = this.dataset.shiftStart;
+      if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
+      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
+      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
+      if (mealStart) mealStart.value = this.dataset.mealStart;
+      if (allowanceInput) allowanceInput.value = this.dataset.allowance;
+      if (moneyInput) moneyInput.value = this.dataset.money;
+      if (remarkInput) remarkInput.value = this.dataset.remark;
+      if (editId) editId.value = this.dataset.id;
+      selectedDate = this.dataset.date;
+      renderSalaryCalendar();
+
+      // 自动回顶+提示
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
+    });
+
+    // 绑定删除按钮事件
+    itemEl.querySelector('.btn-del').addEventListener('click', async () => {
+      if (!confirm('确定删除该条记录？')) return;
+      try {
+        await AV.Object.createWithoutData('Bill', id).destroy();
+        loadData();
+        showToast('删除成功', 'success');
+        cycleDetailOverlay.classList.remove('show');
+      } catch (e) {
+        showToast('删除失败', 'error');
+      }
+    });
   });
 
   cycleDetailOverlay.classList.add('show');
