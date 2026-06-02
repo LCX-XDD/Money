@@ -101,11 +101,7 @@ body {
 
 /* 日历样式（日期上显示班次） */
 .calendar-wrap {
-  background: #fafbfc;
-  padding: 10px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  overflow: hidden;
+  padding:8px;
 }
 
 .calendar-head {
@@ -137,24 +133,18 @@ body {
 }
 
 .calendar-week {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  color: #888;
-  font-weight: bold;
-  margin-bottom: 6px;
-  font-size: 11px;
+  margin-bottom:4px;
 }
 
 .calendar-body {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap:2px;
 }
 
 /* 🔴 这里缩小日历日期大小 */
 .calendar-day {
-  aspect-ratio: 1/1;
+  /* 取消1:1强制正方形，改用固定高度 */
+  aspect-ratio: unset;
+  height: 38px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -166,7 +156,6 @@ body {
   padding: 1px;
   position: relative;
   font-size: 12px;
-  min-height: 32px;
 }
 
 /* 日期上的班次文字：小字号 */
