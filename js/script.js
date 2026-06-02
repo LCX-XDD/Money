@@ -458,19 +458,24 @@ function renderSalaryCalendar() {
     calendarBody.appendChild(el);
   }
 
-  days.forEach(date => {
-    const dateStr = formatDate(date);
-    const el = document.createElement('div');
-    el.className = 'calendar-day';
+days.forEach(date => {
+  const dateStr = formatDate(date);
+  const el = document.createElement('div');
+  el.className = 'calendar-day';
 
-    const record = allBillList.find(item => item.get('date') === dateStr);
-    if (record) {
-      el.classList.add('has-record');
-      const shift = record.get('shift') || '';
-      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+  const record = allBillList.find(item => item.get('date') === dateStr);
+  if (record) {
+    const shift = record.get('shift') || '';
+    // 休息日期加浅绿色，其他班次加蓝色
+    if (shift === '休息') {
+      el.classList.add('rest');
     } else {
-      el.textContent = date.getDate();
+      el.classList.add('has-record');
     }
+    el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+  } else {
+    el.textContent = date.getDate();
+  }
 
     if (selectedDate === dateStr) el.classList.add('selected');
     el.addEventListener('click', () => {
