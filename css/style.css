@@ -542,4 +542,7 @@ body {
 .refresh-btn:hover {
   color:#666;
 }
-
+/* 🔴 强制选中状态下所有班次标签都变成白色，优先级最高 */
+.calendar-day.selected .shift-tag {
+  color: #fff !important;
+}
