@@ -561,3 +561,5 @@ body {
 .slide-inner.no-trans {
   transition: none;
 }
+.slide-outer { overflow: hidden; }
+.slide-inner { transition: transform 0.3s ease; }
