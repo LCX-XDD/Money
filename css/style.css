@@ -563,3 +563,16 @@ body {
 }
 .slide-outer { overflow: hidden; }
 .slide-inner { transition: transform 0.3s ease; }
+.calendar-slider {
+  overflow: hidden;
+  width: 100%;
+}
+.calendar-slider-track {
+  display: flex;
+  width: 300%;
+  transition: transform 0.3s ease;
+}
+.calendar-slide-page {
+  width: 100%;
+  flex-shrink: 0;
+}
