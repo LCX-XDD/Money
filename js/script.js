@@ -881,3 +881,50 @@ document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
   // 3. 弹窗提示刷新成功
   showToast('数据刷新成功','success');
 })
+//日历滑动全局变量
+const calWrap = document.getElementById('calWrap');
+const calSlide = document.getElementById('calSlide');
+let startX = 0, moveX = 0, isDrag = false;
+const slideWidth = calWrap.clientWidth;
+
+// 滑动绑定
+calWrap.addEventListener('touchstart',e=>{
+  startX = e.touches[0].clientX;
+  calSlide.classList.add('no-trans');//取消过渡，实时跟随手指
+  isDrag = true;
+},{passive:false});
+
+calWrap.addEventListener('touchmove',e=>{
+  if(!isDrag)return;
+  moveX = e.touches[0].clientX - startX;
+  //实时位移：基础-100% + 手指偏移
+  calSlide.style.transform = `translateX(calc(-100% + ${moveX}px))`;
+},{passive:false});
+
+calWrap.addEventListener('touchend',()=>{
+  calSlide.classList.remove('no-trans');//恢复过渡动画
+  isDrag = false;
+  //滑动阈值：超过屏幕1/3则切换月份，否则回弹原位
+  const threshold = slideWidth /3;
+  if(moveX > threshold){
+    //右滑→上月
+    prevMonth();
+    calSlide.style.transform = 'translateX(-100%)';
+  }else if(moveX < -threshold){
+    //左滑→下月
+    nextMonth();
+    calSlide.style.transform = 'translateX(-100%)';
+  }else{
+    //滑动距离不足，回弹原位置
+    calSlide.style.transform = 'translateX(-100%)';
+  }
+  moveX=0;
+});
+
+//每次切换月份后 预渲染上月、下月日历（替换你原有渲染日历函数名）
+//⚠️ 你原有【prevMonth()、nextMonth()】函数末尾追加预渲染：
+/*
+切换月份成功后执行：
+renderPreMonth(); //渲染左侧上月面板
+renderNextMonth();//渲染右侧下月面板
+*/
