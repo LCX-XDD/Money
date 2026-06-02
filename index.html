@@ -47,26 +47,21 @@
     <span id="calendar-title">周期</span>
     <button id="next-month">&gt;</button>
   </div>
+  <!--星期只放最顶部，不在三栏里面重复-->
+  <div class="calendar-week">
+    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+  </div>
   <div class="calendar-slide-box" id="calSlide">
-    <!--上月日历-->
+    <!--上月日历：只留日历格子容器，删掉星期栏-->
     <div class="calendar-item" id="preCal">
-      <div class="calendar-week">
-        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-      </div>
       <div class="calendar-body"></div>
     </div>
     <!--当月日历-->
     <div class="calendar-item" id="curCal">
-      <div class="calendar-week">
-        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-      </div>
       <div id="calendar-body" class="calendar-body"></div>
     </div>
     <!--下月日历-->
     <div class="calendar-item" id="nextCal">
-      <div class="calendar-week">
-        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-      </div>
       <div class="calendar-body"></div>
     </div>
   </div>
