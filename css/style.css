@@ -510,3 +510,21 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* 首页右上角刷新按钮 */
+.total-wage-box {
+  position: relative; /* 给刷新按钮做父级定位 */
+}
+.refresh-btn {
+  position: absolute;
+  top:12px;
+  right:12px;
+  font-size:12px;
+  color:#999;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  padding:2px 6px;
+}
+.refresh-btn:hover {
+  color:#666;
+}
