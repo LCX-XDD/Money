@@ -871,3 +871,13 @@ setTimeout(() => {
   loadData();
 }, 500);
 });
+// 首页刷新按钮点击事件
+document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
+  // 1. 还原加载动画
+  document.querySelector('#current-cycle').innerHTML = '<span class="loading-spinner"></span>';
+  document.querySelector('#total-wage-num').innerHTML = '<span class="loading-spinner"></span>';
+  // 2. 重新拉取数据
+  await loadData();
+  // 3. 弹窗提示刷新成功
+  showToast('数据刷新成功','success');
+})
