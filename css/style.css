@@ -142,7 +142,7 @@ body {
   text-align: center;
   color: #888;
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom:4px;
   font-size: 11px;
 }
 
@@ -165,19 +165,24 @@ body {
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  width: 100%;
+  gap:2px;
 }
 
 .calendar-day {
-  height: 32px;
+  aspect-ratio:1/1;
+  width:100%;
+  max-height:40px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  cursor: pointer;
   background: #f1f3f5;
+  font-weight: 500;
+  padding: 1px;
+  position: relative;
   font-size: 12px;
-  padding: 0;
 }
 
 .calendar-day .shift-tag {
