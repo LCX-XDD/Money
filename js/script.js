@@ -882,39 +882,131 @@ document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
   showToast('数据刷新成功','success');
 })
 // ==============================================
-// 日历左右滑动（不破坏原有布局 + 顺滑跟手）
+// 日历左右滑动（三页连动 · 视觉丝滑切换 · 不回弹）
 // ==============================================
-const slideOuter = document.querySelector('.slide-outer');
-const slideInner = document.getElementById('calSlide');
+const calTrack = document.getElementById('calTrack');
+const calPagePrev = document.getElementById('calPagePrev');
+const calPageCur = document.getElementById('calPageCur');
+const calPageNext = document.getElementById('calPageNext');
+
 let startX = 0;
 let moveX = 0;
 let isTouch = false;
 
-slideOuter.addEventListener('touchstart', (e) => {
+// 预渲染左/右日历
+function renderSlidePages() {
+  // 渲染上月
+  currentMonth--;
+  calPagePrev.innerHTML = '';
+  renderSalaryCalendarTo(calPagePrev);
+
+  // 回到当月
+  currentMonth++;
+  calPageCur.innerHTML = '';
+  renderSalaryCalendarTo(calPageCur);
+
+  // 渲染下月
+  currentMonth++;
+  calPageNext.innerHTML = '';
+  renderSalaryCalendarTo(calPageNext);
+
+  // 回到当月
+  currentMonth--;
+}
+
+// 渲染日历到指定容器
+function renderSalaryCalendarTo(container) {
+  const original = document.getElementById('calendar-body');
+  const temp = original.cloneNode(false);
+  container.appendChild(temp);
+
+  const calendarBody = temp;
+  const today = new Date();
+  let cycleStart, cycleEnd;
+
+  if (today.getDate() >= 26) {
+    cycleStart = new Date(currentYear, currentMonth, 26);
+    cycleEnd = new Date(currentYear, currentMonth + 1, 25);
+  } else {
+    cycleStart = new Date(currentYear, currentMonth - 1, 26);
+    cycleEnd = new Date(currentYear, currentMonth, 25);
+  }
+
+  const days = [];
+  const s = new Date(cycleStart);
+  while (s <= cycleEnd) {
+    days.push(new Date(s));
+    s.setDate(s.getDate() + 1);
+  }
+
+  calendarBody.innerHTML = '';
+
+  const firstDay = days[0].getDay();
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'calendar-day other';
+    calendarBody.appendChild(el);
+  }
+
+  days.forEach(date => {
+    const dateStr = formatDate(date);
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
+
+    const record = allBillList.find(item => item.get('date') === dateStr);
+    if (record) {
+      el.classList.add('has-record');
+      const shift = record.get('shift') || '';
+      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+    } else {
+      el.textContent = date.getDate();
+    }
+    calendarBody.appendChild(el);
+  });
+}
+
+// 初始化滑动
+renderSlidePages();
+
+calTrack.addEventListener('touchstart', (e) => {
   startX = e.touches[0].clientX;
-  slideInner.style.transition = 'none';
+  calTrack.style.transition = 'none';
   isTouch = true;
 }, { passive: true });
 
-slideOuter.addEventListener('touchmove', (e) => {
+calTrack.addEventListener('touchmove', (e) => {
   if (!isTouch) return;
   moveX = e.touches[0].clientX - startX;
-  slideInner.style.transform = `translateX(${moveX}px)`;
+  calTrack.style.transform = `translateX(calc(-100% + ${moveX}px))`;
 }, { passive: true });
 
-slideOuter.addEventListener('touchend', () => {
+calTrack.addEventListener('touchend', () => {
   isTouch = false;
-  slideInner.style.transition = 'transform 0.3s ease';
-  const threshold = slideOuter.clientWidth / 3;
+  calTrack.style.transition = 'transform 0.3s ease';
+  const w = calTrack.clientWidth / 3;
 
-  if (moveX > threshold) {
+  if (moveX > w) {
     currentMonth--;
     renderSalaryCalendar();
-  } else if (moveX < -threshold) {
+    renderSlidePages();
+  } else if (moveX < -w) {
     currentMonth++;
     renderSalaryCalendar();
+    renderSlidePages();
   }
 
-  slideInner.style.transform = 'translateX(0)';
+  calTrack.style.transform = 'translateX(-100%)';
   moveX = 0;
 });
+
+// 按钮切换时同步刷新滑动页
+document.getElementById('prev-month').onclick = () => {
+  currentMonth--;
+  renderSalaryCalendar();
+  renderSlidePages();
+};
+document.getElementById('next-month').onclick = () => {
+  currentMonth++;
+  renderSalaryCalendar();
+  renderSlidePages();
+};
