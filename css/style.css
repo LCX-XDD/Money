@@ -531,3 +531,11 @@ body {
 .refresh-btn:hover {
   color:#666;
 }
+/* 休息日期浅绿色标记 */
+.calendar-day.rest {
+  background: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+.calendar-day.rest .shift-tag {
+  color: #43a047 !important;
+}
