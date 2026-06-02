@@ -41,16 +41,35 @@
 
     <!-- 管理员页面 -->
     <div id="admin-view" class="hidden">
-<div class="calendar-wrap">
+<div class="calendar-wrap" id="calWrap">
   <div class="calendar-head">
     <button id="prev-month">&lt;</button>
     <span id="calendar-title">周期</span>
     <button id="next-month">&gt;</button>
   </div>
-  <div class="calendar-week">
-    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+  <div class="calendar-slide-box" id="calSlide">
+    <!--上月日历-->
+    <div class="calendar-item" id="preCal">
+      <div class="calendar-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="calendar-body"></div>
+    </div>
+    <!--当月日历-->
+    <div class="calendar-item" id="curCal">
+      <div class="calendar-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div id="calendar-body" class="calendar-body"></div>
+    </div>
+    <!--下月日历-->
+    <div class="calendar-item" id="nextCal">
+      <div class="calendar-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="calendar-body"></div>
+    </div>
   </div>
-  <div id="calendar-body" class="calendar-body"></div>
 </div>
 
       <div class="form-box">
