@@ -542,6 +542,11 @@ body {
 .calendar-item{
   width:100%;
   flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+}
+.calendar-body{
+  flex:1;
 }
 /*关闭滑动时过渡，实现实时跟手*/
 .calendar-slide-box.no-trans{
