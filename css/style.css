@@ -181,15 +181,26 @@ body {
   color: #1976d2 !important;
 }
 
+.calendar-day.other {
+  color: #ccc;
+  background: #fafafa;
+}
+
+/* 休息日期浅绿色标记 */
+.calendar-day.rest {
+  background: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.calendar-day.rest .shift-tag {
+  color: #43a047 !important;
+}
 .calendar-day.selected {
   background: #409eff !important;
   color: #fff !important;
 }
 
-.calendar-day.other {
-  color: #ccc;
-  background: #fafafa;
-}
+
 
 /* 表单 */
 .form-box {
@@ -531,11 +542,4 @@ body {
 .refresh-btn:hover {
   color:#666;
 }
-/* 休息日期浅绿色标记 */
-.calendar-day.rest {
-  background: #e8f5e9 !important;
-  color: #2e7d32 !important;
-}
-.calendar-day.rest .shift-tag {
-  color: #43a047 !important;
-}
+
