@@ -552,3 +552,12 @@ body {
 .calendar-slide-box.no-trans{
   transition:none;
 }
+.slide-outer {
+  overflow: hidden;
+}
+.slide-inner {
+  transition: transform 0.32s ease;
+}
+.slide-inner.no-trans {
+  transition: none;
+}
