@@ -102,9 +102,9 @@ body {
 /* 日历样式（日期上显示班次） */
 .calendar-wrap {
   background: #fafbfc;
-  padding: 12px;
+  padding: 10px;
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   overflow: hidden;
 }
 
@@ -112,18 +112,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   gap: 8px;
 }
 
 .calendar-head button {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   border: none;
   background: #409eff;
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -133,7 +133,7 @@ body {
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
-  font-size: clamp(12px, 3.2vw, 16px);
+  font-size: clamp(12px, 3vw, 15px);
 }
 
 .calendar-week {
@@ -142,36 +142,38 @@ body {
   text-align: center;
   color: #888;
   font-weight: bold;
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: 6px;
+  font-size: 11px;
 }
 
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 
+/* 🔴 这里缩小日历日期大小 */
 .calendar-day {
   aspect-ratio: 1/1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   background: #f1f3f5;
   font-weight: 500;
-  padding: 2px;
+  padding: 1px;
   position: relative;
-  font-size: 13px;
+  font-size: 12px;
+  min-height: 32px;
 }
 
-/* 日期上的班次文字：小字号、浅色 */
+/* 日期上的班次文字：小字号 */
 .calendar-day .shift-tag {
-  font-size: 9px;
+  font-size: 8px;
   color: #8b939f;
-  margin-top: 2px;
+  margin-top: 1px;
   line-height: 1;
 }
 
@@ -196,55 +198,55 @@ body {
   flex-direction: column;
   gap: 14px;
   background: #fafbfc;
-  padding: 20px;
+  padding: 16px;
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .form-input {
-  height: 44px;
-  padding: 0 14px;
+  height: 42px;
+  padding: 0 12px;
   border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 /* 修复：加长时间下拉框 */
 .time-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .time-row label {
-  width: 95px;
-  font-size: 14px;
+  width: 90px;
+  font-size: 13px;
   color: #444;
 }
 
 .time-select {
   flex: 1;
-  height: 44px;
-  padding: 0 12px;
+  height: 42px;
+  padding: 0 10px;
   border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 8px;
+  font-size: 14px;
   outline: none;
   background: #fff;
 }
 
 .time-tip {
   color: #666;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .btn-primary {
-  height: 46px;
+  height: 44px;
   background: #00c851;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 16px;
+  border-radius: 8px;
+  font-size: 15px;
   cursor: pointer;
   font-weight: 500;
 }
@@ -255,31 +257,32 @@ body {
 }
 
 .btn-back button {
-  padding: 10px 20px;
+  padding: 8px 18px;
   border-radius: 8px;
   background: #909399;
   color: #fff;
   border: none;
   cursor: pointer;
+  font-size: 14px;
 }
 
 /* 列表 */
 .list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .item {
-  padding: 16px;
+  padding: 14px;
   background: #fafbfc;
-  border-radius: 10px;
+  border-radius: 8px;
   border-left: 4px solid #409eff;
 }
 
 .item-date {
   font-weight: bold;
-  font-size: 15px;
+  font-size: 14px;
   margin-bottom: 6px;
 }
 
@@ -287,20 +290,22 @@ body {
   color: #00c851;
   font-weight: bold;
   margin: 6px 0;
+  font-size: 14px;
 }
 
 .item-op {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 8px;
 }
 
 .btn-sm {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: 6px;
   border: none;
   color: white;
   cursor: pointer;
+  font-size: 12px;
 }
 
 .btn-edit {
@@ -315,8 +320,9 @@ body {
 .admin-entrance {
   text-align: center;
   color: #999;
-  margin-top: 20px;
+  margin-top: 16px;
   cursor: pointer;
+  font-size: 12px;
 }
 
 /* 全局轻量弹窗 + 修复动画 */
@@ -345,7 +351,7 @@ body {
   background: #fff;
   width: 90%;
   max-width: 380px;
-  padding: 24px;
+  padding: 20px;
   border-radius: 14px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   transform: translateY(10px) scale(0.95);
@@ -358,20 +364,20 @@ body {
 
 .modal-title {
   text-align: center;
-  font-size: 18px;
+  font-size: 17px;
   color: #333;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-weight: 600;
 }
 
 /* 登录弹窗输入框 */
 .modal-input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 1px solid #e5e6eb;
   border-radius: 8px;
-  font-size: 15px;
-  margin-bottom: 20px;
+  font-size: 14px;
+  margin-bottom: 16px;
   outline: none;
 }
 
@@ -385,7 +391,7 @@ body {
   padding: 10px;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -401,7 +407,7 @@ body {
 
 /* 详情弹窗数字蓝色加粗 */
 .detail-item {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 2;
   color: #333;
 }
@@ -413,16 +419,16 @@ body {
 
 /* 周期分组 */
 .cycle-group {
-  margin: 10px 0;
-  border-radius: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid #eee;
 }
 
 .cycle-header {
   background: #f5f7fa;
-  padding: 12px;
-  font-size: 15px;
+  padding: 10px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -439,7 +445,7 @@ body {
 #cycle-detail-record-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   max-height: 400px;
   overflow-y: auto;
   margin-bottom: 10px;
@@ -447,13 +453,13 @@ body {
 
 .cycle-detail-item {
   background: #f0f7ff;
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: 8px;
+  padding: 10px;
   border-left: 4px solid #409eff;
 }
 
 .cycle-detail-item .date-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #2377d9;
   display: block;
@@ -461,7 +467,7 @@ body {
 }
 
 .cycle-detail-item .info-line {
-  font-size: 14px;
+  font-size: 13px;
   color: #444;
   line-height: 1.5;
 }
@@ -481,10 +487,10 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%) scale(0.9);
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: rgba(0, 0, 0, 0.7);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   border-radius: 8px;
   z-index: 9999;
   opacity: 0;
@@ -515,8 +521,8 @@ body {
 /* 首页右上角刷新按钮 */
 .refresh-btn {
   position: absolute;
-  top:12px;
-  right:12px;
+  top:10px;
+  right:10px;
   font-size:12px;
   color:#999;
   background:transparent;
