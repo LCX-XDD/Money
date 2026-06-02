@@ -372,6 +372,10 @@ function renderData(list) {
       if (editId) editId.value = this.dataset.id;
       selectedDate = this.dataset.date;
       renderSalaryCalendar();
+          // 自动平滑滚动到页面顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 显示编辑模式提示
+    showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
     });
   });
 
