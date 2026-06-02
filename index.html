@@ -44,19 +44,24 @@
 <div class="calendar-wrap" id="calWrap">
   <div class="calendar-head">
     <button id="prev-month">&lt;</button>
-    <span id="calendar-title">2026-05-26~2026-06-25</span>
+    <span id="calendar-title"></span>
     <button id="next-month">&gt;</button>
   </div>
   <div class="calendar-week">
     <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
   </div>
-  <!-- 仅在原有日历外层包滑动盒子，内部代码完全不动 -->
-  <div class="slide-outer">
-    <div class="slide-inner" id="calSlide">
-      <!-- 原来的日历body原样不动 -->
-      <div id="calendar-body" class="calendar-body"></div>
+
+  <!-- 滑动容器 -->
+  <div class="calendar-slider">
+    <div class="calendar-slider-track" id="calTrack">
+      <div class="calendar-slide-page" id="calPagePrev"></div>
+      <div class="calendar-slide-page" id="calPageCur">
+        <div id="calendar-body" class="calendar-body"></div>
+      </div>
+      <div class="calendar-slide-page" id="calPageNext"></div>
     </div>
   </div>
+
 </div>
 
       <div class="form-box">
