@@ -625,37 +625,42 @@ function openCycleDetailPopup(cycleKey, records) {
   btnBox.appendChild(calcBtn);
   list.appendChild(btnBox);
 
-  records.forEach(item => {
-    const workDate = item.get('date') || '';
-    const createdTime = new Date(item.createdAt);
-    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
+records.forEach(item => {
+  const workDate = item.get('date') || '';
+  const createdTime = new Date(item.createdAt);
+  const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
 
-    const shift = item.get('shift') || '';
-    const sStart = item.get('shiftStart') || '';
-    const sEnd = item.get('shiftEnd') || '';
-    const sStart2 = item.get('shiftStart2') || '';
-    const sEnd2 = item.get('shiftEnd2') || '';
-    const money = parseFloat(item.get('money')) || 0;
-    const allow = parseFloat(item.get('allowance')) || 0;
-    const r = item.get('title') || '无';
+  const shift = item.get('shift') || '';
+  const sStart = item.get('shiftStart') || '';
+  const sEnd = item.get('shiftEnd') || '';
+  const sStart2 = item.get('shiftStart2') || '';
+  const sEnd2 = item.get('shiftEnd2') || '';
+  const meal = item.get('mealStart') || ''; // 新增：获取饭点时间
+  const money = parseFloat(item.get('money')) || 0;
+  const allow = parseFloat(item.get('allowance')) || 0;
+  const r = item.get('title') || '无';
 
-    let timeInfo = '';
-    if (shift === '拼班') {
-      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-      timeInfo = t1 + ' / ' + t2;
-    } else {
-      timeInfo = `${sStart}-${sEnd}`;
-    }
+  let timeInfo = '';
+  if (shift === '拼班') {
+    const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+    const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+    timeInfo = t1 + ' / ' + t2;
+  } else {
+    timeInfo = `${sStart}-${sEnd}`;
+  }
 
-    list.insertAdjacentHTML('beforeend', `
-      <div class="cycle-detail-item">
-        <span class="date-text">${timeStr}</span>
-        <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-        <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-      </div>
-    `);
-  });
+  // 拼接饭点行（有饭点才显示）
+  const mealLine = meal ? `<div class="info-line">饭点：${meal}开始（固定1小时）</div>` : '';
+
+  list.insertAdjacentHTML('beforeend', `
+    <div class="cycle-detail-item">
+      <span class="date-text">${timeStr}</span>
+      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+      ${mealLine}
+      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+    </div>
+  `);
+});
 
   cycleDetailOverlay.classList.add('show');
 }
@@ -734,54 +739,59 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   list.appendChild(btnBox);
 
   // 渲染带编辑删除的记录列表
-  records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
-    const workDate = item.get('date') || '';
-    const createdTime = new Date(item.createdAt);
-    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
+records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
+  const workDate = item.get('date') || '';
+  const createdTime = new Date(item.createdAt);
+  const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
 
-    const shift = item.get('shift') || '';
-    const sStart = item.get('shiftStart') || '';
-    const sEnd = item.get('shiftEnd') || '';
-    const sStart2 = item.get('shiftStart2') || '';
-    const sEnd2 = item.get('shiftEnd2') || '';
-    const money = parseFloat(item.get('money')) || 0;
-    const allow = parseFloat(item.get('allowance')) || 0;
-    const r = item.get('title') || '无';
-    const id = item.id;
+  const shift = item.get('shift') || '';
+  const sStart = item.get('shiftStart') || '';
+  const sEnd = item.get('shiftEnd') || '';
+  const sStart2 = item.get('shiftStart2') || '';
+  const sEnd2 = item.get('shiftEnd2') || '';
+  const meal = item.get('mealStart') || ''; // 新增：获取饭点时间
+  const money = parseFloat(item.get('money')) || 0;
+  const allow = parseFloat(item.get('allowance')) || 0;
+  const r = item.get('title') || '无';
+  const id = item.id;
 
-    let timeInfo = '';
-    if (shift === '拼班') {
-      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-      timeInfo = t1 + ' / ' + t2;
-    } else {
-      timeInfo = `${sStart}-${sEnd}`;
-    }
+  let timeInfo = '';
+  if (shift === '拼班') {
+    const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+    const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+    timeInfo = t1 + ' / ' + t2;
+  } else {
+    timeInfo = `${sStart}-${sEnd}`;
+  }
 
-    const itemEl = document.createElement('div');
-    itemEl.className = 'cycle-detail-item';
-    itemEl.innerHTML = `
-      <span class="date-text">${timeStr}</span>
-      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-      <div class="item-op" style="margin-top:8px;gap:8px;">
-        <button class="btn-sm btn-edit" 
-          data-id="${id}" 
-          data-date="${workDate}" 
-          data-shift="${shift}"
-          data-shiftStart="${sStart}" 
-          data-shiftEnd="${sEnd}"
-          data-shiftStart2="${sStart2}" 
-          data-shiftEnd2="${sEnd2}"
-          data-mealStart="${item.get('mealStart') || ''}"
-          data-allowance="${allow}"
-          data-money="${money}"
-          data-remark="${r}"
-        >编辑</button>
-        <button class="btn-sm btn-del" data-id="${id}">删除</button>
-      </div>
-    `;
-    list.appendChild(itemEl);
+  // 拼接饭点行（有饭点才显示）
+  const mealLine = meal ? `<div class="info-line">饭点：${meal}开始（固定1小时）</div>` : '';
+
+  const itemEl = document.createElement('div');
+  itemEl.className = 'cycle-detail-item';
+  itemEl.innerHTML = `
+    <span class="date-text">${timeStr}</span>
+    <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+    ${mealLine}
+    <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+    <div class="item-op" style="margin-top:8px;gap:8px;">
+      <button class="btn-sm btn-edit" 
+        data-id="${id}" 
+        data-date="${workDate}" 
+        data-shift="${shift}"
+        data-shiftStart="${sStart}" 
+        data-shiftEnd="${sEnd}"
+        data-shiftStart2="${sStart2}" 
+        data-shiftEnd2="${sEnd2}"
+        data-mealStart="${meal}"
+        data-allowance="${allow}"
+        data-money="${money}"
+        data-remark="${r}"
+      >编辑</button>
+      <button class="btn-sm btn-del" data-id="${id}">删除</button>
+    </div>
+  `;
+  list.appendChild(itemEl);
 
     // 绑定编辑按钮事件
     itemEl.querySelector('.btn-edit').addEventListener('click', function () {
