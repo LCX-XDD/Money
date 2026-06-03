@@ -650,7 +650,14 @@ records.forEach(item => {
   }
 
   // 拼接饭点行（有饭点才显示）
-  const mealLine = meal ? `<div class="info-line">饭点：${meal}开始（固定1小时）</div>` : '';
+    // 拼接饭点行（自动计算结束时间，显示完整时间段）
+  let mealLine = '';
+  if (meal) {
+    const [h, m] = meal.split(':').map(Number);
+    const endH = h + 1;
+    const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
+  }
 
   list.insertAdjacentHTML('beforeend', `
     <div class="cycle-detail-item">
@@ -765,7 +772,14 @@ records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach
   }
 
   // 拼接饭点行（有饭点才显示）
-  const mealLine = meal ? `<div class="info-line">饭点：${meal}开始（固定1小时）</div>` : '';
+   // 拼接饭点行（自动计算结束时间，显示完整时间段）
+  let mealLine = '';
+  if (meal) {
+    const [h, m] = meal.split(':').map(Number);
+    const endH = h + 1;
+    const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
+  }
 
   const itemEl = document.createElement('div');
   itemEl.className = 'cycle-detail-item';
