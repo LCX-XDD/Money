@@ -581,7 +581,7 @@ function openCycleDetailPopup(cycleKey, records) {
     let totalWage = 0;
     let workDays = 0;
 
-    records.forEach(item => {
+  records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
       const shift = item.get('shift') || '';
       if (shift === '休息') return;
 
