@@ -825,8 +825,6 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       const shiftSelect = document.getElementById('record-shift');
       if (dateInput) dateInput.value = this.dataset.date;
       if (shiftSelect) shiftSelect.value = this.dataset.shift;
-      // 手动触发change事件，显示对应时间行
-      shiftSelect.dispatchEvent(new Event('change'));
 
       const shiftStart = document.getElementById('shift-start');
       const shiftEnd = document.getElementById('shift-end');
@@ -847,6 +845,10 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       if (moneyInput) moneyInput.value = this.dataset.money;
       if (remarkInput) remarkInput.value = this.dataset.remark;
       if (editId) editId.value = this.dataset.id;
+      
+      // ✅ 正确顺序：先填充所有值，再触发change事件显示对应时间行
+      shiftSelect.dispatchEvent(new Event('change'));
+      
       selectedDate = this.dataset.date;
       renderSalaryCalendar();
 
