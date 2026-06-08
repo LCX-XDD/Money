@@ -315,6 +315,11 @@ function renderData(list) {
     cycleMap[cycleKey].push(item);
   });
 
+  // 🔴 核心修复：每个周期的记录提前按日期降序排序，所有地方共用
+  Object.values(cycleMap).forEach(records => {
+    records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
+  });
+
   // 渲染周期列表（和用户页样式一致）
   Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
     const records = cycleMap[cycleKey];
@@ -523,24 +528,29 @@ function renderTotalAndStat() {
     cycleMap[cycleKey].push(item);
   });
 
-cycleGroupList.innerHTML = '';
-// 按时间倒序排列，最新的周期在最上面（和管理员页一致）
-Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
-  const records = cycleMap[cycleKey];
-  const group = document.createElement('div');
-  group.className = 'cycle-group';
-  group.innerHTML = `
-    <div class="cycle-header" data-cycle="${cycleKey}">
-      <span>${cycleKey}</span>
-      <span class="arrow"></span>
-      <span style="color:#666;font-size:12px;">${records.length} 条记录</span>
-    </div>
-  `;
-  cycleGroupList.appendChild(group);
-  group.querySelector('.cycle-header').addEventListener('click', () => {
-    openCycleDetailPopup(cycleKey, records);
+  // 🔴 核心修复：每个周期的记录提前按日期降序排序，所有地方共用
+  Object.values(cycleMap).forEach(records => {
+    records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
   });
-});
+
+  cycleGroupList.innerHTML = '';
+  // 按时间倒序排列，最新的周期在最上面（和管理员页一致）
+  Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
+    const records = cycleMap[cycleKey];
+    const group = document.createElement('div');
+    group.className = 'cycle-group';
+    group.innerHTML = `
+      <div class="cycle-header" data-cycle="${cycleKey}">
+        <span>${cycleKey}</span>
+        <span class="arrow"></span>
+        <span style="color:#666;font-size:12px;">${records.length} 条记录</span>
+      </div>
+    `;
+    cycleGroupList.appendChild(group);
+    group.querySelector('.cycle-header').addEventListener('click', () => {
+      openCycleDetailPopup(cycleKey, records);
+    });
+  });
 
   totalWageNum.innerText = totalWage.toFixed(2);
   statWorkHours.innerText = totalWorkHours.toFixed(1);
@@ -581,7 +591,7 @@ function openCycleDetailPopup(cycleKey, records) {
     let totalWage = 0;
     let workDays = 0;
 
-  records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
+    records.forEach(item => {
       const shift = item.get('shift') || '';
       if (shift === '休息') return;
 
@@ -625,49 +635,48 @@ function openCycleDetailPopup(cycleKey, records) {
   btnBox.appendChild(calcBtn);
   list.appendChild(btnBox);
 
-records.forEach(item => {
-  const workDate = item.get('date') || '';
-  const createdTime = new Date(item.createdAt);
-  const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
+  records.forEach(item => {
+    const workDate = item.get('date') || '';
+    const createdTime = new Date(item.createdAt);
+    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
 
-  const shift = item.get('shift') || '';
-  const sStart = item.get('shiftStart') || '';
-  const sEnd = item.get('shiftEnd') || '';
-  const sStart2 = item.get('shiftStart2') || '';
-  const sEnd2 = item.get('shiftEnd2') || '';
-  const meal = item.get('mealStart') || ''; // 新增：获取饭点时间
-  const money = parseFloat(item.get('money')) || 0;
-  const allow = parseFloat(item.get('allowance')) || 0;
-  const r = item.get('title') || '无';
+    const shift = item.get('shift') || '';
+    const sStart = item.get('shiftStart') || '';
+    const sEnd = item.get('shiftEnd') || '';
+    const sStart2 = item.get('shiftStart2') || '';
+    const sEnd2 = item.get('shiftEnd2') || '';
+    const meal = item.get('mealStart') || '';
+    const money = parseFloat(item.get('money')) || 0;
+    const allow = parseFloat(item.get('allowance')) || 0;
+    const r = item.get('title') || '无';
 
-  let timeInfo = '';
-  if (shift === '拼班') {
-    const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-    const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-    timeInfo = t1 + ' / ' + t2;
-  } else {
-    timeInfo = `${sStart}-${sEnd}`;
-  }
+    let timeInfo = '';
+    if (shift === '拼班') {
+      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = t1 + ' / ' + t2;
+    } else {
+      timeInfo = `${sStart}-${sEnd}`;
+    }
 
-  // 拼接饭点行（有饭点才显示）
     // 拼接饭点行（自动计算结束时间，显示完整时间段）
-  let mealLine = '';
-  if (meal) {
-    const [h, m] = meal.split(':').map(Number);
-    const endH = h + 1;
-    const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
-  }
+    let mealLine = '';
+    if (meal) {
+      const [h, m] = meal.split(':').map(Number);
+      const endH = h + 1;
+      const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
+    }
 
-  list.insertAdjacentHTML('beforeend', `
-    <div class="cycle-detail-item">
-      <span class="date-text">${timeStr}</span>
-      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-      ${mealLine}
-      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-    </div>
-  `);
-});
+    list.insertAdjacentHTML('beforeend', `
+      <div class="cycle-detail-item">
+        <span class="date-text">${timeStr}</span>
+        <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+        ${mealLine}
+        <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+      </div>
+    `);
+  });
 
   cycleDetailOverlay.classList.add('show');
 }
@@ -746,66 +755,65 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   list.appendChild(btnBox);
 
   // 渲染带编辑删除的记录列表
-records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach(item => {
-  const workDate = item.get('date') || '';
-  const createdTime = new Date(item.createdAt);
-  const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
+  records.forEach(item => {
+    const workDate = item.get('date') || '';
+    const createdTime = new Date(item.createdAt);
+    const timeStr = `${workDate} ${String(createdTime.getHours()).padStart(2, '0')}:${String(createdTime.getMinutes()).padStart(2, '0')}:${String(createdTime.getSeconds()).padStart(2, '0')}`;
 
-  const shift = item.get('shift') || '';
-  const sStart = item.get('shiftStart') || '';
-  const sEnd = item.get('shiftEnd') || '';
-  const sStart2 = item.get('shiftStart2') || '';
-  const sEnd2 = item.get('shiftEnd2') || '';
-  const meal = item.get('mealStart') || ''; // 新增：获取饭点时间
-  const money = parseFloat(item.get('money')) || 0;
-  const allow = parseFloat(item.get('allowance')) || 0;
-  const r = item.get('title') || '无';
-  const id = item.id;
+    const shift = item.get('shift') || '';
+    const sStart = item.get('shiftStart') || '';
+    const sEnd = item.get('shiftEnd') || '';
+    const sStart2 = item.get('shiftStart2') || '';
+    const sEnd2 = item.get('shiftEnd2') || '';
+    const meal = item.get('mealStart') || '';
+    const money = parseFloat(item.get('money')) || 0;
+    const allow = parseFloat(item.get('allowance')) || 0;
+    const r = item.get('title') || '无';
+    const id = item.id;
 
-  let timeInfo = '';
-  if (shift === '拼班') {
-    const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
-    const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
-    timeInfo = t1 + ' / ' + t2;
-  } else {
-    timeInfo = `${sStart}-${sEnd}`;
-  }
+    let timeInfo = '';
+    if (shift === '拼班') {
+      const t1 = (sStart && sEnd) ? `${sStart}-${sEnd}` : '未设置';
+      const t2 = (sStart2 && sEnd2) ? `${sStart2}-${sEnd2}` : '未设置';
+      timeInfo = t1 + ' / ' + t2;
+    } else {
+      timeInfo = `${sStart}-${sEnd}`;
+    }
 
-  // 拼接饭点行（有饭点才显示）
-   // 拼接饭点行（自动计算结束时间，显示完整时间段）
-  let mealLine = '';
-  if (meal) {
-    const [h, m] = meal.split(':').map(Number);
-    const endH = h + 1;
-    const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
-  }
+    // 拼接饭点行（自动计算结束时间，显示完整时间段）
+    let mealLine = '';
+    if (meal) {
+      const [h, m] = meal.split(':').map(Number);
+      const endH = h + 1;
+      const endMeal = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
+    }
 
-  const itemEl = document.createElement('div');
-  itemEl.className = 'cycle-detail-item';
-  itemEl.innerHTML = `
-    <span class="date-text">${timeStr}</span>
-    <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-    ${mealLine}
-    <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-    <div class="item-op" style="margin-top:8px;gap:8px;">
-      <button class="btn-sm btn-edit" 
-        data-id="${id}" 
-        data-date="${workDate}" 
-        data-shift="${shift}"
-        data-shiftStart="${sStart}" 
-        data-shiftEnd="${sEnd}"
-        data-shiftStart2="${sStart2}" 
-        data-shiftEnd2="${sEnd2}"
-        data-mealStart="${meal}"
-        data-allowance="${allow}"
-        data-money="${money}"
-        data-remark="${r}"
-      >编辑</button>
-      <button class="btn-sm btn-del" data-id="${id}">删除</button>
-    </div>
-  `;
-  list.appendChild(itemEl);
+    const itemEl = document.createElement('div');
+    itemEl.className = 'cycle-detail-item';
+    itemEl.innerHTML = `
+      <span class="date-text">${timeStr}</span>
+      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+      ${mealLine}
+      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+      <div class="item-op" style="margin-top:8px;gap:8px;">
+        <button class="btn-sm btn-edit" 
+          data-id="${id}" 
+          data-date="${workDate}" 
+          data-shift="${shift}"
+          data-shiftStart="${sStart}" 
+          data-shiftEnd="${sEnd}"
+          data-shiftStart2="${sStart2}" 
+          data-shiftEnd2="${sEnd2}"
+          data-mealStart="${meal}"
+          data-allowance="${allow}"
+          data-money="${money}"
+          data-remark="${r}"
+        >编辑</button>
+        <button class="btn-sm btn-del" data-id="${id}">删除</button>
+      </div>
+    `;
+    list.appendChild(itemEl);
 
     // 绑定编辑按钮事件
     itemEl.querySelector('.btn-edit').addEventListener('click', function () {
@@ -817,6 +825,8 @@ records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date'))).forEach
       const shiftSelect = document.getElementById('record-shift');
       if (dateInput) dateInput.value = this.dataset.date;
       if (shiftSelect) shiftSelect.value = this.dataset.shift;
+      // 手动触发change事件，显示对应时间行
+      shiftSelect.dispatchEvent(new Event('change'));
 
       const shiftStart = document.getElementById('shift-start');
       const shiftEnd = document.getElementById('shift-end');
@@ -964,26 +974,32 @@ document.addEventListener('DOMContentLoaded', function () {
       if (shift !== '休息' && (isNaN(money) || money <= 0)) { showToast('工时或工资异常', 'error'); return; }
 
       try {
-  const bill = editIdVal ? AV.Object.createWithoutData('Bill', editIdVal) : new Bill();
-  bill.set('date', d);
-  bill.set('shift', shift);
-  bill.set('shiftStart', sStart);
-  bill.set('shiftEnd', sEnd);
-  bill.set('shiftStart2', sStart2);
-  bill.set('shiftEnd2', sEnd2);   // ✅ 修复这里！
-  bill.set('mealStart', mStart);
-  bill.set('allowance', allowance);
-  bill.set('money', money);
-  bill.set('title', r);
-  bill.set('type', 'income');
-  await bill.save();
-  clearForm();
-  loadData();
-  showToast('保存成功', 'success');
-} catch (e) {
-  showToast('保存失败', 'error');
-  console.error(e);
-}
+        const bill = editIdVal ? AV.Object.createWithoutData('Bill', editIdVal) : new Bill();
+        bill.set('date', d);
+        bill.set('shift', shift);
+        bill.set('shiftStart', sStart);
+        bill.set('shiftEnd', sEnd);
+        bill.set('shiftStart2', sStart2);
+        bill.set('shiftEnd2', sEnd2);
+        bill.set('mealStart', mStart);
+        bill.set('allowance', allowance);
+        bill.set('money', money);
+        bill.set('title', r);
+        bill.set('type', 'income');
+        await bill.save();
+        clearForm();
+        loadData();
+        showToast('保存成功', 'success');
+
+        // 🔴 新增：保存后自动重置表单到初始状态
+        if (shiftSelect) {
+          shiftSelect.value = '';
+          shiftSelect.dispatchEvent(new Event('change'));
+        }
+      } catch (e) {
+        showToast('保存失败', 'error');
+        console.error(e);
+      }
     });
   }
 
