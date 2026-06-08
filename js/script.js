@@ -820,12 +820,9 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       // 关闭弹窗
       cycleDetailOverlay.classList.remove('show');
       
-      // 填充表单
+      // 1. 获取所有DOM元素
       const dateInput = document.getElementById('record-date');
       const shiftSelect = document.getElementById('record-shift');
-      if (dateInput) dateInput.value = this.dataset.date;
-      if (shiftSelect) shiftSelect.value = this.dataset.shift;
-
       const shiftStart = document.getElementById('shift-start');
       const shiftEnd = document.getElementById('shift-end');
       const shiftStart2 = document.getElementById('shift-start2');
@@ -836,29 +833,38 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       const remarkInput = document.getElementById('record-remark');
       const editId = document.getElementById('edit-id');
 
+      // 2. 先填充日期和班次
+      if (dateInput) dateInput.value = this.dataset.date;
+      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+
+      // 3. 触发班次change事件，显示对应时间行
+      shiftSelect.dispatchEvent(new Event('change'));
+
+      // 4. 填充第一段上班时间 → 触发change生成下班和饭点选项 → 再填充下班和饭点
       if (shiftStart) shiftStart.value = this.dataset.shiftStart;
+      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
       if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
       if (mealStart) mealStart.value = this.dataset.mealStart;
+
+      // 5. 填充第二段上班时间 → 触发change生成第二段下班选项 → 再填充第二段下班
+      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
+      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
+
+      // 6. 填充其他字段
       if (allowanceInput) allowanceInput.value = this.dataset.allowance;
       if (moneyInput) moneyInput.value = this.dataset.money;
       if (remarkInput) remarkInput.value = this.dataset.remark;
       if (editId) editId.value = this.dataset.id;
       
-      // ✅ 正确顺序：先填充所有值，再触发change事件显示对应时间行
-      shiftSelect.dispatchEvent(new Event('change'));
-      // ✅ 手动触发上班时间的change事件，生成下班时间下拉选项
-      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
-      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
-      // ✅ 重新计算并显示有效工时
+      // 7. 计算并显示有效工时
       calcWorkHours();
 
-      
+      // 8. 更新选中日期和日历
       selectedDate = this.dataset.date;
       renderSalaryCalendar();
 
-      // 自动回顶+提示
+      // 9. 自动回顶+显示编辑提示
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
     });
