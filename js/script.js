@@ -848,6 +848,12 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       
       // ✅ 正确顺序：先填充所有值，再触发change事件显示对应时间行
       shiftSelect.dispatchEvent(new Event('change'));
+      // ✅ 手动触发上班时间的change事件，生成下班时间下拉选项
+      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
+      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+      // ✅ 重新计算并显示有效工时
+      calcWorkHours();
+
       
       selectedDate = this.dataset.date;
       renderSalaryCalendar();
