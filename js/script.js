@@ -871,6 +871,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
       }, 100);
+    });
 
     // 绑定删除按钮事件
     itemEl.querySelector('.btn-del').addEventListener('click', async () => {
