@@ -243,6 +243,8 @@ function initTimeSelect() {
   });
 
   mealStart.addEventListener('change', calcWorkHours);
+    // ✅ 新增：把工时计算函数暴露到全局，让编辑按钮可以调用
+  window.calcWorkHours = calcWorkHours;
 }
 
 // 防重复请求 + 自动重试，解决首次打开加载失败
@@ -858,16 +860,17 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       if (editId) editId.value = this.dataset.id;
       
       // 7. 计算并显示有效工时
-      calcWorkHours();
+      window.calcWorkHours();
 
       // 8. 更新选中日期和日历
       selectedDate = this.dataset.date;
       renderSalaryCalendar();
 
-      // 9. 自动回顶+显示编辑提示
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
-    });
+      // 9. 延迟100ms执行回顶和提示，确保所有DOM操作完成
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
+      }, 100);
 
     // 绑定删除按钮事件
     itemEl.querySelector('.btn-del').addEventListener('click', async () => {
