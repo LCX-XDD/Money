@@ -275,6 +275,8 @@ async function loadData(retryCount = 0) {
   try {
     const query = new AV.Query(Bill);
     query.descending('createdAt');
+    // ✅ 新增：把查询数量从默认100条增加到1000条
+    query.limit(1000);
     const res = await query.find();
     
     allBillList = res;
