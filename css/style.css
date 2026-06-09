@@ -1,3 +1,58 @@
+/* 全局主题变量（浅色模式默认） */
+:root {
+  --bg-primary: #f7f8fa;
+  --bg-card: #ffffff;
+  --bg-secondary: #fafbfc;
+  --bg-tertiary: #f5f7fa;
+  --text-primary: #222222;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-faint: #999999;
+  --border-color: #e0e0e0;
+  --border-light: #f0f0f0;
+  --primary-color: #409eff;
+  --primary-light: #e3f2fd;
+  --success-color: #00c851;
+  --success-light: #e8f5e9;
+  --danger-color: #f56c6c;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色模式自动跟随系统 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #121212;
+    --bg-card: #1e1e1e;
+    --bg-secondary: #252525;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #909090;
+    --text-faint: #707070;
+    --border-color: #404040;
+    --border-light: #303030;
+    --primary-color: #60a5fa;
+    --primary-light: #1e3a5f;
+    --success-color: #86efac;
+    --success-light: #2e7d32;
+    --danger-color: #fca5a5;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-modal: 0 8px 25px rgba(0, 0, 0, 0.4);
+  }
+
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .toast {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+  }
+  .calendar-day.selected .shift-tag {
+    color: #ffffff !important;
+  }
+}
+
 /* 全局基础 + 防双击放大 */
 * {
   margin: 0;
@@ -14,50 +69,52 @@ html, body {
 }
 
 body {
-  background: #f7f8fa;
+  background: var(--bg-primary);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 10px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .white-window {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 16px;
   max-width: 600px;
   width: 100%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow);
   overflow: hidden;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* 主页面文字 */
 .title {
   text-align: center;
   font-size: 24px;
-  color: #222;
+  color: var(--text-primary);
   margin-bottom: 20px;
   font-weight: bold;
 }
 
 .cycle-text {
   font-size: 16px;
-  color: #666;
+  color: var(--text-muted);
   margin-bottom: 14px;
   text-align: center;
 }
 
 .total-wage-line {
   font-size: 22px;
-  color: #333;
+  color: var(--text-secondary);
   margin-bottom: 22px;
   font-weight: 500;
   text-align: center;
 }
 
 .total-wage-line span {
-  color: #00c851;
+  color: var(--success-color);
   font-weight: bold;
   font-size: 26px;
 }
@@ -65,7 +122,7 @@ body {
 .sub-title {
   font-size: 17px;
   margin: 20px 0 12px;
-  color: #333;
+  color: var(--text-secondary);
 }
 
 .hidden {
@@ -77,35 +134,37 @@ body {
   text-align: center;
   margin-top: 10px;
   padding: 20px;
-  background: #fcfcfc;
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-light);
   position: relative;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .btn-detail {
   padding: 14px 28px;
   font-size: 16px;
-  background: #409eff;
+  background: var(--primary-color);
   color: #fff;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: filter 0.2s;
   font-weight: 500;
 }
 
 .btn-detail:hover {
-  background: #338ee5;
+  filter: brightness(0.9);
 }
 
 /* 日历样式（日期上显示班次） */
 .calendar-wrap {
-  background: #fafbfc;
+  background: var(--bg-secondary);
   padding: 8px;
   border-radius: 12px;
   margin-bottom: 16px;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .calendar-head {
@@ -121,11 +180,16 @@ body {
   height: 32px;
   border-radius: 6px;
   border: none;
-  background: #409eff;
+  background: var(--primary-color);
   color: white;
   font-size: 14px;
   cursor: pointer;
   flex-shrink: 0;
+  transition: filter 0.2s;
+}
+
+.calendar-head button:hover {
+  filter: brightness(0.9);
 }
 
 #calendar-title {
@@ -134,18 +198,18 @@ body {
   white-space: nowrap;
   overflow: hidden;
   font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .calendar-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  color: #888;
+  color: var(--text-muted);
   font-weight: bold;
   margin-bottom:4px;
   font-size: 11px;
 }
-
 
 .calendar-body {
   display: grid;
@@ -163,62 +227,72 @@ body {
   justify-content: center;
   border-radius: 6px;
   cursor: pointer;
-  background: #f1f3f5;
+  background: var(--bg-tertiary);
   font-weight: 500;
   padding: 1px;
   position: relative;
   font-size: 12px;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .calendar-day .shift-tag {
   font-size: 8px;
-  color: #8b939f;
+  color: var(--text-muted);
   margin-top: 1px;
 }
 
 .calendar-day.has-record {
-  background: #e3f2fd !important;
-  color: #1976d2 !important;
+  background: var(--primary-light) !important;
+  color: var(--primary-color) !important;
 }
 
 .calendar-day.other {
-  color: #ccc;
-  background: #fafafa;
+  color: var(--text-faint);
+  background: var(--bg-secondary);
 }
 
 /* 休息日期浅绿色标记 */
 .calendar-day.rest {
-  background: #e8f5e9 !important;
-  color: #2e7d32 !important;
+  background: var(--success-light) !important;
+  color: var(--success-color) !important;
 }
 
 .calendar-day.rest .shift-tag {
-  color: #43a047 !important;
+  color: var(--success-color) !important;
 }
+
 .calendar-day.selected {
-  background: #409eff !important;
+  background: var(--primary-color) !important;
   color: #fff !important;
 }
-
-
 
 /* 表单 */
 .form-box {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: #fafbfc;
+  background: var(--bg-secondary);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .form-input {
   height: 42px;
   padding: 0 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .time-row {
@@ -230,34 +304,45 @@ body {
 .time-row label {
   width: 90px;
   font-size: 13px;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .time-select {
   flex: 1;
   height: 42px;
   padding: 0 10px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  background: #fff;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.time-select:focus {
+  border-color: var(--primary-color);
 }
 
 .time-tip {
-  color: #666;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .btn-primary {
   height: 44px;
-  background: #00c851;
+  background: var(--success-color);
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 15px;
   cursor: pointer;
   font-weight: 500;
+  transition: filter 0.2s;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.9);
 }
 
 .btn-back {
@@ -268,11 +353,16 @@ body {
 .btn-back button {
   padding: 8px 18px;
   border-radius: 8px;
-  background: #909399;
+  background: var(--text-muted);
   color: #fff;
   border: none;
   cursor: pointer;
   font-size: 14px;
+  transition: filter 0.2s;
+}
+
+.btn-back button:hover {
+  filter: brightness(0.9);
 }
 
 /* 列表 */
@@ -284,19 +374,21 @@ body {
 
 .item {
   padding: 14px;
-  background: #fafbfc;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border-left: 4px solid #409eff;
+  border-left: 4px solid var(--primary-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .item-date {
   font-weight: bold;
   font-size: 14px;
   margin-bottom: 6px;
+  color: var(--text-primary);
 }
 
 .item-money {
-  color: #00c851;
+  color: var(--success-color);
   font-weight: bold;
   margin: 6px 0;
   font-size: 14px;
@@ -315,23 +407,33 @@ body {
   color: white;
   cursor: pointer;
   font-size: 12px;
+  transition: filter 0.2s;
+}
+
+.btn-sm:hover {
+  filter: brightness(0.9);
 }
 
 .btn-edit {
-  background: #409eff;
+  background: var(--primary-color);
 }
 
 .btn-del {
-  background: #f56c6c;
+  background: var(--danger-color);
 }
 
 /* 管理员入口 */
 .admin-entrance {
   text-align: center;
-  color: #999;
+  color: var(--text-faint);
   margin-top: 16px;
   cursor: pointer;
   font-size: 12px;
+  transition: color 0.2s;
+}
+
+.admin-entrance:hover {
+  color: var(--text-muted);
 }
 
 /* 全局轻量弹窗 + 修复动画 */
@@ -357,14 +459,14 @@ body {
 }
 
 .modal-box {
-  background: #fff;
+  background: var(--bg-card);
   width: 90%;
   max-width: 380px;
   padding: 20px;
   border-radius: 14px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-modal);
   transform: translateY(10px) scale(0.95);
-  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .modal-overlay.show .modal-box {
@@ -374,7 +476,7 @@ body {
 .modal-title {
   text-align: center;
   font-size: 17px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 16px;
   font-weight: 600;
 }
@@ -383,11 +485,18 @@ body {
 .modal-input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid #e5e6eb;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   margin-bottom: 16px;
   outline: none;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.modal-input:focus {
+  border-color: var(--primary-color);
 }
 
 .modal-btn-group {
@@ -402,15 +511,20 @@ body {
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.modal-btn:hover {
+  filter: brightness(0.9);
 }
 
 .modal-btn.cancel {
-  background: #f5f7fa;
-  color: #666;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
 }
 
 .modal-btn.confirm {
-  background: #409eff;
+  background: var(--primary-color);
   color: #fff;
 }
 
@@ -418,11 +532,11 @@ body {
 .detail-item {
   font-size: 14px;
   line-height: 2;
-  color: #333;
+  color: var(--text-secondary);
 }
 
 .detail-item span {
-  color: #409eff;
+  color: var(--primary-color);
   font-weight: bold;
 }
 
@@ -431,23 +545,30 @@ body {
   margin: 8px 0;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-light);
+  transition: border-color 0.3s ease;
 }
 
 .cycle-header {
-  background: #f5f7fa;
+  background: var(--bg-tertiary);
   padding: 10px;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: var(--text-secondary);
+  transition: background-color 0.3s ease;
+}
+
+.cycle-header:hover {
+  background: var(--border-light);
 }
 
 /* 周期明细子弹窗 */
 #cycle-detail-overlay .modal-box {
-  border-top: 4px solid #409eff;
-  background: #f8fbff;
+  border-top: 4px solid var(--primary-color);
+  background: var(--bg-secondary);
   max-width: 420px;
 }
 
@@ -461,33 +582,34 @@ body {
 }
 
 .cycle-detail-item {
-  background: #f0f7ff;
+  background: var(--primary-light);
   border-radius: 8px;
   padding: 10px;
-  border-left: 4px solid #409eff;
+  border-left: 4px solid var(--primary-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .cycle-detail-item .date-text {
   font-size: 14px;
   font-weight: 700;
-  color: #2377d9;
+  color: var(--primary-color);
   display: block;
   margin-bottom: 6px;
 }
 
 .cycle-detail-item .info-line {
   font-size: 13px;
-  color: #444;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .cycle-detail-item .money {
-  color: #00c851;
+  color: var(--success-color);
   font-weight: 500;
 }
 
 #cycle-detail-close {
-  background-color: #409eff !important;
+  background-color: var(--primary-color) !important;
 }
 
 /* Toast 轻提示 */
@@ -517,8 +639,8 @@ body {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid #e0e0e0;
-  border-top-color: #409eff;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -533,15 +655,18 @@ body {
   top:10px;
   right:10px;
   font-size:12px;
-  color:#999;
+  color: var(--text-faint);
   background:transparent;
   border:none;
   cursor:pointer;
   padding:2px 6px;
+  transition: color 0.2s;
 }
+
 .refresh-btn:hover {
-  color:#666;
+  color: var(--text-muted);
 }
+
 /* 🔴 强制选中状态下所有班次标签都变成白色，优先级最高 */
 .calendar-day.selected .shift-tag {
   color: #fff !important;
