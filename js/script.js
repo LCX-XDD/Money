@@ -12,7 +12,7 @@ if (!AV.applicationId) {
 }
 
 const Bill = AV.Object.extend('Bill');
-const HOURLY_WAGE = 2700 / 208; // 基础时薪公式
+const HOURLY_WAGE = 2900 / 208; // 基础时薪公式
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
