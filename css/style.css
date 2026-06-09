@@ -540,6 +540,11 @@ body {
   font-weight: bold;
 }
 
+/* ✅ 修复：周期记录明细标题颜色跟随主题 */
+.detail-list-title {
+  color: var(--text-primary);
+}
+
 /* 周期分组 */
 .cycle-group {
   margin: 8px 0;
