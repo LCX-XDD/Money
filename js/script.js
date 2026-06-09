@@ -12,7 +12,17 @@ if (!AV.applicationId) {
 }
 
 const Bill = AV.Object.extend('Bill');
-const HOURLY_WAGE = 2900 / 208; // 基础时薪公式
+
+// ✅ 分阶段底薪自动计算（核心修改）
+function getBaseWageByDate(dateStr) {
+  const date = new Date(dateStr);
+  // 2026-06-01 及以后 = 2900底薪
+  if (date >= new Date('2026-06-01')) {
+    return 2900 / 208;
+  }
+  // 2026-06-01 以前 = 2700底薪
+  return 2700 / 208;
+}
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -51,8 +61,9 @@ function initTimeSelect() {
   const workHoursTip = document.getElementById('work-hours-tip');
   const moneyInput = document.getElementById('record-money');
   const allowanceInput = document.getElementById('record-allowance');
+  const dateInput = document.getElementById('record-date');
 
-  if (!shiftSelect || !shiftStart || !shiftEnd || !shiftStart2 || !shiftEnd2 || !mealStart || !workHoursTip || !moneyInput || !allowanceInput) return;
+  if (!shiftSelect || !shiftStart || !shiftEnd || !shiftStart2 || !shiftEnd2 || !mealStart || !workHoursTip || !moneyInput || !allowanceInput || !dateInput) return;
 
   const allHours = [];
   for (let i = 0; i < 24; i++) allHours.push(`${String(i).padStart(2, '0')}:00`);
@@ -129,6 +140,9 @@ function initTimeSelect() {
 
     workHoursTip.textContent = `有效工时：${totalHour} 小时`;
 
+    // ✅ 根据选中的日期自动计算当日时薪
+    const currentDate = dateInput.value || formatDate(new Date());
+    const HOURLY_WAGE = getBaseWageByDate(currentDate);
     const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
     moneyInput.value = dailyWage.toFixed(2);
   }
@@ -243,7 +257,7 @@ function initTimeSelect() {
   });
 
   mealStart.addEventListener('change', calcWorkHours);
-    // ✅ 新增：把工时计算函数暴露到全局，让编辑按钮可以调用
+  // 把工时计算函数暴露到全局，让编辑按钮可以调用
   window.calcWorkHours = calcWorkHours;
 }
 
@@ -317,7 +331,7 @@ function renderData(list) {
     cycleMap[cycleKey].push(item);
   });
 
-  // 🔴 核心修复：每个周期的记录提前按日期降序排序，所有地方共用
+  // 每个周期的记录提前按日期降序排序，所有地方共用
   Object.values(cycleMap).forEach(records => {
     records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
   });
@@ -504,6 +518,8 @@ function renderTotalAndStat() {
     if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
     totalWorkHours += h;
 
+    // ✅ 根据日期自动计算当日时薪
+    const HOURLY_WAGE = getBaseWageByDate(dateStr);
     const wage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
     totalWage += Math.round((wage + allow) * 1000) / 1000;
 
@@ -530,7 +546,7 @@ function renderTotalAndStat() {
     cycleMap[cycleKey].push(item);
   });
 
-  // 🔴 核心修复：每个周期的记录提前按日期降序排序，所有地方共用
+  // 每个周期的记录提前按日期降序排序，所有地方共用
   Object.values(cycleMap).forEach(records => {
     records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
   });
@@ -616,6 +632,8 @@ function openCycleDetailPopup(cycleKey, records) {
       if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
       totalHours += h;
 
+      // ✅ 根据日期自动计算当日时薪
+      const HOURLY_WAGE = getBaseWageByDate(item.get('date'));
       const dayWage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
       totalBase += dayWage;
       totalWage += Math.round((dayWage + allow) * 1000) / 1000;
@@ -735,6 +753,8 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
       totalHours += h;
 
+      // ✅ 根据日期自动计算当日时薪
+      const HOURLY_WAGE = getBaseWageByDate(item.get('date'));
       const dayWage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
       totalBase += dayWage;
       totalWage += Math.round((dayWage + allow) * 1000) / 1000;
@@ -1009,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loadData();
         showToast('保存成功', 'success');
 
-        // 🔴 新增：保存后自动重置表单到初始状态
+        // 保存后自动重置表单到初始状态
         if (shiftSelect) {
           shiftSelect.value = '';
           shiftSelect.dispatchEvent(new Event('change'));
