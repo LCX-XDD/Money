@@ -1281,6 +1281,7 @@ backUserBtn.addEventListener('click', function (e) {
 // ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
 // ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
 // 刷新按钮
+// 刷新按钮
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1315,15 +1316,3 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
 });
-  ]);
-
-  // 数据加载完成且动画结束后，立即渲染并显示Toast
-  if (data) {
-    renderData(data);
-    renderUserCalendar();
-    renderAdminCalendar();
-    renderTotalAndStat();
-  }
-  
-  showToast('数据刷新成功','success');
-})
