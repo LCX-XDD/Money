@@ -284,6 +284,7 @@ function initTimeSelect() {
 
 // 防重复请求 + 自动重试
 // ✅ 优化后的加载函数：支持手动控制动画停止
+// 防重复请求 + 自动重试
 let isLoading = false;
 async function loadData(retryCount = 0, autoRender = true, showLoading = true, autoStopLoading = true) {
   if (isLoading) return;
@@ -292,7 +293,6 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
   const wageBox = document.querySelector('.total-wage-box');
   const refreshBtn = document.getElementById('refresh-data-btn');
 
-  // 只有需要时才显示加载动画
   if (showLoading && wageBox) {
     wageBox.classList.add('loading');
     if (refreshBtn) refreshBtn.classList.add('spinning');
@@ -325,7 +325,6 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
     showToast('数据加载失败，请刷新', 'error');
   } finally {
     isLoading = false;
-    // ✅ 只有自动模式才停止动画，手动刷新由按钮自己控制
     if (autoStopLoading) {
       if (wageBox) wageBox.classList.remove('loading');
       if (refreshBtn) refreshBtn.classList.remove('spinning');
@@ -1014,8 +1013,7 @@ const todayStr = formatDate(now);
 selectedDate = todayStr;
 
 if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
-  // ✅ 进入管理员页面时添加顶部对齐类
-  document.body.classList.add('admin-active');
+  document.body.classList.add('admin-active'); // 管理员页顶部对齐
   userView.classList.add('hidden');
   adminView.classList.remove('hidden');
   adminEntrance.classList.add('hidden');
@@ -1023,8 +1021,7 @@ if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
   if (dateInput) dateInput.value = todayStr;
   loadData();
 } else {
-  // ✅ 用户页面保持垂直居中
-  document.body.classList.remove('admin-active');
+  document.body.classList.remove('admin-active'); // 用户页垂直居中
   loadData().then(() => {
     renderUserCalendar();
   });
@@ -1283,6 +1280,7 @@ backUserBtn.addEventListener('click', function (e) {
 
 // ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
 // ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
+// 刷新按钮
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1291,12 +1289,12 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   if (this.classList.contains('spinning') || isLoading) return;
 
   const startTime = Date.now();
-  const minAnimationDuration = 1000; // 保证动画至少播放1秒
+  const minAnimationDuration = 1000;
 
   // 加载数据（不自动停止动画）
   const data = await loadData(0, false, true, false);
   
-  // ✅ 数据一加载完就立即渲染并显示Toast，无任何延迟
+  // 数据加载完成立即渲染并显示Toast
   if (data) {
     renderData(data);
     renderUserCalendar();
@@ -1305,18 +1303,18 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   }
   showToast('数据刷新成功','success');
 
-  // ✅ 单独等待动画时长，不阻塞Toast显示
+  // 单独等待动画时长
   const elapsed = Date.now() - startTime;
   if (elapsed < minAnimationDuration) {
     await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
   }
 
-  // 动画结束后再停止加载状态
+  // 动画结束后停止加载状态
   const wageBox = document.querySelector('.total-wage-box');
   const refreshBtn = document.getElementById('refresh-data-btn');
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
-})
+});
   ]);
 
   // 数据加载完成且动画结束后，立即渲染并显示Toast
