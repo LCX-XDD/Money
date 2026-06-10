@@ -918,56 +918,63 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     `;
     list.appendChild(itemEl);
 
-    itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
+itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-      cycleDetailOverlay.classList.remove('show');
-      enableBodyScroll();
-      
-      const dateInput = document.getElementById('record-date');
-      const shiftSelect = document.getElementById('record-shift');
-      const shiftStart = document.getElementById('shift-start');
-      const shiftEnd = document.getElementById('shift-end');
-      const shiftStart2 = document.getElementById('shift-start2');
-      const shiftEnd2 = document.getElementById('shift-end2');
-      const mealStart = document.getElementById('meal-start');
-      const allowanceInput = document.getElementById('record-allowance');
-      const moneyInput = document.getElementById('record-money');
-      const remarkInput = document.getElementById('record-remark');
-      const editId = document.getElementById('edit-id');
+  cycleDetailOverlay.classList.remove('show');
+  enableBodyScroll();
+  
+  const dateInput = document.getElementById('record-date');
+  const shiftSelect = document.getElementById('record-shift');
+  const shiftStart = document.getElementById('shift-start');
+  const shiftEnd = document.getElementById('shift-end');
+  const shiftStart2 = document.getElementById('shift-start2');
+  const shiftEnd2 = document.getElementById('shift-end2');
+  const mealStart = document.getElementById('meal-start');
+  const allowanceInput = document.getElementById('record-allowance');
+  const moneyInput = document.getElementById('record-money');
+  const remarkInput = document.getElementById('record-remark');
+  const editId = document.getElementById('edit-id');
 
-      if (dateInput) dateInput.value = this.dataset.date;
-      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+  if (dateInput) dateInput.value = this.dataset.date;
+  if (shiftSelect) shiftSelect.value = this.dataset.shift;
 
-      shiftSelect.dispatchEvent(new Event('change'));
+  shiftSelect.dispatchEvent(new Event('change'));
 
-      if (shiftStart) shiftStart.value = this.dataset.shiftStart;
-      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
-      if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-      if (mealStart) mealStart.value = this.dataset.mealStart;
+  if (shiftStart) shiftStart.value = this.dataset.shiftStart;
+  if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
+  if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
+  if (mealStart) mealStart.value = this.dataset.mealStart;
 
-      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
-      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
+  if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
+  if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+  if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
 
-      if (allowanceInput) allowanceInput.value = this.dataset.allowance;
-      if (moneyInput) moneyInput.value = this.dataset.money;
-      if (remarkInput) remarkInput.value = this.dataset.remark;
-      if (editId) editId.value = this.dataset.id;
-      
-      window.calcWorkHours();
+  if (allowanceInput) allowanceInput.value = this.dataset.allowance;
+  if (moneyInput) moneyInput.value = this.dataset.money;
+  if (remarkInput) remarkInput.value = this.dataset.remark;
+  if (editId) editId.value = this.dataset.id;
+  
+  window.calcWorkHours();
 
-      selectedDate = this.dataset.date;
-      renderUserCalendar();
-      renderAdminCalendar();
+  selectedDate = this.dataset.date;
+  renderUserCalendar();
+  renderAdminCalendar();
 
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
-      }, 100);
-    });
+  setTimeout(() => {
+    // ✅ 修改：自动滚动到班次选择框（正好显示所有时间输入区域）
+    const formTarget = document.getElementById('record-shift');
+    if (formTarget) {
+      formTarget.scrollIntoView({
+        behavior: 'smooth', // 保持平滑滚动
+        block: 'start' // 元素顶部对齐视口顶部
+      });
+    }
+    showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
+  }, 100);
+});
 
     itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
       e.stopPropagation();
