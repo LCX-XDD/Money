@@ -1,5 +1,6 @@
-// ========== 禁止/恢复页面滚动（业界标准方案，无任何副作用） ==========
+// ========== 禁止/恢复页面滚动（彻底解决所有点击穿透问题） ==========
 let savedScrollTop = 0;
+let clickBlocker = null;
 
 function disableBodyScroll() {
   // 1. 保存当前滚动位置
@@ -8,6 +9,22 @@ function disableBodyScroll() {
   document.body.style.position = 'fixed';
   document.body.style.top = `-${savedScrollTop}px`;
   document.body.style.width = '100%';
+  
+  // ✅ 创建点击拦截层，阻止所有穿透点击
+  if (!clickBlocker) {
+    clickBlocker = document.createElement('div');
+    clickBlocker.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9998;
+      background: transparent;
+      pointer-events: auto;
+    `;
+    document.body.appendChild(clickBlocker);
+  }
 }
 
 function enableBodyScroll() {
@@ -17,10 +34,18 @@ function enableBodyScroll() {
   document.body.style.width = '';
   // 2. 恢复滚动位置
   window.scrollTo(0, savedScrollTop);
-  // ✅ 核心修复：关闭弹窗时强制清除所有按钮的焦点
+  // 3. 强制清除所有按钮的焦点
   document.activeElement?.blur?.();
-  // 强制重绘，清除所有残留的点击状态
+  // 4. 强制重绘，清除所有残留的点击状态
   document.body.offsetHeight;
+  
+  // ✅ 延迟350ms移除点击拦截层（覆盖移动端300ms双击检测延迟）
+  setTimeout(() => {
+    if (clickBlocker && clickBlocker.parentNode) {
+      clickBlocker.parentNode.removeChild(clickBlocker);
+      clickBlocker = null;
+    }
+  }, 350);
 }
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
