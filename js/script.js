@@ -1302,7 +1302,10 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
     renderAdminCalendar();
     renderTotalAndStat();
   }
+// 等DOM渲染完成后再显示Toast
+setTimeout(() => {
   showToast('数据刷新成功','success');
+}, 0);
 
   // 单独等待动画时长
   const elapsed = Date.now() - startTime;
