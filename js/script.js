@@ -1,3 +1,26 @@
+// ========== 禁止/恢复页面滚动（解决弹窗滚动穿透） ==========
+function disableBodyScroll() {
+  // 保存当前滚动位置
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  // 给body添加固定定位，禁止滚动
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollTop}px`;
+  document.body.style.width = '100%';
+  document.body.style.overflowY = 'hidden';
+}
+
+function enableBodyScroll() {
+  // 恢复滚动位置
+  const scrollTop = parseInt(document.body.style.top || '0');
+  // 移除固定定位
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  document.body.style.overflowY = '';
+  // 滚动回原来的位置
+  window.scrollTo(0, -scrollTop);
+}
+
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
 const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
