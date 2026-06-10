@@ -22,7 +22,7 @@ body {
   min-height: -webkit-fill-available;
   display: flex;
   justify-content: center;
-  align-items: center !important; /* 加!important强制覆盖 */
+  align-items: center;
   padding: 20px 10px;
   transition: background-color 0.3s ease;
 }
@@ -768,7 +768,7 @@ body {
 /* 在文件最后添加 */
 /* 管理员模式：页面顶部对齐，避免内容溢出截断 */
 body.admin-active {
-  align-items: flex-start;
+  align-items: flex-start !important;
   padding-top: 20px;
   padding-bottom: 40px;
 }
