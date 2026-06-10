@@ -1,71 +1,22 @@
-// ========== 禁止/恢复页面滚动（解决弹窗滚动穿透 + iOS焦点丢失） ==========
-let scrollLockHandler = null;
+// ========== 禁止/恢复页面滚动（业界标准方案，无任何副作用） ==========
+let savedScrollTop = 0;
 
 function disableBodyScroll() {
-  // 保存当前滚动位置
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  // 给body添加固定定位，禁止滚动
+  // 1. 保存当前滚动位置
+  savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  // 2. 给body添加固定定位，物理上切断滚动可能
   document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollTop}px`;
+  document.body.style.top = `-${savedScrollTop}px`;
   document.body.style.width = '100%';
-  document.body.style.overflowY = 'hidden';
-
-  // ✅ 核心修复：拦截全局touchmove事件，只允许弹窗内部滚动
-  scrollLockHandler = function(e) {
-    // 找到当前触摸的元素
-    let target = e.target;
-    let isInModalContent = false;
-    
-    // 向上遍历，看是否在弹窗内容区域（.modal-box）内
-    while (target) {
-      if (target.classList && target.classList.contains('modal-box')) {
-        isInModalContent = true;
-        break;
-      }
-      target = target.parentElement;
-    }
-
-    // 如果不在弹窗内容内，直接阻止滚动
-    if (!isInModalContent) {
-      e.preventDefault();
-      return;
-    }
-
-    // ✅ 修复弹窗滚动到顶/底时的橡皮筋滚动穿透
-    const modalBox = target.closest('.modal-box');
-    const scrollable = modalBox.querySelector('#cycle-detail-record-list') || modalBox;
-    
-    const isAtTop = scrollable.scrollTop === 0;
-    const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight;
-    const isScrollingUp = e.touches[0].clientY > (e.lastClientY || 0);
-    e.lastClientY = e.touches[0].clientY;
-
-    // 如果已经到顶还往上滑，或者到底还往下滑，阻止事件
-    if ((isAtTop && isScrollingUp) || (isAtBottom && !isScrollingUp)) {
-      e.preventDefault();
-    }
-  };
-
-  // 绑定事件，必须加{ passive: false }否则iOS会忽略preventDefault
-  document.addEventListener('touchmove', scrollLockHandler, { passive: false });
 }
 
 function enableBodyScroll() {
-  // 恢复滚动位置
-  const scrollTop = parseInt(document.body.style.top || '0');
-  // 移除固定定位
+  // 1. 移除固定定位
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.width = '';
-  document.body.style.overflowY = '';
-  // 滚动回原来的位置
-  window.scrollTo(0, -scrollTop);
-
-  // 移除全局touchmove拦截器
-  if (scrollLockHandler) {
-    document.removeEventListener('touchmove', scrollLockHandler);
-    scrollLockHandler = null;
-  }
+  // 2. 恢复滚动位置
+  window.scrollTo(0, savedScrollTop);
 }
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
@@ -260,8 +211,8 @@ function initTimeSelect() {
       // 显示第一段和第二段
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('part2-start-row').classList.remove('hidden');
-      document.getElementById('part2-end-row').classList.remove('hidden');
+      document.getElementById('part2-start-row').classList.add('hidden');
+      document.getElementById('part2-end-row').classList.add('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
@@ -1170,6 +1121,13 @@ document.addEventListener('DOMContentLoaded', function () {
         enableBodyScroll();
       }
     });
+
+    // ✅ 只阻止遮罩层本身的滚动，不影响弹窗内部
+    overlay.addEventListener('touchmove', function(e) {
+      if (e.target === this) {
+        e.preventDefault();
+      }
+    }, { passive: false });
   });
 
 // 延迟 500 毫秒加载，解决 SDK 未初始化完成导致的失败
