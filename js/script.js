@@ -621,13 +621,14 @@ function renderTotalAndStat() {
   });
 
   totalWageNum.innerText = totalWage.toFixed(2);
-  statWorkHours.innerText = totalWorkHours.toFixed(1);
-  statWorkDays.innerText = workDays;
-  stat21hDays.innerText = day21;
-  stat22hDays.innerText = day22;
-  stat23hDays.innerText = day23;
-  statBaseMoney.innerText = totalBase.toFixed(2);
-  statAllowance.innerText = totalAllow.toFixed(2);
+  // ✅ 修复：统计项赋值时带上单位，和HTML结构匹配
+  statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
+  statWorkDays.innerText = workDays + ' 天';
+  stat21hDays.innerText = day21 + ' 天';
+  stat22hDays.innerText = day22 + ' 天';
+  stat23hDays.innerText = day23 + ' 天';
+  statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
+  statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 }
 
 // ========== 周期明细弹窗 ==========
@@ -1260,7 +1261,8 @@ setTimeout(() => {
   loadData();
 }, 500);
 });
-// 首页刷新按钮点击事件
+
+// ✅ 修复：延长刷新按钮动画时长至1秒，确保用户能看到完整旋转效果
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   // 阻止事件冒泡和默认行为
   e.stopPropagation();
@@ -1278,9 +1280,10 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   // 重新拉取数据
   await loadData();
   
-  // 移除旋转动画
-  this.classList.remove('spinning');
-  
-  // 弹窗提示刷新成功
-  showToast('数据刷新成功','success');
+  // 延迟1秒移除旋转动画，让动画完整显示一圈多
+  setTimeout(() => {
+    this.classList.remove('spinning');
+    // 弹窗提示刷新成功
+    showToast('数据刷新成功','success');
+  }, 1000);
 })
