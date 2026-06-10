@@ -14,30 +14,30 @@
   <div class="white-window">
     <h1 class="title">LCX的工资</h1>
 
-    <!-- 用户页面：只显示总工资+日历 -->
-    <div id="user-view">
-      <!-- 总工资卡片（内容完全居中） -->
-      <div class="total-wage-box">
-        <button id="refresh-data-btn" class="refresh-btn">↻</button>
-        <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
-        <div class="total-wage-label">总工资</div>
-        <div class="total-wage-value" id="total-wage-num">0.00</div>
-        <button id="detail-btn" class="btn-detail">查看详细信息</button>
-      </div>
+<!-- 用户页面：只显示总工资，隐藏日历 -->
+<div id="user-view">
+  <!-- 总工资卡片（内容全部靠左对齐） -->
+  <div class="total-wage-box">
+    <button id="refresh-data-btn" class="refresh-btn">↻</button>
+    <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+    <div class="total-wage-label">总工资</div>
+    <div class="total-wage-value" id="total-wage-num">0.00</div>
+    <button id="detail-btn" class="btn-detail">查看详细信息</button>
+  </div>
 
-      <!-- 用户页面日历 -->
-      <div class="calendar-wrap">
-        <div class="calendar-head">
-          <button id="prev-month-btn">&lt;</button>
-          <span id="calendar-title">2026-05-26~2026-06-25</span>
-          <button id="next-month-btn">&gt;</button>
-        </div>
-        <div class="calendar-week">
-          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-        </div>
-        <div class="calendar-body" id="calendar-body"></div>
-      </div>
+  <!-- ✅ 隐藏用户页面日历（添加hidden类） -->
+  <div class="calendar-wrap hidden">
+    <div class="calendar-head">
+      <button id="prev-month-btn">&lt;</button>
+      <span id="calendar-title">2026-05-26~2026-06-25</span>
+      <button id="next-month-btn">&gt;</button>
     </div>
+    <div class="calendar-week">
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="calendar-body" id="calendar-body"></div>
+  </div>
+</div>
 
     <!-- 管理员页面：不显示总工资，只显示日历+表单+列表 -->
     <div id="admin-view" class="hidden">
