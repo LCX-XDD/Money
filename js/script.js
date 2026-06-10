@@ -283,7 +283,6 @@ function initTimeSelect() {
 }
 
 // 防重复请求 + 自动重试
-// ✅ 优化后的加载函数：无重复调用+无闪烁加载
 let isLoading = false;
 async function loadData(retryCount = 0, autoRender = true, showLoading = true) {
   if (isLoading) return;
@@ -962,12 +961,12 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
   renderAdminCalendar();
 
   setTimeout(() => {
-    // ✅ 修改：自动滚动到班次选择框（正好显示所有时间输入区域）
+    // 自动滚动到班次选择框
     const formTarget = document.getElementById('record-shift');
     if (formTarget) {
       formTarget.scrollIntoView({
-        behavior: 'smooth', // 保持平滑滚动
-        block: 'start' // 元素顶部对齐视口顶部
+        behavior: 'smooth',
+        block: 'start'
       });
     }
     showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
@@ -1268,14 +1267,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: false });
   });
 
-  // 延迟加载数据
-  setTimeout(() => {
-    loadData();
-  }, 500);
+  // ✅ 已删除重复的loadData调用，彻底解决刷新页面加载两次的问题
 });
 
-// 刷新按钮
-// ✅ 优化后的刷新按钮：无闪烁+平滑动画
+// ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1283,12 +1278,22 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   if (this.classList.contains('spinning') || isLoading) return;
 
-  // 同时执行：数据加载 + 1秒动画保证（避免加载太快导致闪烁）
+  const startTime = Date.now();
+  const minAnimationDuration = 1000; // 保证动画至少播放1秒
+
+  // 开始加载数据
+  const dataPromise = loadData(0, false, true);
+  
+  // 等待数据加载完成，同时保证动画时长
   const [data] = await Promise.all([
-    loadData(0, false, true),
-    new Promise(resolve => setTimeout(resolve, 1000))
+    dataPromise,
+    new Promise(resolve => {
+      const elapsed = Date.now() - startTime;
+      setTimeout(resolve, Math.max(0, minAnimationDuration - elapsed));
+    })
   ]);
 
+  // 数据加载完成且动画结束后，立即渲染并显示Toast
   if (data) {
     renderData(data);
     renderUserCalendar();
