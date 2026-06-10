@@ -425,6 +425,7 @@ body {
 .item-op {
   display: flex;
   margin-top: 8px;
+  gap: 8px;
 }
 
 .btn-sm {
@@ -433,7 +434,6 @@ body {
   border-radius: 20px; /* 圆角矩形，不是纯椭圆 */
   font-size: 14px;
   cursor: pointer;
-  margin-right: 8px;
 }
 
 .btn-edit {
