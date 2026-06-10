@@ -16,14 +16,18 @@
 
 <!-- 用户页面：只显示总工资，隐藏日历 -->
 <div id="user-view">
-  <!-- 总工资卡片（内容全部靠左对齐） -->
-  <div class="total-wage-box">
-    <button id="refresh-data-btn" class="refresh-btn">↻</button>
-    <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
-    <div class="total-wage-label">总工资</div>
-    <div class="total-wage-value" id="total-wage-num">0.00</div>
-    <button id="detail-btn" class="btn-detail">查看详细信息</button>
+<!-- 总工资卡片（内容全部靠左对齐） -->
+<div class="total-wage-box">
+  <!-- ✅ 无闪烁加载覆盖层（核心解决闪烁） -->
+  <div class="loading-overlay">
+    <span class="loading-spinner"></span>
   </div>
+  <button id="refresh-data-btn" class="refresh-btn">↻</button>
+  <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+  <div class="total-wage-label">总工资</div>
+  <div class="total-wage-value" id="total-wage-num">0.00</div>
+  <button id="detail-btn" class="btn-detail">查看详细信息</button>
+</div>
 
   <!-- ✅ 隐藏用户页面日历（添加hidden类） -->
   <div class="calendar-wrap hidden">
