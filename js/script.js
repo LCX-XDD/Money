@@ -990,25 +990,35 @@ document.addEventListener('DOMContentLoaded', function () {
   const adminEntrance = document.getElementById('admin-entrance');
   const loginOverlay = document.getElementById('login-overlay');
   const adminPwdInput = document.getElementById('admin-pwd-input');
-  const loginCancelBtn = document.getElementById('login-cancel-btn');
-  const loginConfirmBtn = document.getElementById('login-confirm-btn');
+  const loginCancelBtn = document.getElementById('login-cancel');
+  const loginConfirmBtn = document.getElementById('login-confirm');
   const userView = document.getElementById('user-view');
   const adminView = document.getElementById('admin-view');
 
   const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+  const now = new Date();
+  const todayStr = formatDate(now);
+
+  // ✅ 修复：无论用户还是管理员页面，都自动选中今天的日期
+  selectedDate = todayStr;
+
   if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
     userView.classList.add('hidden');
     adminView.classList.remove('hidden');
     adminEntrance.classList.add('hidden');
-    const now = new Date();
-    selectedDate = formatDate(now);
     const dateInput = document.getElementById('record-date');
-    if (dateInput) dateInput.value = selectedDate;
+    if (dateInput) dateInput.value = todayStr;
     loadData();
+  } else {
+    // ✅ 修复：用户页面加载完成后自动渲染日历并选中今天
+    loadData().then(() => {
+      renderSalaryCalendar();
+    });
   }
 
   initTimeSelect();
 
+  // ✅ 修复：管理员入口点击事件绑定（确保在DOM加载完成后执行）
   if (adminEntrance && loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
     adminEntrance.addEventListener('click', function (e) {
       // 阻止事件冒泡和默认行为
@@ -1049,10 +1059,8 @@ document.addEventListener('DOMContentLoaded', function () {
         userView.classList.add('hidden');
         adminView.classList.remove('hidden');
         adminEntrance.classList.add('hidden');
-        const now = new Date();
-        selectedDate = formatDate(now);
         const dateInput = document.getElementById('record-date');
-        if (dateInput) dateInput.value = selectedDate;
+        if (dateInput) dateInput.value = todayStr;
         setTimeout(() => loadData(), 300);
       } else {
         showToast('密码错误', 'error');
@@ -1064,25 +1072,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-// ✅ 修复：返回用户页按钮点击失效问题（ID匹配错误）
-const backUserBtn = document.getElementById('back-user');
-if (backUserBtn && adminView && userView && adminEntrance) {
-  backUserBtn.addEventListener('click', function (e) {
-    // 阻止事件冒泡和默认行为
-    e.stopPropagation();
-    e.preventDefault();
-    // 点击后立即失去焦点
-    this.blur();
+  const backUserBtn = document.getElementById('back-user');
+  if (backUserBtn && adminView && userView && adminEntrance) {
+    backUserBtn.addEventListener('click', function (e) {
+      // 阻止事件冒泡和默认行为
+      e.stopPropagation();
+      e.preventDefault();
+      // 点击后立即失去焦点
+      this.blur();
 
-    localStorage.removeItem('isAdminLoggedIn');
-    adminView.classList.add('hidden');
-    userView.classList.remove('hidden');
-    adminEntrance.classList.remove('hidden');
-    clearForm();
-    renderTotalAndStat();
-    showToast('已返回用户页面', 'success');
-  });
-}
+      localStorage.removeItem('isAdminLoggedIn');
+      adminView.classList.add('hidden');
+      userView.classList.remove('hidden');
+      adminEntrance.classList.remove('hidden');
+      clearForm();
+      renderTotalAndStat();
+      // ✅ 返回用户页面后重新渲染日历并选中今天
+      renderSalaryCalendar();
+      showToast('已返回用户页面', 'success');
+    });
+  }
 
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
