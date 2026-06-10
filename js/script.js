@@ -240,8 +240,8 @@ function initTimeSelect() {
       // 显示第一段和第二段
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('part2-start-row').classList.add('hidden');
-      document.getElementById('part2-end-row').classList.add('hidden');
+      document.getElementById('part2-start-row').classList.remove('hidden');
+      document.getElementById('part2-end-row').classList.remove('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
@@ -1005,8 +1005,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const adminEntrance = document.getElementById('admin-entrance');
   const loginOverlay = document.getElementById('login-overlay');
   const adminPwdInput = document.getElementById('admin-pwd-input');
-  const loginCancelBtn = document.getElementById('login-cancel');
-  const loginConfirmBtn = document.getElementById('login-confirm');
+  const loginCancelBtn = document.getElementById('login-cancel-btn');
+  const loginConfirmBtn = document.getElementById('login-confirm-btn');
   const userView = document.getElementById('user-view');
   const adminView = document.getElementById('admin-view');
 
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const backUserBtn = document.getElementById('back-user');
+  const backUserBtn = document.getElementById('back-user-btn');
   if (backUserBtn && adminView && userView && adminEntrance) {
     backUserBtn.addEventListener('click', function (e) {
       // 阻止事件冒泡和默认行为
@@ -1165,8 +1165,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const prevMonthBtn = document.getElementById('prev-month');
-  const nextMonthBtn = document.getElementById('next-month');
+  const prevMonthBtn = document.getElementById('prev-month-btn');
+  const nextMonthBtn = document.getElementById('next-month-btn');
   if (prevMonthBtn && nextMonthBtn) {
     prevMonthBtn.addEventListener('click', function (e) {
       // 阻止事件冒泡和默认行为
