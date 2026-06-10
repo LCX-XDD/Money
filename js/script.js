@@ -1,6 +1,5 @@
-// ========== 禁止/恢复页面滚动（彻底解决所有点击穿透问题） ==========
+// ========== 禁止/恢复页面滚动（业界标准方案，无任何副作用） ==========
 let savedScrollTop = 0;
-let clickBlocker = null;
 
 function disableBodyScroll() {
   // 1. 保存当前滚动位置
@@ -9,22 +8,6 @@ function disableBodyScroll() {
   document.body.style.position = 'fixed';
   document.body.style.top = `-${savedScrollTop}px`;
   document.body.style.width = '100%';
-  
-  // ✅ 创建点击拦截层，阻止所有穿透点击
-  if (!clickBlocker) {
-    clickBlocker = document.createElement('div');
-    clickBlocker.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9998;
-      background: transparent;
-      pointer-events: auto;
-    `;
-    document.body.appendChild(clickBlocker);
-  }
 }
 
 function enableBodyScroll() {
@@ -34,18 +17,6 @@ function enableBodyScroll() {
   document.body.style.width = '';
   // 2. 恢复滚动位置
   window.scrollTo(0, savedScrollTop);
-  // 3. 强制清除所有按钮的焦点
-  document.activeElement?.blur?.();
-  // 4. 强制重绘，清除所有残留的点击状态
-  document.body.offsetHeight;
-  
-  // ✅ 延迟350ms移除点击拦截层（覆盖移动端300ms双击检测延迟）
-  setTimeout(() => {
-    if (clickBlocker && clickBlocker.parentNode) {
-      clickBlocker.parentNode.removeChild(clickBlocker);
-      clickBlocker = null;
-    }
-  }, 350);
 }
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
@@ -240,8 +211,8 @@ function initTimeSelect() {
       // 显示第一段和第二段
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('part2-start-row').classList.remove('hidden');
-      document.getElementById('part2-end-row').classList.remove('hidden');
+      document.getElementById('part2-start-row').classList.add('hidden');
+      document.getElementById('part2-end-row').classList.add('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
@@ -654,13 +625,7 @@ function openCycleDetailPopup(cycleKey, records) {
   calcBtn.style.borderRadius = '4px';
   calcBtn.style.cursor = 'pointer';
   
-  calcBtn.onclick = function (e) {
-    // ✅ 阻止事件冒泡和默认行为
-    e.stopPropagation();
-    e.preventDefault();
-    // 点击后立即失去焦点
-    this.blur();
-
+  calcBtn.onclick = function () {
     let totalHours = 0;
     let totalBase = 0;
     let totalAllow = 0;
@@ -783,13 +748,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   calcBtn.style.borderRadius = '4px';
   calcBtn.style.cursor = 'pointer';
   
-  calcBtn.onclick = function (e) {
-    // ✅ 阻止事件冒泡和默认行为
-    e.stopPropagation();
-    e.preventDefault();
-    // 点击后立即失去焦点
-    this.blur();
-
+  calcBtn.onclick = function () {
     let totalHours = 0;
     let totalBase = 0;
     let totalAllow = 0;
@@ -905,13 +864,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     list.appendChild(itemEl);
 
     // 绑定编辑按钮事件
-    itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    itemEl.querySelector('.btn-edit').addEventListener('click', function () {
       // 关闭弹窗
       cycleDetailOverlay.classList.remove('show');
       enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
@@ -968,13 +921,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     });
 
     // 绑定删除按钮事件
-    itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    itemEl.querySelector('.btn-del').addEventListener('click', async () => {
       if (!confirm('确定删除该条记录？')) return;
       try {
         await AV.Object.createWithoutData('Bill', id).destroy();
@@ -1016,37 +963,19 @@ document.addEventListener('DOMContentLoaded', function () {
   initTimeSelect();
 
   if (adminEntrance && loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
-    adminEntrance.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    adminEntrance.addEventListener('click', () => {
       loginOverlay.classList.add('show');
       adminPwdInput.value = '';
       adminPwdInput.focus();
       disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
     });
 
-    loginCancelBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    loginCancelBtn.addEventListener('click', () => {
       loginOverlay.classList.remove('show');
       enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
 
-    loginConfirmBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    loginConfirmBtn.addEventListener('click', () => {
       const pwd = adminPwdInput.value.trim();
       if (pwd === 'admin123') {
         localStorage.setItem('isAdminLoggedIn', 'true');
@@ -1072,13 +1001,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const backUserBtn = document.getElementById('back-user');
   if (backUserBtn && adminView && userView && adminEntrance) {
-    backUserBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    backUserBtn.addEventListener('click', () => {
       localStorage.removeItem('isAdminLoggedIn');
       adminView.classList.add('hidden');
       userView.classList.remove('hidden');
@@ -1090,13 +1013,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', async function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    saveBtn.addEventListener('click', async () => {
       const dateInput = document.getElementById('record-date');
       const shiftSelect = document.getElementById('record-shift');
       const shiftStart = document.getElementById('shift-start');
@@ -1159,52 +1076,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const prevMonthBtn = document.getElementById('prev-month');
   const nextMonthBtn = document.getElementById('next-month');
   if (prevMonthBtn && nextMonthBtn) {
-    prevMonthBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
-      currentMonth--;
-      renderSalaryCalendar();
-    });
-
-    nextMonthBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
-      currentMonth++;
-      renderSalaryCalendar();
-    });
+    prevMonthBtn.addEventListener('click', () => { currentMonth--; renderSalaryCalendar(); });
+    nextMonthBtn.addEventListener('click', () => { currentMonth++; renderSalaryCalendar(); });
   }
 
   const detailBtn = document.getElementById('detail-btn');
   const detailOverlay = document.getElementById('detail-overlay');
   const detailClose = document.getElementById('detail-close');
   if (detailBtn && detailOverlay && detailClose) {
-    detailBtn.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    detailBtn.addEventListener('click', () => {
       renderTotalAndStat();
       detailOverlay.classList.add('show');
       disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
     });
-
-    detailClose.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    detailClose.addEventListener('click', () => {
       detailOverlay.classList.remove('show');
       enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
@@ -1213,13 +1098,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const cycleDetailClose = document.getElementById('cycle-detail-close');
   const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
   if (cycleDetailClose && cycleDetailOverlay) {
-    cycleDetailClose.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    cycleDetailClose.addEventListener('click', () => {
       cycleDetailOverlay.classList.remove('show');
       enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
@@ -1228,13 +1107,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const cycleTotalClose = document.getElementById('cycle-total-close');
   const cycleTotalOverlay = document.getElementById('cycle-total-overlay');
   if (cycleTotalClose && cycleTotalOverlay) {
-    cycleTotalClose.addEventListener('click', function (e) {
-      // ✅ 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
-
+    cycleTotalClose.addEventListener('click', () => {
       cycleTotalOverlay.classList.remove('show');
       enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
@@ -1263,13 +1136,7 @@ setTimeout(() => {
 }, 500);
 });
 // 首页刷新按钮点击事件
-document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
-  // ✅ 阻止事件冒泡和默认行为
-  e.stopPropagation();
-  e.preventDefault();
-  // 点击后立即失去焦点
-  this.blur();
-
+document.getElementById('refresh-data-btn').addEventListener('click',async ()=>{
   // 1. 还原加载动画
   document.querySelector('#current-cycle').innerHTML = '<span class="loading-spinner"></span>';
   document.querySelector('#total-wage-num').innerHTML = '<span class="loading-spinner"></span>';
