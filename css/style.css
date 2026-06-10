@@ -6,13 +6,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ✅ 核心修复：整个页面垂直水平居中 */
+/* ✅ 修复：只水平居中，内容从顶部开始 */
 body {
   background-color: #f5f5f7;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  justify-content: center; /* 水平居中 */
+  align-items: flex-start; /* 内容从顶部开始 */
   padding: 40px 10px;
 }
 
@@ -58,7 +58,7 @@ body {
   color: white;
   margin-bottom: 24px;
   position: relative;
-  text-align: center; /* ✅ 所有内容居中 */
+  text-align: center; /* 所有内容居中 */
 }
 
 /* ✅ 修复：刷新按钮整个圆形都能点击，提高z-index */
@@ -494,10 +494,10 @@ body {
   color: white;
 }
 
-/* ✅ Toast 移到页面顶端，不挡住工资数字 */
+/* ✅ Toast 保持在页面顶端，不挡住工资数字 */
 .toast {
   position: fixed;
-  top: 20px; /* 改为顶部20px */
+  top: 20px; /* 保持顶部20px */
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.8);
@@ -548,6 +548,7 @@ body {
   align-items: center;
   font-size: 12px;
   cursor: pointer;
+  z-index: 999; /* 确保在最上层 */
 }
 
 /* ✅ 弹窗滚动条美化 */
