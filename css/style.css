@@ -164,6 +164,7 @@ body {
   font-size: 14px;
   cursor: pointer;
   position: relative;
+  transition: all 0.2s ease;
 }
 
 .calendar-day.other {
@@ -180,8 +181,11 @@ body {
   color: white;
 }
 
+/* ✅ 修复：日历选中日期边框超级明显，蓝色背景上也清晰可见 */
 .calendar-day.selected {
-  border: 2px solid #ff9500;
+  border: 3px solid #ff9500;
+  box-shadow: 0 0 0 2px white inset;
+  transform: scale(1.05);
 }
 
 .shift-tag {
@@ -400,7 +404,7 @@ body {
 }
 
 .cycle-detail-item {
-  padding: 12px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid #f5f5f7;
 }
 
@@ -408,12 +412,13 @@ body {
   font-size: 12px;
   color: #8e8e93;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .info-line {
   font-size: 14px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 .money {
@@ -424,16 +429,17 @@ body {
 /* ✅ 管理员弹窗编辑删除按钮圆角（类似椭圆但不是椭圆） */
 .item-op {
   display: flex;
-  margin-top: 8px;
-  gap: 8px;
+  margin-top: 12px;
+  gap: 12px;
 }
 
 .btn-sm {
-  padding: 6px 18px;
+  padding: 6px 20px;
   border: none;
   border-radius: 20px; /* 圆角矩形，不是纯椭圆 */
   font-size: 14px;
   cursor: pointer;
+  font-weight: 500;
 }
 
 .btn-edit {
@@ -500,4 +506,23 @@ body {
   align-items: center;
   font-size: 12px;
   cursor: pointer;
+}
+
+/* ✅ 弹窗滚动条美化 */
+.modal-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-box::-webkit-scrollbar-track {
+  background: #f5f5f7;
+  border-radius: 3px;
+}
+
+.modal-box::-webkit-scrollbar-thumb {
+  background: #c7c7cc;
+  border-radius: 3px;
+}
+
+.modal-box::-webkit-scrollbar-thumb:hover {
+  background: #8e8e93;
 }
