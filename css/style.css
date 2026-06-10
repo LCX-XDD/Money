@@ -676,3 +676,8 @@ body {
 .calendar-day.selected .shift-tag {
   color: #fff !important;
 }
+/* ✅ 解决弹窗滚动到边界时的橡皮筋穿透问题 */
+#cycle-detail-record-list {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
