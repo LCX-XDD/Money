@@ -283,8 +283,9 @@ function initTimeSelect() {
 }
 
 // 防重复请求 + 自动重试
+// ✅ 优化后的加载函数：支持手动控制动画停止
 let isLoading = false;
-async function loadData(retryCount = 0, autoRender = true, showLoading = true) {
+async function loadData(retryCount = 0, autoRender = true, showLoading = true, autoStopLoading = true) {
   if (isLoading) return;
   isLoading = true;
 
@@ -317,16 +318,18 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true) {
   } catch (e) {
     if (retryCount < 3) {
       setTimeout(() => {
-        loadData(retryCount + 1, autoRender, showLoading);
+        loadData(retryCount + 1, autoRender, showLoading, autoStopLoading);
       }, 1000);
       return;
     }
     showToast('数据加载失败，请刷新', 'error');
   } finally {
     isLoading = false;
-    // 隐藏加载动画
-    if (wageBox) wageBox.classList.remove('loading');
-    if (refreshBtn) refreshBtn.classList.remove('spinning');
+    // ✅ 只有自动模式才停止动画，手动刷新由按钮自己控制
+    if (autoStopLoading) {
+      if (wageBox) wageBox.classList.remove('loading');
+      if (refreshBtn) refreshBtn.classList.remove('spinning');
+    }
   }
 }
 
@@ -1004,24 +1007,28 @@ document.addEventListener('DOMContentLoaded', function () {
   const userView = document.getElementById('user-view');
   const adminView = document.getElementById('admin-view');
 
-  const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
-  const now = new Date();
-  const todayStr = formatDate(now);
+const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+const now = new Date();
+const todayStr = formatDate(now);
 
-  selectedDate = todayStr;
+selectedDate = todayStr;
 
-  if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
-    userView.classList.add('hidden');
-    adminView.classList.remove('hidden');
-    adminEntrance.classList.add('hidden');
-    const dateInput = document.getElementById('record-date');
-    if (dateInput) dateInput.value = todayStr;
-    loadData();
-  } else {
-    loadData().then(() => {
-      renderUserCalendar();
-    });
-  }
+if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
+  // ✅ 进入管理员页面时添加顶部对齐类
+  document.body.classList.add('admin-active');
+  userView.classList.add('hidden');
+  adminView.classList.remove('hidden');
+  adminEntrance.classList.add('hidden');
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) dateInput.value = todayStr;
+  loadData();
+} else {
+  // ✅ 用户页面保持垂直居中
+  document.body.classList.remove('admin-active');
+  loadData().then(() => {
+    renderUserCalendar();
+  });
+}
 
   initTimeSelect();
 
@@ -1046,26 +1053,28 @@ document.addEventListener('DOMContentLoaded', function () {
       enableBodyScroll();
     });
 
-    loginConfirmBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
+loginConfirmBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-      const pwd = adminPwdInput.value.trim();
-      if (pwd === 'admin123') {
-        localStorage.setItem('isAdminLoggedIn', 'true');
-        loginOverlay.classList.remove('show');
-        enableBodyScroll();
-        userView.classList.add('hidden');
-        adminView.classList.remove('hidden');
-        adminEntrance.classList.add('hidden');
-        const dateInput = document.getElementById('record-date');
-        if (dateInput) dateInput.value = todayStr;
-        setTimeout(() => loadData(), 300);
-      } else {
-        showToast('密码错误', 'error');
-      }
-    });
+  const pwd = adminPwdInput.value.trim();
+  if (pwd === 'admin123') {
+    localStorage.setItem('isAdminLoggedIn', 'true');
+    loginOverlay.classList.remove('show');
+    enableBodyScroll();
+    // ✅ 登录成功添加管理员模式类
+    document.body.classList.add('admin-active');
+    userView.classList.add('hidden');
+    adminView.classList.remove('hidden');
+    adminEntrance.classList.add('hidden');
+    const dateInput = document.getElementById('record-date');
+    if (dateInput) dateInput.value = todayStr;
+    setTimeout(() => loadData(), 300);
+  } else {
+    showToast('密码错误', 'error');
+  }
+});
 
     adminPwdInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') loginConfirmBtn.click();
@@ -1074,20 +1083,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const backUserBtn = document.getElementById('back-user');
   if (backUserBtn && adminView && userView && adminEntrance) {
-    backUserBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
+backUserBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-      localStorage.removeItem('isAdminLoggedIn');
-      adminView.classList.add('hidden');
-      userView.classList.remove('hidden');
-      adminEntrance.classList.remove('hidden');
-      clearForm();
-      renderTotalAndStat();
-      renderUserCalendar();
-      showToast('已返回用户页面', 'success');
-    });
+  localStorage.removeItem('isAdminLoggedIn');
+  // ✅ 返回用户页面移除管理员模式类，恢复垂直居中
+  document.body.classList.remove('admin-active');
+  adminView.classList.add('hidden');
+  userView.classList.remove('hidden');
+  adminEntrance.classList.remove('hidden');
+  clearForm();
+  renderTotalAndStat();
+  renderUserCalendar();
+  showToast('已返回用户页面', 'success');
+});
   }
 
   const saveBtn = document.getElementById('save-btn');
@@ -1271,6 +1282,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
+// ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1281,16 +1293,30 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   const startTime = Date.now();
   const minAnimationDuration = 1000; // 保证动画至少播放1秒
 
-  // 开始加载数据
-  const dataPromise = loadData(0, false, true);
+  // 加载数据（不自动停止动画）
+  const data = await loadData(0, false, true, false);
   
-  // 等待数据加载完成，同时保证动画时长
-  const [data] = await Promise.all([
-    dataPromise,
-    new Promise(resolve => {
-      const elapsed = Date.now() - startTime;
-      setTimeout(resolve, Math.max(0, minAnimationDuration - elapsed));
-    })
+  // ✅ 数据一加载完就立即渲染并显示Toast，无任何延迟
+  if (data) {
+    renderData(data);
+    renderUserCalendar();
+    renderAdminCalendar();
+    renderTotalAndStat();
+  }
+  showToast('数据刷新成功','success');
+
+  // ✅ 单独等待动画时长，不阻塞Toast显示
+  const elapsed = Date.now() - startTime;
+  if (elapsed < minAnimationDuration) {
+    await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
+  }
+
+  // 动画结束后再停止加载状态
+  const wageBox = document.querySelector('.total-wage-box');
+  const refreshBtn = document.getElementById('refresh-data-btn');
+  if (wageBox) wageBox.classList.remove('loading');
+  if (refreshBtn) refreshBtn.classList.remove('spinning');
+})
   ]);
 
   // 数据加载完成且动画结束后，立即渲染并显示Toast
