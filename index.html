@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-  <title>工资</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>LCX的工资</title>
 
   <!-- 浏览器标签小图标 -->
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/4969/4969649.png" type="image/png">
@@ -13,6 +12,10 @@
   <!-- 苹果手机桌面图标（关键） -->
   <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/128/4969/4969649.png">
   <meta name="apple-mobile-web-app-title" content="LCX的工资">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -23,18 +26,16 @@
     <div id="user-view">
 <div class="total-wage-box">
   <!-- 右上角刷新按钮 -->
-  <button id="refresh-data-btn" class="refresh-btn">刷新</button>
+  <button id="refresh-data-btn" class="refresh-btn">↻</button>
   <div class="cycle-text">
     当前计薪周期：<br>
     <span id="current-cycle">
       <span class="loading-spinner"></span>
     </span>
   </div>
-  <div class="total-wage-line">
-    总工资<br>
-    <span id="total-wage-num">
-      <span class="loading-spinner"></span>
-    </span>
+  <div class="total-wage-label">总工资</div>
+  <div class="total-wage-value" id="total-wage-num">
+    <span class="loading-spinner"></span>
   </div>
   <button id="detail-btn" class="btn-detail">查看详细信息</button>
 </div>
@@ -171,7 +172,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@3.15.0/dist/av-min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
   <script src="js/script.js"></script>
 
 <!-- 禁止双击放大 JS -->
