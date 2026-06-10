@@ -1,55 +1,57 @@
 /* 全局主题变量（浅色模式默认） */
 :root {
-  --bg-primary: rgba(247, 248, 250, 0.85);
-  --bg-card: rgba(255, 255, 255, 0.7);
-  --bg-secondary: rgba(250, 251, 252, 0.6);
-  --bg-tertiary: rgba(245, 247, 250, 0.7);
-  --bg-overlay: rgba(0, 0, 0, 0.25);
-  --text-primary: #222222;
+  --bg-primary: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-secondary: rgba(255, 255, 255, 0.65);
+  --bg-tertiary: rgba(248, 250, 252, 0.7);
+  --bg-overlay: rgba(0, 0, 0, 0.3);
+  --text-primary: #1a1a1a;
   --text-secondary: #333333;
-  --text-muted: #666666;
-  --text-faint: #999999;
-  --border-color: rgba(224, 224, 224, 0.5);
-  --border-light: rgba(240, 240, 240, 0.5);
-  --primary-color: #409eff;
-  --primary-light: rgba(64, 158, 255, 0.15);
-  --success-color: #00c851;
-  --success-light: rgba(0, 200, 81, 0.15);
-  --danger-color: #f56c6c;
+  --text-muted: #555555;
+  --text-faint: #888888;
+  --border-color: rgba(210, 210, 210, 0.5);
+  --border-light: rgba(230, 230, 230, 0.5);
+  --primary-color: #3b82f6;
+  --primary-light: rgba(59, 130, 246, 0.18);
+  --success-color: #16a34a; /* 浅色模式深绿色，对比度更高 */
+  --success-light: rgba(22, 163, 74, 0.15);
+  --danger-color: #ef4444;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --shadow-modal: 0 12px 48px rgba(0, 0, 0, 0.12);
-  --shadow-button: 0 4px 12px rgba(64, 158, 255, 0.3);
-  --shadow-success: 0 4px 12px rgba(0, 200, 81, 0.3);
-  --blur-radius: 20px;
+  --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-modal: 0 16px 64px rgba(0, 0, 0, 0.15);
+  --shadow-button: 0 4px 16px rgba(59, 130, 246, 0.35);
+  --shadow-success: 0 4px 16px rgba(22, 163, 74, 0.35);
+  --blur-radius: 24px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-xl: 24px;
 }
 
 /* 深色模式自动跟随系统 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: rgba(18, 18, 18, 0.85);
-    --bg-card: rgba(30, 30, 30, 0.7);
-    --bg-secondary: rgba(37, 37, 37, 0.6);
-    --bg-tertiary: rgba(45, 45, 45, 0.7);
-    --bg-overlay: rgba(0, 0, 0, 0.5);
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #909090;
+    --bg-primary: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    --bg-card: rgba(30, 30, 30, 0.75);
+    --bg-secondary: rgba(40, 40, 40, 0.65);
+    --bg-tertiary: rgba(50, 50, 50, 0.7);
+    --bg-overlay: rgba(0, 0, 0, 0.6);
+    --text-primary: #f0f0f0;
+    --text-secondary: #d0d0d0;
+    --text-muted: #a0a0a0;
     --text-faint: #707070;
-    --border-color: rgba(64, 64, 64, 0.5);
-    --border-light: rgba(48, 48, 48, 0.5);
+    --border-color: rgba(80, 80, 80, 0.5);
+    --border-light: rgba(60, 60, 60, 0.5);
     --primary-color: #60a5fa;
-    --primary-light: rgba(96, 165, 250, 0.2);
-    --success-color: #86efac;
-    --success-light: rgba(134, 239, 172, 0.2);
-    --danger-color: #fca5a5;
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    --shadow-modal: 0 12px 48px rgba(0, 0, 0, 0.35);
-    --shadow-button: 0 4px 12px rgba(96, 165, 250, 0.3);
-    --shadow-success: 0 4px 12px rgba(134, 239, 172, 0.3);
+    --primary-light: rgba(96, 165, 250, 0.22);
+    --success-color: #4ade80; /* 深色模式亮绿色，清晰不刺眼 */
+    --success-light: rgba(74, 222, 128, 0.2);
+    --danger-color: #f87171;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-modal: 0 16px 64px rgba(0, 0, 0, 0.45);
+    --shadow-button: 0 4px 16px rgba(96, 165, 250, 0.35);
+    --shadow-success: 0 4px 16px rgba(74, 222, 128, 0.35);
   }
 
   .toast {
@@ -85,16 +87,13 @@ body {
   align-items: center;
   padding: 16px;
   transition: background-color 0.3s ease;
-  /* 全局背景模糊基底 */
-  backdrop-filter: blur(var(--blur-radius));
-  -webkit-backdrop-filter: blur(var(--blur-radius));
 }
 
-/* ✅ 主窗口毛玻璃效果 */
+/* ✅ 主窗口增强毛玻璃效果 */
 .white-window {
   background: var(--bg-card);
   border-radius: var(--radius-xl);
-  padding: 24px;
+  padding: 28px;
   max-width: 600px;
   width: 100%;
   box-shadow: var(--shadow);
@@ -102,16 +101,18 @@ body {
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow), var(--shadow-inner);
   transition: all 0.3s ease;
+  position: relative;
 }
 
 /* 主页面文字 */
 .title {
   text-align: center;
-  font-size: 28px;
+  font-size: 32px;
   color: var(--text-primary);
-  margin-bottom: 24px;
-  font-weight: 700;
+  margin-bottom: 28px;
+  font-weight: 800;
   letter-spacing: -0.5px;
 }
 
@@ -124,7 +125,7 @@ body {
 }
 
 .total-wage-line {
-  font-size: 26px;
+  font-size: 28px;
   color: var(--text-secondary);
   margin-bottom: 28px;
   font-weight: 600;
@@ -133,9 +134,10 @@ body {
 
 .total-wage-line span {
   color: var(--success-color);
-  font-weight: 800;
-  font-size: 32px;
+  font-weight: 900;
+  font-size: 36px;
   letter-spacing: -1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .sub-title {
@@ -149,17 +151,18 @@ body {
   display: none !important;
 }
 
-/* ✅ 首页工资卡片毛玻璃 */
+/* ✅ 首页总工资卡片毛玻璃效果（核心修复） */
 .total-wage-box {
   text-align: center;
   margin-top: 10px;
-  padding: 28px;
+  padding: 32px;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   position: relative;
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
+  box-shadow: var(--shadow-inner);
   transition: all 0.3s ease;
 }
 
@@ -175,7 +178,6 @@ body {
   transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
   font-weight: 600;
   box-shadow: var(--shadow-button);
-  /* 紧致点击动画 */
   transform: scale(1);
 }
 
@@ -185,19 +187,20 @@ body {
 
 .btn-detail:active {
   transform: scale(0.96);
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 /* ✅ 日历毛玻璃效果 */
 .calendar-wrap {
   background: var(--bg-secondary);
-  padding: 12px;
+  padding: 16px;
   border-radius: var(--radius-lg);
   margin-bottom: 20px;
   overflow: hidden;
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-inner);
   transition: all 0.3s ease;
 }
 
@@ -330,6 +333,7 @@ body {
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-inner);
   transition: all 0.3s ease;
 }
 
@@ -410,7 +414,7 @@ body {
 
 .btn-primary:active {
   transform: scale(0.96);
-  box-shadow: 0 2px 8px rgba(0, 200, 81, 0.2);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
 }
 
 .btn-back {
@@ -439,18 +443,52 @@ body {
   transform: scale(0.96);
 }
 
-/* 列表 */
-.list {
+/* ✅ 管理员页面列表毛玻璃效果（核心修复） */
+#admin-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.item {
-  padding: 16px;
+#admin-list .cycle-group {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
   background: var(--bg-secondary);
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  box-shadow: var(--shadow-inner);
+  transition: all 0.2s ease;
+}
+
+#admin-list .cycle-header {
+  background: transparent;
+  padding: 14px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+  font-weight: 600;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
+}
+
+#admin-list .cycle-header:hover {
+  background: var(--border-light);
+}
+
+#admin-list .cycle-header:active {
+  transform: scale(0.98);
+}
+
+#admin-list .item {
+  padding: 16px;
+  background: var(--bg-tertiary);
   border-radius: var(--radius-md);
   border-left: 4px solid var(--primary-color);
+  margin: 8px;
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
   transition: all 0.2s ease;
@@ -468,6 +506,7 @@ body {
   font-weight: 700;
   margin: 8px 0;
   font-size: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .item-op {
@@ -533,8 +572,8 @@ body {
   opacity: 0;
   visibility: hidden;
   transition: all 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .modal-overlay.show {
@@ -554,6 +593,7 @@ body {
   backdrop-filter: blur(var(--blur-radius));
   -webkit-backdrop-filter: blur(var(--blur-radius));
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-modal), var(--shadow-inner);
 }
 
 .modal-overlay.show .modal-box {
@@ -562,7 +602,7 @@ body {
 
 .modal-title {
   text-align: center;
-  font-size: 19px;
+  font-size: 20px;
   color: var(--text-primary);
   margin-bottom: 20px;
   font-weight: 700;
@@ -639,7 +679,7 @@ body {
 
 .detail-list-title {
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   margin-top: 16px;
   margin-bottom: 12px;
@@ -676,7 +716,7 @@ body {
   transform: scale(0.98);
 }
 
-/* 周期明细子弹窗 */
+/* ✅ 周期明细子弹窗（绿色字体清晰度修复） */
 #cycle-detail-overlay .modal-box {
   border-top: 4px solid var(--primary-color);
   background: var(--bg-secondary);
@@ -717,9 +757,12 @@ body {
   font-weight: 500;
 }
 
+/* ✅ 弹窗绿色字体清晰度核心修复 */
 .cycle-detail-item .money {
   color: var(--success-color);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 #cycle-detail-close {
@@ -752,11 +795,11 @@ body {
 }
 
 .toast.success {
-  background: rgba(0, 200, 81, 0.85);
+  background: rgba(22, 163, 74, 0.85);
 }
 
 .toast.error {
-  background: rgba(245, 108, 108, 0.85);
+  background: rgba(239, 68, 68, 0.85);
 }
 
 /* 加载动画 */
@@ -777,14 +820,14 @@ body {
 /* 首页右上角刷新按钮 */
 .refresh-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   font-size: 13px;
   color: var(--text-faint);
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
   transform: scale(1);
@@ -797,6 +840,15 @@ body {
 
 .refresh-btn:active {
   transform: scale(0.92);
+}
+
+/* 底部签名文字 */
+.footer-text {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 12px;
+  margin-top: 20px;
+  font-weight: 500;
 }
 
 /* 🔴 强制选中状态下所有班次标签都变成白色，优先级最高 */
