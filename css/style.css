@@ -19,9 +19,11 @@ html, body {
 body {
   background-color: #f5f5f7;
   min-height: 100vh;
+  /* ✅ 新增：修复iOS 100vh包含状态栏/工具栏的bug */
+  min-height: -webkit-fill-available;
   display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
+  justify-content: center;
+  align-items: center;
   padding: 20px 10px;
   transition: background-color 0.3s ease;
 }
@@ -775,4 +777,11 @@ body.admin-active {
 /* 确保窗口底部有足够边距 */
 .white-window {
   margin-bottom: 20px;
+}
+/* ✅ 修复iOS日期输入框自动拉伸变高的问题 */
+input[type="date"].form-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 52px; /* 和其他输入框保持完全一致的高度 */
+  line-height: 1;
 }
