@@ -1,4 +1,6 @@
-// ========== 禁止/恢复页面滚动（解决弹窗滚动穿透） ==========
+// ========== 禁止/恢复页面滚动（解决弹窗滚动穿透 + iOS焦点丢失） ==========
+let scrollLockHandler = null;
+
 function disableBodyScroll() {
   // 保存当前滚动位置
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -7,6 +9,45 @@ function disableBodyScroll() {
   document.body.style.top = `-${scrollTop}px`;
   document.body.style.width = '100%';
   document.body.style.overflowY = 'hidden';
+
+  // ✅ 核心修复：拦截全局touchmove事件，只允许弹窗内部滚动
+  scrollLockHandler = function(e) {
+    // 找到当前触摸的元素
+    let target = e.target;
+    let isInModalContent = false;
+    
+    // 向上遍历，看是否在弹窗内容区域（.modal-box）内
+    while (target) {
+      if (target.classList && target.classList.contains('modal-box')) {
+        isInModalContent = true;
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    // 如果不在弹窗内容内，直接阻止滚动
+    if (!isInModalContent) {
+      e.preventDefault();
+      return;
+    }
+
+    // ✅ 修复弹窗滚动到顶/底时的橡皮筋滚动穿透
+    const modalBox = target.closest('.modal-box');
+    const scrollable = modalBox.querySelector('#cycle-detail-record-list') || modalBox;
+    
+    const isAtTop = scrollable.scrollTop === 0;
+    const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight;
+    const isScrollingUp = e.touches[0].clientY > (e.lastClientY || 0);
+    e.lastClientY = e.touches[0].clientY;
+
+    // 如果已经到顶还往上滑，或者到底还往下滑，阻止事件
+    if ((isAtTop && isScrollingUp) || (isAtBottom && !isScrollingUp)) {
+      e.preventDefault();
+    }
+  };
+
+  // 绑定事件，必须加{ passive: false }否则iOS会忽略preventDefault
+  document.addEventListener('touchmove', scrollLockHandler, { passive: false });
 }
 
 function enableBodyScroll() {
@@ -19,6 +60,12 @@ function enableBodyScroll() {
   document.body.style.overflowY = '';
   // 滚动回原来的位置
   window.scrollTo(0, -scrollTop);
+
+  // 移除全局touchmove拦截器
+  if (scrollLockHandler) {
+    document.removeEventListener('touchmove', scrollLockHandler);
+    scrollLockHandler = null;
+  }
 }
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
@@ -200,9 +247,9 @@ function initTimeSelect() {
 
     if (val === '早班' || val === '中班' || val === '晚班') {
       // 显示第一段和饭点
-      document.getElementById('normal-time-row').classList.add('hidden');
-      document.getElementById('normal-end-row').classList.add('hidden');
-      document.getElementById('meal-wrap').classList.add('hidden');
+      document.getElementById('normal-time-row').classList.remove('hidden');
+      document.getElementById('normal-end-row').classList.remove('hidden');
+      document.getElementById('meal-wrap').classList.remove('hidden');
       
       // 启用上班，下班/饭点仍由「是否选上班」控制
       shiftEnd.disabled = !shiftStart.value;
@@ -211,10 +258,10 @@ function initTimeSelect() {
 
     if (val === '拼班') {
       // 显示第一段和第二段
-      document.getElementById('normal-time-row').classList.add('hidden');
-      document.getElementById('normal-end-row').classList.add('hidden');
-      document.getElementById('part2-start-row').classList.add('hidden');
-      document.getElementById('part2-end-row').classList.add('hidden');
+      document.getElementById('normal-time-row').classList.remove('hidden');
+      document.getElementById('normal-end-row').classList.remove('hidden');
+      document.getElementById('part2-start-row').classList.remove('hidden');
+      document.getElementById('part2-end-row').classList.remove('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
