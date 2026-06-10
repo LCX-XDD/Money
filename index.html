@@ -2,197 +2,205 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-  <title>LCX的工资</title>
-
-  <!-- 浏览器标签小图标 -->
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/4969/4969649.png" type="image/png">
-  <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/128/4969/4969649.png" type="image/png">
-
-  <!-- 苹果手机桌面图标（关键） -->
-  <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/128/4969/4969649.png">
-  <meta name="apple-mobile-web-app-title" content="LCX的工资">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>LCX的工资</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
+  <!-- 主窗口 -->
   <div class="white-window">
     <h1 class="title">LCX的工资</h1>
 
     <!-- 用户页面 -->
     <div id="user-view">
-<div class="total-wage-box">
-  <!-- 右上角刷新按钮 -->
-  <button id="refresh-data-btn" class="refresh-btn">↻</button>
-  <div class="cycle-text">
-    当前计薪周期：<br>
-    <span id="current-cycle">
-      <span class="loading-spinner"></span>
-    </span>
-  </div>
-  <div class="total-wage-label">总工资</div>
-  <div class="total-wage-value" id="total-wage-num">
-    <span class="loading-spinner"></span>
-  </div>
-  <button id="detail-btn" class="btn-detail">查看详细信息</button>
-</div>
+      <!-- 总工资卡片 -->
+      <div class="total-wage-box">
+        <button id="refresh-data-btn" class="refresh-btn">↻</button>
+        <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+        <div class="total-wage-label">总工资</div>
+        <div class="total-wage-value" id="total-wage-num">0.00</div>
+        <button id="detail-btn" class="btn-detail">查看详细信息</button>
+      </div>
+
+      <!-- 日历 -->
+      <div class="calendar-wrap">
+        <div class="calendar-head">
+          <button id="prev-month-btn">&lt;</button>
+          <span id="calendar-title">2026-05-26~2026-06-25</span>
+          <button id="next-month-btn">&gt;</button>
+        </div>
+        <div class="calendar-week">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="calendar-body" id="calendar-body"></div>
+      </div>
     </div>
 
     <!-- 管理员页面 -->
     <div id="admin-view" class="hidden">
-<div class="calendar-wrap" id="calWrap">
-  <div class="calendar-head">
-    <button id="prev-month">&lt;</button>
-    <span id="calendar-title"></span>
-    <button id="next-month">&gt;</button>
-  </div>
-  <div class="calendar-week">
-    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-  </div>
-
-<div id="calendar-body" class="calendar-body"></div>
-
-</div>
-
-      <div class="form-box">
-        <input type="text" id="record-date" class="form-input" readonly placeholder="点击日历选择日期">
-        
-        <select id="record-shift" class="form-input">
-          <option value="">请选择班次</option>
-          <option value="早班">早班</option>
-          <option value="中班">中班</option>
-          <option value="晚班">晚班</option>
-          <option value="拼班">拼班</option>
-          <option value="休息">休息</option>
-        </select>
-
-        <div class="time-row" id="normal-time-row">
-          <label>上班时间：</label>
-          <select id="shift-start" class="form-input time-select"></select>
-        </div>
-        <div class="time-row" id="normal-end-row">
-          <label>下班时间：</label>
-          <select id="shift-end" class="form-input time-select"></select>
-        </div>
-
-        <div class="time-row hidden" id="part2-start-row">
-          <label>第二班上班：</label>
-          <select id="shift-start2" class="form-input time-select"></select>
-        </div>
-        <div class="time-row hidden" id="part2-end-row">
-          <label>第二班下班：</label>
-          <select id="shift-end2" class="form-input time-select"></select>
-        </div>
-
-        <div id="meal-wrap">
-          <div class="time-row">
-            <label>饭点开始：</label>
-            <select id="meal-start" class="form-input time-select"></select>
-          </div>
-        </div>
-
-        <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
-
-        <input type="number" id="record-money" class="form-input" placeholder="当日基本工资（自动计算）">
-        <input type="number" id="record-allowance" class="form-input" placeholder="加班补贴（自动）">
-        <input type="text" id="record-remark" class="form-input" placeholder="备注信息">
-        
-        <input type="hidden" id="edit-id">
-        <button id="save-btn" class="btn-primary">保存记录</button>
+      <!-- 总工资卡片 -->
+      <div class="total-wage-box">
+        <button id="refresh-data-btn" class="refresh-btn">↻</button>
+        <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+        <div class="total-wage-label">总工资</div>
+        <div class="total-wage-value" id="total-wage-num">0.00</div>
       </div>
 
+      <!-- 日历 -->
+      <div class="calendar-wrap">
+        <div class="calendar-head">
+          <button id="prev-month-btn">&lt;</button>
+          <span id="calendar-title">2026-05-26~2026-06-25</span>
+          <button id="next-month-btn">&gt;</button>
+        </div>
+        <div class="calendar-week">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="calendar-body" id="calendar-body"></div>
+      </div>
+
+      <!-- 记录表单 -->
+      <input type="date" id="record-date" class="form-input">
+      <select id="record-shift" class="form-input">
+        <option value="">请选择班次</option>
+        <option value="早班">早班</option>
+        <option value="中班">中班</option>
+        <option value="晚班">晚班</option>
+        <option value="拼班">拼班</option>
+        <option value="休息">休息</option>
+      </select>
+
+      <div id="normal-time-row" class="time-row hidden">
+        <label>上班时间：</label>
+        <select id="shift-start" class="time-select"></select>
+      </div>
+      <div id="normal-end-row" class="time-row hidden">
+        <label>下班时间：</label>
+        <select id="shift-end" class="time-select"></select>
+      </div>
+      <div id="part2-start-row" class="time-row hidden">
+        <label>第二段上班：</label>
+        <select id="shift-start2" class="time-select"></select>
+      </div>
+      <div id="part2-end-row" class="time-row hidden">
+        <label>第二段下班：</label>
+        <select id="shift-end2" class="time-select"></select>
+      </div>
+      <div id="meal-wrap" class="time-row hidden">
+        <label>饭点开始：</label>
+        <select id="meal-start" class="time-select"></select>
+      </div>
+
+      <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
+      <input type="text" id="record-money" class="form-input" placeholder="当日基本工资（自动计算）" readonly>
+      <input type="text" id="record-allowance" class="form-input" placeholder="加班补贴（自动）">
+      <input type="text" id="record-remark" class="form-input" placeholder="备注信息">
+      <input type="hidden" id="edit-id">
+
+      <button id="save-btn" class="btn-primary">保存记录</button>
       <div class="btn-back">
         <button id="back-user">返回用户页</button>
       </div>
 
+      <!-- 管理列表 -->
       <h3 class="sub-title">管理列表</h3>
-      <div id="admin-list" class="list"></div>
+      <div class="list" id="admin-list"></div>
     </div>
-
-    <div class="admin-entrance" id="admin-entrance">LCX</div>
   </div>
 
-  <!-- 主详情弹窗 -->
-  <div class="modal-overlay" id="detail-overlay">
+  <!-- 管理员入口（右下角） -->
+  <div id="admin-entrance" class="admin-entrance">管理</div>
+
+  <!-- 登录弹窗 -->
+  <div id="login-overlay" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-content">
+        <div class="modal-title">管理员登录</div>
+        <input type="password" id="admin-pwd-input" class="modal-input" placeholder="请输入管理员密码">
+        <div class="modal-btn-group">
+          <button id="login-cancel" class="modal-btn cancel">取消</button>
+          <button id="login-confirm" class="modal-btn confirm">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情弹窗 -->
+  <div id="detail-overlay" class="modal-overlay">
     <div class="modal-box detail-modal">
-      <h3 class="modal-title">详细统计信息</h3>
-      <!-- ✅ 修复：文字顺序错误，把单位放到span内部，确保右浮动时整体对齐 -->
-      <div class="detail-item">总工时：<span id="stat-work-hours">0 小时</span></div>
-      <div class="detail-item">出勤天数：<span id="stat-work-days">0 天</span></div>
-      <div class="detail-item">21点下班天数：<span id="stat-21h-days">0 天</span></div>
-      <div class="detail-item">22点下班天数：<span id="stat-22h-days">0 天</span></div>
-      <div class="detail-item">23点下班天数：<span id="stat-23h-days">0 天</span></div>
-      <div class="detail-item">基本工资：<span id="stat-base-money">¥0.00</span></div>
-      <div class="detail-item">加班补贴：<span id="stat-allowance">¥0.00</span></div>
-
-      <div class="detail-list-title">周期记录明细</div>
-      <div id="cycle-group-list"></div>
-
-      <div class="modal-btn-group">
-        <button class="modal-btn confirm" id="detail-close">关闭</button>
+      <div class="modal-content">
+        <div class="modal-title">本期详情</div>
+        <div class="detail-item">
+          <span>总工时</span>
+          <span id="stat-work-hours">0 小时</span>
+        </div>
+        <div class="detail-item">
+          <span>出勤天数</span>
+          <span id="stat-work-days">0 天</span>
+        </div>
+        <div class="detail-item">
+          <span>21点下班</span>
+          <span id="stat-21h-days">0 天</span>
+        </div>
+        <div class="detail-item">
+          <span>22点下班</span>
+          <span id="stat-22h-days">0 天</span>
+        </div>
+        <div class="detail-item">
+          <span>23点下班</span>
+          <span id="stat-23h-days">0 天</span>
+        </div>
+        <div class="detail-item">
+          <span>总基本工资</span>
+          <span id="stat-base-money">¥0.00</span>
+        </div>
+        <div class="detail-item">
+          <span>总加班补贴</span>
+          <span id="stat-allowance">¥0.00</span>
+        </div>
+        <div class="detail-list-title">历史周期</div>
+        <div id="cycle-group-list"></div>
+        <div style="text-align:center;padding:16px;">
+          <button id="detail-close" class="btn-primary" style="width:80%;">关闭</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 子弹窗：周期内每日明细 -->
-  <div class="modal-overlay" id="cycle-detail-overlay">
+  <!-- 周期详情弹窗 -->
+  <div id="cycle-detail-overlay" class="modal-overlay">
     <div class="modal-box">
-      <h3 class="modal-title" id="cycle-detail-title">周期明细</h3>
-      <div id="cycle-detail-record-list"></div>
-      <div class="modal-btn-group">
-        <button class="modal-btn confirm" id="cycle-detail-close">关闭</button>
+      <div class="modal-content">
+        <div class="modal-title" id="cycle-detail-title"></div>
+        <div id="cycle-detail-record-list"></div>
+        <div style="text-align:center;padding:16px;">
+          <button id="cycle-detail-close" class="btn-primary" style="width:80%;">关闭</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 管理员登录弹窗 -->
-  <div class="modal-overlay" id="login-overlay">
+  <!-- 周期工资统计弹窗 -->
+  <div id="cycle-total-overlay" class="modal-overlay">
     <div class="modal-box">
-      <h3 class="modal-title">管理员登录</h3>
-      <input type="password" id="admin-pwd-input" class="modal-input" placeholder="请输入管理员密码">
-      <div class="modal-btn-group">
-        <button class="modal-btn cancel" id="login-cancel">取消</button>
-        <button class="modal-btn confirm" id="login-confirm">确定</button>
+      <div class="modal-content">
+        <div class="modal-title" id="cycle-total-title"></div>
+        <div style="padding:20px;text-align:center;" id="cycle-total-info"></div>
+        <div style="text-align:center;padding:16px;">
+          <button id="cycle-total-close" class="btn-primary" style="width:80%;">关闭</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 周期总工资弹窗 -->
-<div class="modal-overlay" id="cycle-total-overlay">
-  <div class="modal-box">
-    <h3 class="modal-title" id="cycle-total-title">周期工资统计</h3>
-    <div id="cycle-total-info" style="padding:10px; line-height:2;"></div>
-    <div class="modal-btn-group">
-      <button class="modal-btn confirm" id="cycle-total-close">关闭</button>
-    </div>
-  </div>
-</div>
+  <!-- Toast提示 -->
+  <div id="toast" class="toast"></div>
 
-  <div class="toast" id="toast"></div>
-
+  <!-- LeanCloud SDK -->
   <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <!-- 本地JS -->
   <script src="js/script.js"></script>
-
-<!-- 禁止双击放大 JS -->
-<script>
-let lastTouchEnd = 0;
-document.documentElement.addEventListener('touchstart', function(e) {
-  if (e.touches.length > 1) e.preventDefault();
-}, { passive: false });
-
-document.documentElement.addEventListener('touchend', function(e) {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300) e.preventDefault();
-  lastTouchEnd = now;
-}, false);
-
-document.addEventListener('gesturestart', function(e) {
-  e.preventDefault();
-});
-</script>
-
 </body>
 </html>
