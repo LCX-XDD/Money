@@ -4,11 +4,11 @@
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  /* ✅ 禁止双击放大 */
+  /* 禁止双击放大 */
   touch-action: manipulation;
 }
 
-/* ✅ 全局禁止缩放 */
+/* 全局禁止缩放 */
 html, body {
   touch-action: pan-x pan-y;
   -webkit-touch-callout: none;
@@ -23,6 +23,7 @@ body {
   justify-content: center; /* 水平居中 */
   align-items: center; /* 垂直居中 */
   padding: 20px 10px;
+  transition: background-color 0.3s ease;
 }
 
 .white-window {
@@ -32,6 +33,7 @@ body {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 420px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 @media (min-width: 768px) {
@@ -54,9 +56,10 @@ body {
   font-weight: 700;
   margin-bottom: 24px;
   color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
-/* ✅ 总工资卡片内容全部靠左对齐 */
+/* 总工资卡片：固定高度+无闪烁加载 */
 .total-wage-box {
   background: linear-gradient(135deg, #007aff, #5856d6);
   border-radius: 20px;
@@ -68,6 +71,7 @@ body {
   min-height: 200px; /* 固定最小高度，避免加载时页面跳动 */
 }
 
+/* 无闪烁加载覆盖层（核心解决闪烁） */
 .total-wage-box .loading-overlay {
   position: absolute;
   top: 0;
@@ -90,6 +94,7 @@ body {
   visibility: visible;
 }
 
+/* 刷新按钮在加载层之上，随时可点击 */
 .refresh-btn {
   position: absolute;
   top: 16px;
@@ -159,6 +164,7 @@ body {
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 24px;
+  transition: background-color 0.3s ease;
 }
 
 .calendar-head {
@@ -168,6 +174,7 @@ body {
   margin-bottom: 12px;
   font-weight: 600;
   color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .calendar-head button {
@@ -192,6 +199,7 @@ body {
   font-size: 12px;
   color: #8e8e93;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .calendar-body {
@@ -211,6 +219,7 @@ body {
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
+  color: #1d1d1f;
 }
 
 .calendar-day.other {
@@ -246,6 +255,9 @@ body {
   font-size: 16px;
   margin-bottom: 12px;
   outline: none;
+  background: white;
+  color: #1d1d1f;
+  transition: all 0.3s ease;
 }
 
 .form-input:focus {
@@ -263,6 +275,7 @@ body {
   width: 80px;
   font-size: 16px;
   color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .time-select {
@@ -273,6 +286,9 @@ body {
   font-size: 16px;
   outline: none;
   min-width: 140px;
+  background: white;
+  color: #1d1d1f;
+  transition: all 0.3s ease;
 }
 
 .time-select:focus {
@@ -285,6 +301,7 @@ body {
   color: #8e8e93;
   margin-bottom: 12px;
   padding-right: 4px;
+  transition: color 0.3s ease;
 }
 
 .btn-primary {
@@ -313,6 +330,7 @@ body {
   color: #ff3b30;
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .sub-title {
@@ -320,6 +338,7 @@ body {
   font-weight: 600;
   margin: 24px 0 12px;
   color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .list {
@@ -331,6 +350,7 @@ body {
   border-radius: 12px;
   margin-bottom: 8px;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .cycle-header {
@@ -339,6 +359,8 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .hidden {
@@ -375,7 +397,7 @@ body {
   max-height: 80vh;
   overflow: hidden;
   transform: translateY(20px);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .modal-overlay.show .modal-box {
@@ -397,6 +419,8 @@ body {
   font-size: 18px;
   font-weight: 600;
   text-align: center;
+  color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .modal-input {
@@ -407,11 +431,15 @@ body {
   border-radius: 12px;
   font-size: 16px;
   outline: none;
+  background: white;
+  color: #1d1d1f;
+  transition: all 0.3s ease;
 }
 
 .modal-btn-group {
   display: flex;
   border-top: 1px solid #e5e5ea;
+  transition: border-color 0.3s ease;
 }
 
 .modal-btn {
@@ -421,11 +449,13 @@ body {
   background: white;
   font-size: 16px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .modal-btn.cancel {
   color: #8e8e93;
   border-right: 1px solid #e5e5ea;
+  transition: all 0.3s ease;
 }
 
 .modal-btn.confirm {
@@ -438,6 +468,8 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 16px;
+  color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .detail-item span:last-child {
@@ -451,6 +483,8 @@ body {
   font-weight: 600;
   border-top: 1px solid #e5e5ea;
   margin-top: 8px;
+  color: #1d1d1f;
+  transition: all 0.3s ease;
 }
 
 .cycle-detail-item {
@@ -458,6 +492,7 @@ body {
   border-radius: 12px;
   padding: 16px;
   margin: 0 20px 12px;
+  transition: background-color 0.3s ease;
 }
 
 .date-text {
@@ -465,12 +500,15 @@ body {
   color: #8e8e93;
   display: block;
   margin-bottom: 6px;
+  transition: color 0.3s ease;
 }
 
 .info-line {
   font-size: 14px;
   margin-bottom: 4px;
   line-height: 1.4;
+  color: #1d1d1f;
+  transition: color 0.3s ease;
 }
 
 .money {
@@ -517,7 +555,7 @@ body {
   color: white;
 }
 
-/* ✅ Toast 保持在页面顶端 */
+/* Toast 保持在页面顶端 */
 .toast {
   position: fixed;
   top: 20px;
@@ -572,6 +610,7 @@ body {
   font-size: 12px;
   cursor: pointer;
   z-index: 999;
+  transition: all 0.3s ease;
 }
 
 /* 弹窗滚动条美化 */
@@ -592,4 +631,136 @@ body {
 
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: #8e8e93;
+}
+
+/* ==================== 夜间模式（跟随系统） ==================== */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1c1c1e;
+  }
+
+  .white-window {
+    background: #2c2c2e;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .title {
+    color: #f5f5f7;
+  }
+
+  .calendar-wrap {
+    background: #3a3a3c;
+  }
+
+  .calendar-head {
+    color: #f5f5f7;
+  }
+
+  .calendar-week {
+    color: #aeaeb2;
+  }
+
+  .calendar-day {
+    color: #f5f5f7;
+  }
+
+  .form-input {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+  }
+
+  .time-row label {
+    color: #f5f5f7;
+  }
+
+  .time-select {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+  }
+
+  .time-tip {
+    color: #aeaeb2;
+  }
+
+  .btn-back button {
+    background: #2c2c2e;
+  }
+
+  .sub-title {
+    color: #f5f5f7;
+  }
+
+  .cycle-group {
+    background: #3a3a3c;
+  }
+
+  .cycle-header {
+    color: #f5f5f7;
+  }
+
+  .modal-box {
+    background: #2c2c2e;
+  }
+
+  .modal-title {
+    color: #f5f5f7;
+  }
+
+  .modal-input {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+  }
+
+  .modal-btn-group {
+    border-top-color: #48484a;
+  }
+
+  .modal-btn {
+    background: #2c2c2e;
+  }
+
+  .modal-btn.cancel {
+    border-right-color: #48484a;
+  }
+
+  .detail-item {
+    color: #f5f5f7;
+  }
+
+  .detail-list-title {
+    border-top-color: #48484a;
+    color: #f5f5f7;
+  }
+
+  .cycle-detail-item {
+    background: #3a3a3c;
+  }
+
+  .date-text {
+    color: #aeaeb2;
+  }
+
+  .info-line {
+    color: #f5f5f7;
+  }
+
+  .admin-entrance {
+    background: rgba(255, 255, 255, 0.1);
+    color: #aeaeb2;
+  }
+
+  .modal-content::-webkit-scrollbar-track {
+    background: #3a3a3c;
+  }
+
+  .modal-content::-webkit-scrollbar-thumb {
+    background: #636366;
+  }
+
+  .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #8e8e93;
+  }
 }
