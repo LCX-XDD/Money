@@ -1,163 +1,79 @@
-/* ========================================
-   iOS 系统设计规范 - 全局基础
-   ======================================== */
-:root {
-  /* 浅色模式（iOS系统色） */
-  --ios-bg-primary: #f2f2f7;
-  --ios-bg-card: rgba(255, 255, 255, 0.85);
-  --ios-tint: #007aff;
-  --ios-text-primary: #1c1c1e;
-  --ios-text-secondary: #8e8e93;
-  --ios-success: #34c759;
-  --ios-danger: #ff3b30;
-  --ios-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --ios-blur: 20px;
-  --ios-radius-card: 20px;
-  --ios-radius-button: 12px;
-}
-
-/* 深色模式（iOS系统色） */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ios-bg-primary: #1c1c1e;
-    --ios-bg-card: rgba(44, 44, 46, 0.85);
-    --ios-tint: #0a84ff;
-    --ios-text-primary: #f2f2f7;
-    --ios-text-secondary: #98989d;
-    --ios-success: #30d158;
-    --ios-danger: #ff453a;
-    --ios-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  }
-}
-
-/* 全局重置 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  touch-action: manipulation;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  -webkit-text-size-adjust: 100%;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* 全局字体（苹果系统栈） */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-smoothing: antialiased;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: var(--ios-bg-primary);
+  background-color: #f5f5f7;
+  padding: 20px 10px;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  line-height: 1.47;
 }
 
-/* ========================================
-   主卡片容器（iOS磨砂质感）
-   ======================================== */
+/* ✅ 核心自适应：不同设备自动缩放窗口大小 */
 .white-window {
-  background: var(--ios-bg-card);
-  border-radius: var(--ios-radius-card);
-  padding: 32px 24px;
-  max-width: 400px;
+  background: white;
+  border-radius: 24px;
+  padding: 24px 16px;
+  margin: 0 auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  /* 手机端默认宽度 */
   width: 100%;
-  box-shadow: var(--ios-shadow);
-  backdrop-filter: blur(var(--ios-blur));
-  -webkit-backdrop-filter: blur(var(--ios-blur));
-  position: relative;
-  text-align: center;
-  border: none;
+  max-width: 420px;
 }
 
-/* ========================================
-   文字层级（严格iOS规范）
-   ======================================== */
-/* 页面主标题 */
+/* 平板设备（768px以上） */
+@media (min-width: 768px) {
+  .white-window {
+    max-width: 650px;
+    padding: 32px 24px;
+  }
+}
+
+/* 电脑设备（1024px以上） */
+@media (min-width: 1024px) {
+  .white-window {
+    max-width: 800px;
+    padding: 36px 32px;
+  }
+}
+
 .title {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--ios-text-primary);
-  margin-bottom: 18px;
-  letter-spacing: -0.3px;
-}
-
-/* 计薪周期（辅助文本） */
-.cycle-text {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--ios-text-secondary);
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-/* 总工资标签 */
-.total-wage-label {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--ios-text-primary);
-  margin-bottom: 8px;
-}
-
-/* 核心金额数据（视觉焦点） */
-.total-wage-value {
-  font-size: 36px;
+  text-align: center;
+  font-size: 24px;
   font-weight: 700;
-  color: var(--ios-tint);
-  margin-bottom: 40px;
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
+  margin-bottom: 24px;
+  color: #1d1d1f;
 }
 
-/* 底部签名 */
-.footer-text {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--ios-text-secondary);
-  margin-top: 24px;
-  opacity: 0.6;
+.total-wage-box {
+  background: linear-gradient(135deg, #007aff, #5856d6);
+  border-radius: 20px;
+  padding: 24px;
+  color: white;
+  margin-bottom: 24px;
+  position: relative;
 }
 
-/* ========================================
-   按钮系统（iOS原生风格）
-   ======================================== */
-/* 右上角刷新按钮（图标风格） */
 .refresh-btn {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-  color: var(--ios-tint);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
 }
 
-.refresh-btn:hover {
-  opacity: 0.7;
-}
-
-.refresh-btn:active {
-  opacity: 0.5;
-}
-
-/* 刷新按钮旋转动画 */
 .refresh-btn.spinning {
-  animation: spin 0.6s linear;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -165,348 +81,42 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* 主按钮（系统实心风格） */
+.cycle-text {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.total-wage-label {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-top: 12px;
+}
+
+.total-wage-value {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .btn-detail {
-  width: 100%;
-  padding: 14px 24px;
-  font-size: 17px;
-  font-weight: 500;
-  color: #ffffff;
-  background: var(--ios-tint);
-  border: none;
-  border-radius: var(--ios-radius-button);
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
-  transform: scale(1);
-}
-
-.btn-detail:hover {
-  filter: brightness(1.05);
-}
-
-.btn-detail:active {
-  transform: scale(0.96);
-  filter: brightness(0.95);
-}
-
-/* ========================================
-   弹窗系统（统一iOS风格）
-   ======================================== */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.25s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.modal-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal-box {
-  background: var(--ios-bg-card);
-  width: 90%;
-  max-width: 360px;
-  padding: 24px;
-  border-radius: var(--ios-radius-card);
-  box-shadow: var(--ios-shadow);
-  transform: translateY(20px) scale(0.95);
-  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  backdrop-filter: blur(var(--ios-blur));
-  -webkit-backdrop-filter: blur(var(--ios-blur));
-  text-align: center;
-  border: none;
-}
-
-.modal-overlay.show .modal-box {
-  transform: translateY(0) scale(1);
-}
-
-.modal-title {
-  font-size: 19px;
-  font-weight: 600;
-  color: var(--ios-text-primary);
-  margin-bottom: 20px;
-  letter-spacing: -0.3px;
-}
-
-/* 弹窗输入框 */
-.modal-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: var(--ios-radius-button);
-  font-size: 17px;
-  margin-bottom: 20px;
-  outline: none;
-  background: rgba(0, 0, 0, 0.02);
-  color: var(--ios-text-primary);
-  transition: border-color 0.2s ease;
-}
-
-.modal-input:focus {
-  border-color: var(--ios-tint);
-}
-
-/* 弹窗按钮组 */
-.modal-btn-group {
-  display: flex;
-  gap: 12px;
-}
-
-.modal-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: var(--ios-radius-button);
-  font-size: 17px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  transform: scale(1);
-}
-
-.modal-btn:active {
-  transform: scale(0.96);
-}
-
-.modal-btn.cancel {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--ios-text-primary);
-}
-
-.modal-btn.confirm {
-  background: var(--ios-tint);
-  color: #ffffff;
-}
-
-/* 详情弹窗 */
-#detail-overlay .modal-box {
-  max-width: 400px;
-  max-height: 80vh;
-  overflow-y: auto;
-  text-align: left;
-}
-
-.detail-item {
-  font-size: 17px;
-  line-height: 2.2;
-  color: var(--ios-text-primary);
-  font-weight: 400;
-}
-
-.detail-item span {
-  color: var(--ios-tint);
-  font-weight: 600;
-  float: right;
-}
-
-/* 周期明细弹窗 */
-#cycle-detail-overlay .modal-box {
-  max-width: 400px;
-  max-height: 80vh;
-  text-align: left;
-}
-
-#cycle-detail-record-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 450px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.cycle-detail-item {
-  background: rgba(0, 122, 255, 0.08);
-  border-radius: var(--ios-radius-button);
-  padding: 14px;
-  border-left: 3px solid var(--ios-tint);
-}
-
-.cycle-detail-item .date-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ios-tint);
   display: block;
-  margin-bottom: 6px;
-}
-
-.cycle-detail-item .info-line {
-  font-size: 14px;
-  color: var(--ios-text-primary);
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-.cycle-detail-item .money {
-  color: var(--ios-tint);
-  font-weight: 600;
-}
-
-/* ========================================
-   通用组件
-   ======================================== */
-/* Toast 轻提示 */
-.toast {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  padding: 14px 24px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
-  font-size: 15px;
-  border-radius: var(--ios-radius-button);
-  z-index: 99999;
-  opacity: 0;
-  transition: all 0.25s ease;
-  pointer-events: none;
-  font-weight: 500;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.toast.success {
-  background: rgba(0, 122, 255, 0.85);
-}
-
-.toast.error {
-  background: rgba(255, 59, 48, 0.85);
-}
-
-/* 加载动画 */
-.loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-top-color: var(--ios-tint);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* ========================================
-   管理员页面专属样式
-   ======================================== */
-.sub-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--ios-text-primary);
-  margin: 24px 0 16px;
-  text-align: left;
-}
-
-.form-box {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.form-input, .time-select {
-  height: 44px;
-  padding: 0 16px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: var(--ios-radius-button);
-  font-size: 17px;
-  background: rgba(0, 0, 0, 0.02);
-  color: var(--ios-text-primary);
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.form-input:focus, .time-select:focus {
-  border-color: var(--ios-tint);
-}
-
-.time-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.time-row label {
-  width: 80px;
-  font-size: 15px;
-  color: var(--ios-text-secondary);
-  font-weight: 500;
-}
-
-.time-tip {
-  color: var(--ios-text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  padding: 4px 0;
-}
-
-.btn-primary {
   width: 100%;
-  height: 44px;
-  background: var(--ios-tint);
-  color: #ffffff;
+  padding: 12px;
+  margin-top: 16px;
   border: none;
-  border-radius: var(--ios-radius-button);
-  font-size: 17px;
-  font-weight: 500;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  transform: scale(1);
 }
 
-.btn-primary:active {
-  transform: scale(0.96);
-}
-
-.btn-back {
-  text-align: center;
-  margin: 12px 0;
-}
-
-.btn-back button {
-  padding: 10px 24px;
-  border-radius: var(--ios-radius-button);
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--ios-text-primary);
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.15s ease;
-  transform: scale(1);
-}
-
-.btn-back button:active {
-  transform: scale(0.96);
-}
-
-/* 日历 */
 .calendar-wrap {
-  border-radius: var(--ios-radius-card);
+  background: #f5f5f7;
+  border-radius: 16px;
   padding: 16px;
-  margin-bottom: 20px;
-  background: rgba(0, 0, 0, 0.02);
-  border: none;
+  margin-bottom: 24px;
 }
 
 .calendar-head {
@@ -514,43 +124,28 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  gap: 8px;
+  font-weight: 600;
+  color: #1d1d1f;
 }
 
 .calendar-head button {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--ios-radius-button);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: none;
-  background: var(--ios-tint);
+  background: #007aff;
   color: white;
-  font-size: 16px;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-  transform: scale(1);
-}
-
-.calendar-head button:active {
-  transform: scale(0.92);
-}
-
-#calendar-title {
-  flex: 1;
-  text-align: center;
-  font-size: 15px;
-  color: var(--ios-text-primary);
-  font-weight: 600;
+  font-size: 16px;
 }
 
 .calendar-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  color: var(--ios-text-secondary);
-  font-weight: 600;
-  margin-bottom: 6px;
   font-size: 12px;
+  color: #8e8e93;
+  margin-bottom: 8px;
 }
 
 .calendar-body {
@@ -560,207 +155,349 @@ body {
 }
 
 .calendar-day {
-  aspect-ratio: 1/1;
-  width: 100%;
-  max-height: 44px;
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  align-items: center;
+  border-radius: 8px;
+  font-size: 14px;
   cursor: pointer;
-  font-weight: 500;
-  padding: 2px;
-  font-size: 13px;
-  color: var(--ios-text-primary);
-  transition: all 0.15s ease;
-  transform: scale(1);
-}
-
-.calendar-day:active {
-  transform: scale(0.92);
-}
-
-.calendar-day .shift-tag {
-  font-size: 8px;
-  color: var(--ios-text-secondary);
-  margin-top: 1px;
-  font-weight: 500;
-}
-
-.calendar-day.has-record {
-  background: rgba(0, 122, 255, 0.15) !important;
-  color: var(--ios-tint) !important;
+  position: relative;
 }
 
 .calendar-day.other {
-  color: var(--ios-text-secondary);
-  opacity: 0.4;
+  visibility: hidden;
+}
+
+.calendar-day.has-record {
+  background: #007aff;
+  color: white;
 }
 
 .calendar-day.rest {
-  background: rgba(52, 199, 89, 0.15) !important;
-  color: #34c759 !important;
-}
-
-.calendar-day.rest .shift-tag {
-  color: #34c759 !important;
+  background: #34c759;
+  color: white;
 }
 
 .calendar-day.selected {
-  background: var(--ios-tint) !important;
-  color: #fff !important;
-  transform: scale(0.96);
+  border: 2px solid #ff9500;
 }
 
-.calendar-day.selected .shift-tag {
-  color: #fff !important;
+.shift-tag {
+  font-size: 10px;
+  margin-top: 2px;
 }
 
-/* 周期列表 */
-.cycle-group {
-  margin: 10px 0;
-  border-radius: var(--ios-radius-button);
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 12px;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #007aff;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.time-row label {
+  width: 80px;
+  font-size: 16px;
+  color: #1d1d1f;
+}
+
+/* ✅ 增加时间选择下拉框的长度 */
+.time-select {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  min-width: 140px; /* 最小宽度，确保下拉选项足够长 */
+}
+
+.time-select:focus {
+  border-color: #007aff;
+}
+
+.time-tip {
+  text-align: right;
+  font-size: 14px;
+  color: #8e8e93;
+  margin-bottom: 12px;
+  padding-right: 4px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
   border: none;
+  border-radius: 12px;
+  background: #007aff;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-back {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.btn-back button {
+  padding: 10px 20px;
+  border: 1px solid #ff3b30;
+  border-radius: 12px;
+  background: white;
+  color: #ff3b30;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sub-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 12px;
+  color: #1d1d1f;
+}
+
+.list {
+  margin-bottom: 24px;
+}
+
+.cycle-group {
+  background: #f5f5f7;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
 }
 
 .cycle-header {
-  padding: 14px;
-  font-size: 15px;
-  cursor: pointer;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--ios-text-primary);
-  font-weight: 500;
-  transition: all 0.15s ease;
-  transform: scale(1);
-}
-
-.cycle-header:active {
-  transform: scale(0.98);
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.admin-entrance {
-  text-align: center;
-  color: var(--ios-text-secondary);
-  margin-top: 20px;
   cursor: pointer;
-  font-size: 12px;
-  transition: color 0.2s ease;
-  opacity: 0.4;
 }
 
-.admin-entrance:hover {
-  opacity: 0.7;
-}
-
-/* 隐藏所有多余元素 */
 .hidden {
   display: none !important;
 }
 
-/* 滚动条美化 */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-}
-
-/* 首页工资卡片 */
-.total-wage-box {
-  text-align: center;
-  margin-top: 10px;
-  padding: 32px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: var(--ios-radius-card);
-  position: relative;
-  backdrop-filter: blur(var(--ios-blur));
-  -webkit-backdrop-filter: blur(var(--ios-blur));
-  border: none;
-}
-
-/* 列表 */
-.list {
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
 }
 
-.item {
+.modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal-box {
+  transform: translateY(0);
+}
+
+.detail-modal {
+  max-width: 450px;
+}
+
+.modal-title {
+  padding: 20px 20px 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.modal-input {
+  width: calc(100% - 40px);
+  margin: 0 20px 16px;
+  padding: 12px 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+}
+
+.modal-btn-group {
+  display: flex;
+  border-top: 1px solid #e5e5ea;
+}
+
+.modal-btn {
+  flex: 1;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: var(--ios-radius-button);
-  border-left: 4px solid var(--ios-tint);
-  backdrop-filter: blur(var(--ios-blur));
-  -webkit-backdrop-filter: blur(var(--ios-blur));
-  transition: all 0.2s ease;
+  border: none;
+  background: white;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.item-date {
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 8px;
-  color: var(--ios-text-primary);
+.modal-btn.cancel {
+  color: #8e8e93;
+  border-right: 1px solid #e5e5ea;
 }
 
-.item-money {
-  color: var(--ios-success);
-  font-weight: 700;
-  margin: 8px 0;
-  font-size: 15px;
+.modal-btn.confirm {
+  color: #007aff;
+  font-weight: 600;
 }
 
+.detail-item {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+}
+
+.detail-item span:last-child {
+  color: #007aff;
+  font-weight: 500;
+}
+
+.detail-list-title {
+  padding: 16px 20px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border-top: 1px solid #e5e5ea;
+  margin-top: 8px;
+}
+
+.cycle-detail-item {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f5f5f7;
+}
+
+.date-text {
+  font-size: 12px;
+  color: #8e8e93;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.info-line {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.money {
+  color: #007aff;
+  font-weight: 500;
+}
+
+/* ✅ 管理员弹窗编辑删除按钮圆角（类似椭圆但不是椭圆） */
 .item-op {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .btn-sm {
-  padding: 6px 12px;
-  border-radius: var(--ios-radius-sm);
+  padding: 6px 18px;
   border: none;
-  color: white;
+  border-radius: 20px; /* 圆角矩形，不是纯椭圆 */
+  font-size: 14px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
-  transform: scale(1);
-}
-
-.btn-sm:hover {
-  filter: brightness(1.05);
-}
-
-.btn-sm:active {
-  transform: scale(0.92);
+  margin-right: 8px;
 }
 
 .btn-edit {
-  background: var(--ios-tint);
+  background: #007aff;
+  color: white;
 }
 
 .btn-del {
-  background: var(--ios-danger);
+  background: #ff3b30;
+  color: white;
 }
 
-/* 详情列表标题 */
-.detail-list-title {
-  color: var(--ios-text-primary);
-  font-size: 17px;
-  font-weight: 700;
-  margin-top: 16px;
-  margin-bottom: 12px;
+/* ✅ Toast 移到页面顶端，不挡住工资数字 */
+.toast {
+  position: fixed;
+  top: 20px; /* 改为顶部20px */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.toast.success {
+  background: #34c759;
+}
+
+.toast.error {
+  background: #ff3b30;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+.admin-entrance {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  color: #8e8e93;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  cursor: pointer;
 }
