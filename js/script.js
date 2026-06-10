@@ -200,9 +200,9 @@ function initTimeSelect() {
 
     if (val === '早班' || val === '中班' || val === '晚班') {
       // 显示第一段和饭点
-      document.getElementById('normal-time-row').classList.remove('hidden');
-      document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('meal-wrap').classList.remove('hidden');
+      document.getElementById('normal-time-row').classList.add('hidden');
+      document.getElementById('normal-end-row').classList.add('hidden');
+      document.getElementById('meal-wrap').classList.add('hidden');
       
       // 启用上班，下班/饭点仍由「是否选上班」控制
       shiftEnd.disabled = !shiftStart.value;
@@ -211,10 +211,10 @@ function initTimeSelect() {
 
     if (val === '拼班') {
       // 显示第一段和第二段
-      document.getElementById('normal-time-row').classList.remove('hidden');
-      document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('part2-start-row').classList.remove('hidden');
-      document.getElementById('part2-end-row').classList.remove('hidden');
+      document.getElementById('normal-time-row').classList.add('hidden');
+      document.getElementById('normal-end-row').classList.add('hidden');
+      document.getElementById('part2-start-row').classList.add('hidden');
+      document.getElementById('part2-end-row').classList.add('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
@@ -675,6 +675,7 @@ function openCycleDetailPopup(cycleKey, records) {
     `;
 
     document.getElementById('cycle-total-overlay').classList.add('show');
+    disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
   };
 
   btnBox.appendChild(calcBtn);
@@ -724,6 +725,7 @@ function openCycleDetailPopup(cycleKey, records) {
   });
 
   cycleDetailOverlay.classList.add('show');
+  disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
 }
 // 管理员周期详情弹窗（带编辑删除按钮）
 function openAdminCycleDetailPopup(cycleKey, records) {
@@ -796,6 +798,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     `;
 
     document.getElementById('cycle-total-overlay').classList.add('show');
+    disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
   };
 
   btnBox.appendChild(calcBtn);
@@ -866,6 +869,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     itemEl.querySelector('.btn-edit').addEventListener('click', function () {
       // 关闭弹窗
       cycleDetailOverlay.classList.remove('show');
+      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
       
       // 1. 获取所有DOM元素
       const dateInput = document.getElementById('record-date');
@@ -926,6 +930,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
         loadData();
         showToast('删除成功', 'success');
         cycleDetailOverlay.classList.remove('show');
+        enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
       } catch (e) {
         showToast('删除失败', 'error');
       }
@@ -933,6 +938,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   });
 
   cycleDetailOverlay.classList.add('show');
+  disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -963,10 +969,12 @@ document.addEventListener('DOMContentLoaded', function () {
       loginOverlay.classList.add('show');
       adminPwdInput.value = '';
       adminPwdInput.focus();
+      disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
     });
 
     loginCancelBtn.addEventListener('click', () => {
       loginOverlay.classList.remove('show');
+      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
 
     loginConfirmBtn.addEventListener('click', () => {
@@ -974,6 +982,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (pwd === 'admin123') {
         localStorage.setItem('isAdminLoggedIn', 'true');
         loginOverlay.classList.remove('show');
+        enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
         userView.classList.add('hidden');
         adminView.classList.remove('hidden');
         adminEntrance.classList.add('hidden');
@@ -1080,9 +1089,11 @@ document.addEventListener('DOMContentLoaded', function () {
     detailBtn.addEventListener('click', () => {
       renderTotalAndStat();
       detailOverlay.classList.add('show');
+      disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
     });
     detailClose.addEventListener('click', () => {
       detailOverlay.classList.remove('show');
+      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
   }
 
@@ -1091,6 +1102,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (cycleDetailClose && cycleDetailOverlay) {
     cycleDetailClose.addEventListener('click', () => {
       cycleDetailOverlay.classList.remove('show');
+      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
   }
 
@@ -1099,8 +1111,19 @@ document.addEventListener('DOMContentLoaded', function () {
   if (cycleTotalClose && cycleTotalOverlay) {
     cycleTotalClose.addEventListener('click', () => {
       cycleTotalOverlay.classList.remove('show');
+      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
     });
   }
+
+  // ✅ 点击弹窗遮罩层关闭弹窗并恢复滚动
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+        enableBodyScroll();
+      }
+    });
+  });
 
 // 延迟 500 毫秒加载，解决 SDK 未初始化完成导致的失败
 setTimeout(() => {
