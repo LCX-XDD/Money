@@ -1079,23 +1079,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const backUserBtn = document.getElementById('back-user-btn');
-  if (backUserBtn && adminView && userView && adminEntrance) {
-    backUserBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
-      e.stopPropagation();
-      e.preventDefault();
-      // 点击后立即失去焦点
-      this.blur();
+// ✅ 修复：返回用户页按钮点击失效问题（ID匹配错误）
+const backUserBtn = document.getElementById('back-user');
+if (backUserBtn && adminView && userView && adminEntrance) {
+  backUserBtn.addEventListener('click', function (e) {
+    // 阻止事件冒泡和默认行为
+    e.stopPropagation();
+    e.preventDefault();
+    // 点击后立即失去焦点
+    this.blur();
 
-      localStorage.removeItem('isAdminLoggedIn');
-      adminView.classList.add('hidden');
-      userView.classList.remove('hidden');
-      adminEntrance.classList.remove('hidden');
-      clearForm();
-      renderTotalAndStat();
-    });
-  }
+    localStorage.removeItem('isAdminLoggedIn');
+    adminView.classList.add('hidden');
+    userView.classList.remove('hidden');
+    adminEntrance.classList.remove('hidden');
+    clearForm();
+    renderTotalAndStat();
+    showToast('已返回用户页面', 'success');
+  });
+}
 
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
