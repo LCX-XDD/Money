@@ -1,49 +1,57 @@
 /* 全局主题变量（浅色模式默认） */
 :root {
-  --bg-primary: #f7f8fa;
-  --bg-card: #ffffff;
-  --bg-secondary: #fafbfc;
-  --bg-tertiary: #f5f7fa;
+  --bg-primary: rgba(247, 248, 250, 0.85);
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-secondary: rgba(250, 251, 252, 0.6);
+  --bg-tertiary: rgba(245, 247, 250, 0.7);
+  --bg-overlay: rgba(0, 0, 0, 0.25);
   --text-primary: #222222;
   --text-secondary: #333333;
   --text-muted: #666666;
   --text-faint: #999999;
-  --border-color: #e0e0e0;
-  --border-light: #f0f0f0;
+  --border-color: rgba(224, 224, 224, 0.5);
+  --border-light: rgba(240, 240, 240, 0.5);
   --primary-color: #409eff;
-  --primary-light: #e3f2fd;
+  --primary-light: rgba(64, 158, 255, 0.15);
   --success-color: #00c851;
-  --success-light: #e8f5e9;
+  --success-light: rgba(0, 200, 81, 0.15);
   --danger-color: #f56c6c;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --shadow-modal: 0 8px 25px rgba(0, 0, 0, 0.1);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-modal: 0 12px 48px rgba(0, 0, 0, 0.12);
+  --shadow-button: 0 4px 12px rgba(64, 158, 255, 0.3);
+  --shadow-success: 0 4px 12px rgba(0, 200, 81, 0.3);
+  --blur-radius: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 /* 深色模式自动跟随系统 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #121212;
-    --bg-card: #1e1e1e;
-    --bg-secondary: #252525;
-    --bg-tertiary: #2d2d2d;
+    --bg-primary: rgba(18, 18, 18, 0.85);
+    --bg-card: rgba(30, 30, 30, 0.7);
+    --bg-secondary: rgba(37, 37, 37, 0.6);
+    --bg-tertiary: rgba(45, 45, 45, 0.7);
+    --bg-overlay: rgba(0, 0, 0, 0.5);
     --text-primary: #e0e0e0;
     --text-secondary: #b0b0b0;
     --text-muted: #909090;
     --text-faint: #707070;
-    --border-color: #404040;
-    --border-light: #303030;
+    --border-color: rgba(64, 64, 64, 0.5);
+    --border-light: rgba(48, 48, 48, 0.5);
     --primary-color: #60a5fa;
-    --primary-light: #1e3a5f;
+    --primary-light: rgba(96, 165, 250, 0.2);
     --success-color: #86efac;
-    --success-light: #2e7d32;
+    --success-light: rgba(134, 239, 172, 0.2);
     --danger-color: #fca5a5;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    --shadow-modal: 0 8px 25px rgba(0, 0, 0, 0.4);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    --shadow-modal: 0 12px 48px rgba(0, 0, 0, 0.35);
+    --shadow-button: 0 4px 12px rgba(96, 165, 250, 0.3);
+    --shadow-success: 0 4px 12px rgba(134, 239, 172, 0.3);
   }
 
-  .modal-overlay {
-    background: rgba(0, 0, 0, 0.6);
-  }
   .toast {
     background: rgba(255, 255, 255, 0.15);
     color: var(--text-primary);
@@ -58,8 +66,9 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -74,122 +83,152 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  padding: 16px;
+  transition: background-color 0.3s ease;
+  /* 全局背景模糊基底 */
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
 }
 
+/* ✅ 主窗口毛玻璃效果 */
 .white-window {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: var(--radius-xl);
+  padding: 24px;
   max-width: 600px;
   width: 100%;
   box-shadow: var(--shadow);
   overflow: hidden;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
 }
 
 /* 主页面文字 */
 .title {
   text-align: center;
-  font-size: 24px;
+  font-size: 28px;
   color: var(--text-primary);
-  margin-bottom: 20px;
-  font-weight: bold;
+  margin-bottom: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .cycle-text {
   font-size: 16px;
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   text-align: center;
+  font-weight: 500;
 }
 
 .total-wage-line {
-  font-size: 22px;
+  font-size: 26px;
   color: var(--text-secondary);
-  margin-bottom: 22px;
-  font-weight: 500;
+  margin-bottom: 28px;
+  font-weight: 600;
   text-align: center;
 }
 
 .total-wage-line span {
   color: var(--success-color);
-  font-weight: bold;
-  font-size: 26px;
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -1px;
 }
 
 .sub-title {
-  font-size: 17px;
-  margin: 20px 0 12px;
+  font-size: 18px;
+  margin: 24px 0 16px;
   color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .hidden {
   display: none !important;
 }
 
-/* 首页工资卡片 */
+/* ✅ 首页工资卡片毛玻璃 */
 .total-wage-box {
   text-align: center;
   margin-top: 10px;
-  padding: 20px;
+  padding: 28px;
   background: var(--bg-secondary);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   position: relative;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  transition: all 0.3s ease;
 }
 
+/* ✅ 按钮统一动画 + 触感反馈 */
 .btn-detail {
-  padding: 14px 28px;
+  padding: 16px 32px;
   font-size: 16px;
   background: var(--primary-color);
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: filter 0.2s;
-  font-weight: 500;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  font-weight: 600;
+  box-shadow: var(--shadow-button);
+  /* 紧致点击动画 */
+  transform: scale(1);
 }
 
 .btn-detail:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
 }
 
-/* 日历样式（日期上显示班次） */
+.btn-detail:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+}
+
+/* ✅ 日历毛玻璃效果 */
 .calendar-wrap {
   background: var(--bg-secondary);
-  padding: 8px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
   overflow: hidden;
-  transition: background-color 0.3s ease;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
 }
 
 .calendar-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   gap: 8px;
 }
 
 .calendar-head button {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
   border: none;
   background: var(--primary-color);
   color: white;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: filter 0.2s;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .calendar-head button:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
+}
+
+.calendar-head button:active {
+  transform: scale(0.92);
 }
 
 #calendar-title {
@@ -197,8 +236,9 @@ body {
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .calendar-week {
@@ -206,40 +246,50 @@ body {
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   color: var(--text-muted);
-  font-weight: bold;
-  margin-bottom:4px;
-  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 12px;
 }
 
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap:2px;
+  gap: 4px;
 }
 
 .calendar-day {
-  aspect-ratio:1/1;
-  width:100%;
-  max-height:40px;
+  aspect-ratio: 1/1;
+  width: 100%;
+  max-height: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   background: var(--bg-tertiary);
-  font-weight: 500;
-  padding: 1px;
+  font-weight: 600;
+  padding: 2px;
   position: relative;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
+}
+
+.calendar-day:hover {
+  background: var(--border-light);
+}
+
+.calendar-day:active {
+  transform: scale(0.92);
 }
 
 .calendar-day .shift-tag {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--text-muted);
-  margin-top: 1px;
+  margin-top: 2px;
+  font-weight: 500;
 }
 
 .calendar-day.has-record {
@@ -249,7 +299,7 @@ body {
 
 .calendar-day.other {
   color: var(--text-faint);
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 /* 休息日期浅绿色标记 */
@@ -265,153 +315,185 @@ body {
 .calendar-day.selected {
   background: var(--primary-color) !important;
   color: #fff !important;
+  transform: scale(0.96);
 }
 
-/* 表单 */
+/* ✅ 表单毛玻璃效果 */
 .form-box {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   background: var(--bg-secondary);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  transition: background-color 0.3s ease;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
 }
 
 .form-input {
-  height: 42px;
-  padding: 0 12px;
+  height: 48px;
+  padding: 0 16px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
   background: var(--bg-card);
   color: var(--text-primary);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .time-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .time-row label {
-  width: 90px;
-  font-size: 13px;
+  width: 100px;
+  font-size: 14px;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .time-select {
   flex: 1;
-  height: 42px;
-  padding: 0 10px;
+  height: 48px;
+  padding: 0 12px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
   outline: none;
   background: var(--bg-card);
   color: var(--text-primary);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .time-select:focus {
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .time-tip {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 0;
 }
 
 .btn-primary {
-  height: 44px;
+  height: 48px;
   background: var(--success-color);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
   cursor: pointer;
-  font-weight: 500;
-  transition: filter 0.2s;
+  font-weight: 600;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  box-shadow: var(--shadow-success);
+  transform: scale(1);
 }
 
 .btn-primary:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px rgba(0, 200, 81, 0.2);
 }
 
 .btn-back {
   text-align: center;
-  margin: 10px 0;
+  margin: 12px 0;
 }
 
 .btn-back button {
-  padding: 8px 18px;
-  border-radius: 8px;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
   background: var(--text-muted);
   color: #fff;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  transition: filter 0.2s;
+  font-weight: 500;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .btn-back button:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
+}
+
+.btn-back button:active {
+  transform: scale(0.96);
 }
 
 /* 列表 */
 .list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .item {
-  padding: 14px;
+  padding: 16px;
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border-left: 4px solid var(--primary-color);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  transition: all 0.2s ease;
 }
 
 .item-date {
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
   color: var(--text-primary);
 }
 
 .item-money {
   color: var(--success-color);
-  font-weight: bold;
-  margin: 6px 0;
-  font-size: 14px;
+  font-weight: 700;
+  margin: 8px 0;
+  font-size: 15px;
 }
 
 .item-op {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .btn-sm {
-  padding: 5px 8px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
   border: none;
   color: white;
   cursor: pointer;
-  font-size: 12px;
-  transition: filter 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .btn-sm:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
+}
+
+.btn-sm:active {
+  transform: scale(0.92);
 }
 
 .btn-edit {
@@ -426,31 +508,33 @@ body {
 .admin-entrance {
   text-align: center;
   color: var(--text-faint);
-  margin-top: 16px;
+  margin-top: 20px;
   cursor: pointer;
   font-size: 12px;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
 }
 
 .admin-entrance:hover {
   color: var(--text-muted);
 }
 
-/* 全局轻量弹窗 + 修复动画 */
+/* ✅ 弹窗毛玻璃效果 */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.28s ease;
+  transition: all 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-overlay.show {
@@ -461,12 +545,15 @@ body {
 .modal-box {
   background: var(--bg-card);
   width: 90%;
-  max-width: 380px;
-  padding: 20px;
-  border-radius: 14px;
+  max-width: 400px;
+  padding: 24px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-modal);
-  transform: translateY(10px) scale(0.95);
-  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s ease, box-shadow 0.3s ease;
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s ease;
+  backdrop-filter: blur(var(--blur-radius));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  border: 1px solid var(--border-light);
 }
 
 .modal-overlay.show .modal-box {
@@ -475,47 +562,56 @@ body {
 
 .modal-title {
   text-align: center;
-  font-size: 17px;
+  font-size: 19px;
   color: var(--text-primary);
-  margin-bottom: 16px;
-  font-weight: 600;
+  margin-bottom: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 /* 登录弹窗输入框 */
 .modal-input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 14px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  margin-bottom: 20px;
   outline: none;
   background: var(--bg-card);
   color: var(--text-primary);
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .modal-input:focus {
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .modal-btn-group {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .modal-btn {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
   cursor: pointer;
-  transition: filter 0.2s;
+  font-weight: 600;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .modal-btn:hover {
-  filter: brightness(0.9);
+  filter: brightness(1.05);
+}
+
+.modal-btn:active {
+  transform: scale(0.96);
 }
 
 .modal-btn.cancel {
@@ -530,87 +626,100 @@ body {
 
 /* 详情弹窗数字蓝色加粗 */
 .detail-item {
-  font-size: 14px;
-  line-height: 2;
+  font-size: 15px;
+  line-height: 2.2;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .detail-item span {
   color: var(--primary-color);
-  font-weight: bold;
+  font-weight: 700;
 }
 
-/* ✅ 修复：周期记录明细标题颜色跟随主题 */
 .detail-list-title {
   color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: 12px;
 }
 
 /* 周期分组 */
 .cycle-group {
-  margin: 8px 0;
-  border-radius: 8px;
+  margin: 10px 0;
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-light);
-  transition: border-color 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .cycle-header {
   background: var(--bg-tertiary);
-  padding: 10px;
-  font-size: 14px;
+  padding: 14px;
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: var(--text-secondary);
-  transition: background-color 0.3s ease;
+  font-weight: 600;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .cycle-header:hover {
   background: var(--border-light);
 }
 
+.cycle-header:active {
+  transform: scale(0.98);
+}
+
 /* 周期明细子弹窗 */
 #cycle-detail-overlay .modal-box {
   border-top: 4px solid var(--primary-color);
   background: var(--bg-secondary);
-  max-width: 420px;
+  max-width: 440px;
 }
 
 #cycle-detail-record-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 400px;
+  gap: 10px;
+  max-height: 450px;
   overflow-y: auto;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cycle-detail-item {
   background: var(--primary-light);
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: var(--radius-md);
+  padding: 14px;
   border-left: 4px solid var(--primary-color);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .cycle-detail-item .date-text {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--primary-color);
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .cycle-detail-item .info-line {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 .cycle-detail-item .money {
   color: var(--success-color);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 #cycle-detail-close {
@@ -623,15 +732,18 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%) scale(0.9);
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.7);
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 13px;
-  border-radius: 8px;
+  font-size: 14px;
+  border-radius: var(--radius-md);
   z-index: 9999;
   opacity: 0;
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   pointer-events: none;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .toast.show {
@@ -639,11 +751,19 @@ body {
   transform: translate(-50%, -50%) scale(1);
 }
 
+.toast.success {
+  background: rgba(0, 200, 81, 0.85);
+}
+
+.toast.error {
+  background: rgba(245, 108, 108, 0.85);
+}
+
 /* 加载动画 */
 .loading-spinner {
   display: inline-block;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 2px solid var(--border-color);
   border-top-color: var(--primary-color);
   border-radius: 50%;
@@ -657,27 +777,47 @@ body {
 /* 首页右上角刷新按钮 */
 .refresh-btn {
   position: absolute;
-  top:10px;
-  right:10px;
-  font-size:12px;
+  top: 12px;
+  right: 12px;
+  font-size: 13px;
   color: var(--text-faint);
-  background:transparent;
-  border:none;
-  cursor:pointer;
-  padding:2px 6px;
-  transition: color 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .refresh-btn:hover {
   color: var(--text-muted);
+  background: var(--bg-tertiary);
+}
+
+.refresh-btn:active {
+  transform: scale(0.92);
 }
 
 /* 🔴 强制选中状态下所有班次标签都变成白色，优先级最高 */
 .calendar-day.selected .shift-tag {
   color: #fff !important;
 }
-/* ✅ 解决弹窗滚动到边界时的橡皮筋穿透问题 */
-#cycle-detail-record-list {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
