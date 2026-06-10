@@ -119,13 +119,14 @@
   <div class="modal-overlay" id="detail-overlay">
     <div class="modal-box detail-modal">
       <h3 class="modal-title">详细统计信息</h3>
-      <div class="detail-item">总工时：<span id="stat-work-hours">0</span> 小时</div>
-      <div class="detail-item">出勤天数：<span id="stat-work-days">0</span> 天</div>
-      <div class="detail-item">21点下班天数：<span id="stat-21h-days">0</span> 天</div>
-      <div class="detail-item">22点下班天数：<span id="stat-22h-days">0</span> 天</div>
-      <div class="detail-item">23点下班天数：<span id="stat-23h-days">0</span> 天</div>
-      <div class="detail-item">基本工资：¥<span id="stat-base-money">0.00</span></div>
-      <div class="detail-item">加班补贴：¥<span id="stat-allowance">0.00</span></div>
+      <!-- ✅ 修复：文字顺序错误，把单位放到span内部，确保右浮动时整体对齐 -->
+      <div class="detail-item">总工时：<span id="stat-work-hours">0 小时</span></div>
+      <div class="detail-item">出勤天数：<span id="stat-work-days">0 天</span></div>
+      <div class="detail-item">21点下班天数：<span id="stat-21h-days">0 天</span></div>
+      <div class="detail-item">22点下班天数：<span id="stat-22h-days">0 天</span></div>
+      <div class="detail-item">23点下班天数：<span id="stat-23h-days">0 天</span></div>
+      <div class="detail-item">基本工资：<span id="stat-base-money">¥0.00</span></div>
+      <div class="detail-item">加班补贴：<span id="stat-allowance">¥0.00</span></div>
 
       <div class="detail-list-title">周期记录明细</div>
       <div id="cycle-group-list"></div>
