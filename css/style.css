@@ -56,7 +56,7 @@ body {
   color: #1d1d1f;
 }
 
-/* ✅ 总工资卡片所有内容完全水平居中 */
+/* ✅ 总工资卡片内容全部靠左对齐 */
 .total-wage-box {
   background: linear-gradient(135deg, #007aff, #5856d6);
   border-radius: 20px;
@@ -64,7 +64,7 @@ body {
   color: white;
   margin-bottom: 24px;
   position: relative;
-  text-align: center;
+  text-align: left; /* 从center改为left */
 }
 
 .refresh-btn {
@@ -100,21 +100,22 @@ body {
   font-size: 14px;
   opacity: 0.9;
   margin-bottom: 12px;
-  text-align: center;
+  text-align: left; /* 从center改为left */
 }
+
 
 .total-wage-label {
   font-size: 16px;
   opacity: 0.8;
   margin-top: 8px;
-  text-align: center;
+  text-align: left; /* 从center改为left */
 }
 
 .total-wage-value {
   font-size: 56px;
   font-weight: 700;
   line-height: 1.2;
-  text-align: center;
+  text-align: left; /* 从center改为left */
   margin: 8px 0;
 }
 
