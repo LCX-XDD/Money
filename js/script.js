@@ -240,8 +240,8 @@ function initTimeSelect() {
       // 显示第一段和第二段
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
-      document.getElementById('part2-start-row').classList.remove('hidden');
-      document.getElementById('part2-end-row').classList.remove('hidden');
+      document.getElementById('part2-start-row').classList.add('hidden');
+      document.getElementById('part2-end-row').classList.add('hidden');
       
       // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
@@ -313,14 +313,16 @@ function initTimeSelect() {
 
 // 防重复请求 + 自动重试，解决首次打开加载失败
 let isLoading = false;
-async function loadData(retryCount = 0) {
+async function loadData(retryCount = 0, autoRender = true) {
   if (isLoading) return;
   isLoading = true;
 
-  // 显示加载动画
-  document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'inline-block');
-  document.getElementById('total-wage-num').style.opacity = '0.5';
-  document.getElementById('current-cycle').style.opacity = '0.5';
+  // 自动渲染模式下显示加载动画
+  if (autoRender) {
+    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'inline-block');
+    document.getElementById('total-wage-num').style.opacity = '0.5';
+    document.getElementById('current-cycle').style.opacity = '0.5';
+  }
 
   try {
     const query = new AV.Query(Bill);
@@ -331,25 +333,33 @@ async function loadData(retryCount = 0) {
     
     allBillList = res;
     recordDates = new Set(res.map(i => i.get('date') || ''));
-    renderData(res);
-    renderSalaryCalendar();
-    renderTotalAndStat();
 
-    // 隐藏加载动画
-    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
-    document.getElementById('total-wage-num').style.opacity = '1';
-    document.getElementById('current-cycle').style.opacity = '1';
+    // 自动渲染模式下更新页面
+    if (autoRender) {
+      renderData(res);
+      renderSalaryCalendar();
+      renderTotalAndStat();
+
+      // 隐藏加载动画
+      document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
+      document.getElementById('total-wage-num').style.opacity = '1';
+      document.getElementById('current-cycle').style.opacity = '1';
+    }
+
+    return res;
   } catch (e) {
     if (retryCount < 3) {
       setTimeout(() => {
-        loadData(retryCount + 1);
+        loadData(retryCount + 1, autoRender);
       }, 1000);
       return;
     }
     showToast('数据加载失败，请刷新', 'error');
-    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
-    document.getElementById('total-wage-num').style.opacity = '1';
-    document.getElementById('current-cycle').style.opacity = '1';
+    if (autoRender) {
+      document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
+      document.getElementById('total-wage-num').style.opacity = '1';
+      document.getElementById('current-cycle').style.opacity = '1';
+    }
   } finally {
     isLoading = false;
   }
@@ -1262,7 +1272,7 @@ setTimeout(() => {
 }, 500);
 });
 
-// ✅ 修复：延长刷新按钮动画时长至1秒，确保用户能看到完整旋转效果
+// ✅ 核心修复：动画与数据刷新完全同步，保证动画至少播放1秒
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   // 阻止事件冒泡和默认行为
   e.stopPropagation();
@@ -1270,20 +1280,39 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   // 点击后立即失去焦点
   this.blur();
 
+  // 防止重复点击
+  if (this.classList.contains('spinning') || isLoading) return;
+
   // 添加旋转动画
   this.classList.add('spinning');
 
-  // 还原加载动画
+  // 显示加载动画
   document.querySelector('#current-cycle').innerHTML = '<span class="loading-spinner"></span>';
   document.querySelector('#total-wage-num').innerHTML = '<span class="loading-spinner"></span>';
+  document.getElementById('total-wage-num').style.opacity = '0.5';
+  document.getElementById('current-cycle').style.opacity = '0.5';
   
-  // 重新拉取数据
-  await loadData();
+  // 同时执行：数据加载 + 1秒动画保证（无论数据多快，动画都至少播放1秒）
+  const [data] = await Promise.all([
+    loadData(0, false), // 只加载数据，不自动渲染
+    new Promise(resolve => setTimeout(resolve, 1000)) // 强制动画最小时长
+  ]);
+
+  // 动画结束后，一次性渲染所有数据
+  if (data) {
+    renderData(data);
+    renderSalaryCalendar();
+    renderTotalAndStat();
+  }
+
+  // 隐藏加载动画
+  document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
+  document.getElementById('total-wage-num').style.opacity = '1';
+  document.getElementById('current-cycle').style.opacity = '1';
+
+  // 移除旋转动画
+  this.classList.remove('spinning');
   
-  // 延迟1秒移除旋转动画，让动画完整显示一圈多
-  setTimeout(() => {
-    this.classList.remove('spinning');
-    // 弹窗提示刷新成功
-    showToast('数据刷新成功','success');
-  }, 1000);
+  // 数据和动画同时完成后，立即显示成功提示
+  showToast('数据刷新成功','success');
 })
