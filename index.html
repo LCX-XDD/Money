@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ✅ 核心：全局禁止缩放和双击放大 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LCX的工资</title>
-  <!-- ✅ 修复：使用相对路径，确保404不会出现 -->
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -14,9 +14,9 @@
   <div class="white-window">
     <h1 class="title">LCX的工资</h1>
 
-    <!-- 用户页面 -->
+    <!-- 用户页面：只显示总工资+日历 -->
     <div id="user-view">
-      <!-- 总工资卡片 -->
+      <!-- 总工资卡片（内容完全居中） -->
       <div class="total-wage-box">
         <button id="refresh-data-btn" class="refresh-btn">↻</button>
         <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
@@ -25,7 +25,7 @@
         <button id="detail-btn" class="btn-detail">查看详细信息</button>
       </div>
 
-      <!-- 日历 -->
+      <!-- 用户页面日历 -->
       <div class="calendar-wrap">
         <div class="calendar-head">
           <button id="prev-month-btn">&lt;</button>
@@ -39,27 +39,19 @@
       </div>
     </div>
 
-    <!-- 管理员页面 -->
+    <!-- 管理员页面：不显示总工资，只显示日历+表单+列表 -->
     <div id="admin-view" class="hidden">
-      <!-- 总工资卡片 -->
-      <div class="total-wage-box">
-        <button id="refresh-data-btn" class="refresh-btn">↻</button>
-        <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
-        <div class="total-wage-label">总工资</div>
-        <div class="total-wage-value" id="total-wage-num">0.00</div>
-      </div>
-
-      <!-- 日历 -->
+      <!-- 管理员页面日历 -->
       <div class="calendar-wrap">
         <div class="calendar-head">
-          <button id="prev-month-btn">&lt;</button>
-          <span id="calendar-title">2026-05-26~2026-06-25</span>
-          <button id="next-month-btn">&gt;</button>
+          <button id="admin-prev-month-btn">&lt;</button>
+          <span id="admin-calendar-title">2026-05-26~2026-06-25</span>
+          <button id="admin-next-month-btn">&gt;</button>
         </div>
         <div class="calendar-week">
           <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
         </div>
-        <div class="calendar-body" id="calendar-body"></div>
+        <div class="calendar-body" id="admin-calendar-body"></div>
       </div>
 
       <!-- 记录表单 -->
@@ -199,9 +191,8 @@
   <!-- Toast提示（保持顶部显示） -->
   <div id="toast" class="toast"></div>
 
-  <!-- LeanCloud SDK（使用稳定CDN） -->
+  <!-- LeanCloud SDK -->
   <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
-  <!-- ✅ 修复：使用相对路径，确保404不会出现 -->
   <script src="./js/script.js"></script>
 </body>
 </html>
