@@ -764,3 +764,15 @@ body {
     background: #8e8e93;
   }
 }
+/* 在文件最后添加 */
+/* 管理员模式：页面顶部对齐，避免内容溢出截断 */
+body.admin-active {
+  align-items: flex-start;
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+
+/* 确保窗口底部有足够边距 */
+.white-window {
+  margin-bottom: 20px;
+}
