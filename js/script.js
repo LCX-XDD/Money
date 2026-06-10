@@ -283,15 +283,19 @@ function initTimeSelect() {
 }
 
 // 防重复请求 + 自动重试
+// ✅ 优化后的加载函数：无重复调用+无闪烁加载
 let isLoading = false;
-async function loadData(retryCount = 0, autoRender = true) {
+async function loadData(retryCount = 0, autoRender = true, showLoading = true) {
   if (isLoading) return;
   isLoading = true;
 
-  if (autoRender) {
-    document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'inline-block');
-    document.getElementById('total-wage-num').style.opacity = '0.5';
-    document.getElementById('current-cycle').style.opacity = '0.5';
+  const wageBox = document.querySelector('.total-wage-box');
+  const refreshBtn = document.getElementById('refresh-data-btn');
+
+  // 只有需要时才显示加载动画
+  if (showLoading && wageBox) {
+    wageBox.classList.add('loading');
+    if (refreshBtn) refreshBtn.classList.add('spinning');
   }
 
   try {
@@ -308,28 +312,22 @@ async function loadData(retryCount = 0, autoRender = true) {
       renderUserCalendar();
       renderAdminCalendar();
       renderTotalAndStat();
-
-      document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
-      document.getElementById('total-wage-num').style.opacity = '1';
-      document.getElementById('current-cycle').style.opacity = '1';
     }
 
     return res;
   } catch (e) {
     if (retryCount < 3) {
       setTimeout(() => {
-        loadData(retryCount + 1, autoRender);
+        loadData(retryCount + 1, autoRender, showLoading);
       }, 1000);
       return;
     }
     showToast('数据加载失败，请刷新', 'error');
-    if (autoRender) {
-      document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
-      document.getElementById('total-wage-num').style.opacity = '1';
-      document.getElementById('current-cycle').style.opacity = '1';
-    }
   } finally {
     isLoading = false;
+    // 隐藏加载动画
+    if (wageBox) wageBox.classList.remove('loading');
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
   }
 }
 
@@ -1277,6 +1275,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // 刷新按钮
+// ✅ 优化后的刷新按钮：无闪烁+平滑动画
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1284,15 +1283,9 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   if (this.classList.contains('spinning') || isLoading) return;
 
-  this.classList.add('spinning');
-
-  document.querySelector('#current-cycle').innerHTML = '<span class="loading-spinner"></span>';
-  document.querySelector('#total-wage-num').innerHTML = '<span class="loading-spinner"></span>';
-  document.getElementById('total-wage-num').style.opacity = '0.5';
-  document.getElementById('current-cycle').style.opacity = '0.5';
-  
+  // 同时执行：数据加载 + 1秒动画保证（避免加载太快导致闪烁）
   const [data] = await Promise.all([
-    loadData(0, false),
+    loadData(0, false, true),
     new Promise(resolve => setTimeout(resolve, 1000))
   ]);
 
@@ -1302,12 +1295,6 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
     renderAdminCalendar();
     renderTotalAndStat();
   }
-
-  document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
-  document.getElementById('total-wage-num').style.opacity = '1';
-  document.getElementById('current-cycle').style.opacity = '1';
-
-  this.classList.remove('spinning');
   
   showToast('数据刷新成功','success');
 })
