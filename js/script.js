@@ -1,16 +1,13 @@
-// ========== 禁止/恢复页面滚动（彻底解决所有点击穿透问题） ==========
+// ========== 禁止/恢复页面滚动 ==========
 let savedScrollTop = 0;
 let clickBlocker = null;
 
 function disableBodyScroll() {
-  // 1. 保存当前滚动位置
   savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  // 2. 给body添加固定定位，物理上切断滚动可能
   document.body.style.position = 'fixed';
   document.body.style.top = `-${savedScrollTop}px`;
   document.body.style.width = '100%';
   
-  // 创建点击拦截层，阻止所有穿透点击
   if (!clickBlocker) {
     clickBlocker = document.createElement('div');
     clickBlocker.style.cssText = `
@@ -28,18 +25,13 @@ function disableBodyScroll() {
 }
 
 function enableBodyScroll() {
-  // 1. 移除固定定位
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.width = '';
-  // 2. 恢复滚动位置
   window.scrollTo(0, savedScrollTop);
-  // 3. 强制清除所有按钮的焦点
   document.activeElement?.blur?.();
-  // 4. 强制重绘，清除所有残留的点击状态
   document.body.offsetHeight;
   
-  // 延迟350ms移除点击拦截层（覆盖移动端300ms双击检测延迟）
   setTimeout(() => {
     if (clickBlocker && clickBlocker.parentNode) {
       clickBlocker.parentNode.removeChild(clickBlocker);
@@ -52,7 +44,6 @@ const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
 const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
 
-// 只在未初始化时执行，避免重复定义
 if (!AV.applicationId) {
   AV.init({
     appId: LC_APP_ID,
@@ -63,14 +54,12 @@ if (!AV.applicationId) {
 
 const Bill = AV.Object.extend('Bill');
 
-// ✅ 分阶段底薪自动计算（核心修改）
+// 分阶段底薪自动计算
 function getBaseWageByDate(dateStr) {
   const date = new Date(dateStr);
-  // 2026-06-01 及以后 = 2900底薪
   if (date >= new Date('2026-06-01')) {
     return 2900 / 208;
   }
-  // 2026-06-01 以前 = 2700底薪
   return 2700 / 208;
 }
 
@@ -128,12 +117,10 @@ function initTimeSelect() {
   shiftEnd2.innerHTML = defaultOpt;
   mealStart.innerHTML = defaultOpt;
 
-  // 初始化：全部禁用置灰
   shiftEnd.disabled = true;
   shiftEnd2.disabled = true;
   mealStart.disabled = true;
 
-  // 初始化时，所有时间行都隐藏
   document.getElementById('normal-time-row').classList.add('hidden');
   document.getElementById('normal-end-row').classList.add('hidden');
   document.getElementById('part2-start-row').classList.add('hidden');
@@ -141,7 +128,6 @@ function initTimeSelect() {
   document.getElementById('meal-wrap').classList.add('hidden');
 
   function updateMealStartState() {
-    // 有下班时间才启用饭点
     mealStart.disabled = !shiftEnd.value;
   }
 
@@ -169,28 +155,24 @@ function initTimeSelect() {
   function calcWorkHours() {
     let totalHour = 0;
 
-    // 第一段
     if (shiftStart.value && shiftEnd.value) {
       let s = parseInt(shiftStart.value.split(':')[0]);
       let e = parseInt(shiftEnd.value.split(':')[0]);
       if (e > s) totalHour += e - s;
     }
 
-    // 拼班才加第二段
     if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
       let s2 = parseInt(shiftStart2.value.split(':')[0]);
       let e2 = parseInt(shiftEnd2.value.split(':')[0]);
       if (e2 > s2) totalHour += e2 - s2;
     }
 
-    // 非拼班才扣饭点
     if (shiftSelect.value !== '拼班' && mealStart.value) {
       totalHour = Math.max(0, totalHour - 1);
     }
 
     workHoursTip.textContent = `有效工时：${totalHour} 小时`;
 
-    // ✅ 根据选中的日期自动计算当日时薪
     const currentDate = dateInput.value || formatDate(new Date());
     const HOURLY_WAGE = getBaseWageByDate(currentDate);
     const dailyWage = Math.round(totalHour * HOURLY_WAGE * 1000) / 1000;
@@ -200,14 +182,12 @@ function initTimeSelect() {
   shiftSelect.addEventListener('change', () => {
     const val = shiftSelect.value;
 
-    // 先隐藏所有时间行
     document.getElementById('normal-time-row').classList.add('hidden');
     document.getElementById('normal-end-row').classList.add('hidden');
     document.getElementById('part2-start-row').classList.add('hidden');
     document.getElementById('part2-end-row').classList.add('hidden');
     document.getElementById('meal-wrap').classList.add('hidden');
 
-    // 重置所有输入框的disabled状态
     shiftEnd.disabled = true;
     shiftStart2.disabled = true;
     shiftEnd2.disabled = true;
@@ -226,24 +206,20 @@ function initTimeSelect() {
     }
 
     if (val === '早班' || val === '中班' || val === '晚班') {
-      // 显示第一段和饭点
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
       document.getElementById('meal-wrap').classList.remove('hidden');
       
-      // 启用上班，下班/饭点仍由「是否选上班」控制
       shiftEnd.disabled = !shiftStart.value;
       mealStart.disabled = !shiftEnd.value;
     }
 
     if (val === '拼班') {
-      // 显示第一段和第二段
       document.getElementById('normal-time-row').classList.remove('hidden');
       document.getElementById('normal-end-row').classList.remove('hidden');
       document.getElementById('part2-start-row').classList.remove('hidden');
       document.getElementById('part2-end-row').classList.remove('hidden');
       
-      // 启用两段上班，下班由对应上班控制
       shiftEnd.disabled = !shiftStart.value;
       shiftStart2.disabled = false;
       shiftEnd2.disabled = !shiftStart2.value;
@@ -252,9 +228,7 @@ function initTimeSelect() {
     calcWorkHours();
   });
 
-  // ========= 核心修复：上班时间改变时联动禁用下班/饭点 =========
   shiftStart.addEventListener('change', () => {
-    // 没选上班时间：清空+禁用下班、饭点
     if (!shiftStart.value) {
       shiftEnd.innerHTML = defaultOpt;
       shiftEnd.disabled = true;
@@ -265,7 +239,6 @@ function initTimeSelect() {
       calcWorkHours();
       return;
     }
-    // 选了上班时间：生成后续时段 + 启用下班
     const startH = parseInt(shiftStart.value.split(':')[0]);
     const afterOpts = allHours.filter(h => parseInt(h.split(':')[0]) > startH)
                                 .map(h => `<option value="${h}">${h}</option>`).join('');
@@ -284,7 +257,6 @@ function initTimeSelect() {
     calcWorkHours();
   });
 
-  // 第二段上班 → 联动第二段下班
   shiftStart2.addEventListener('change', () => {
     if (!shiftStart2.value) {
       shiftEnd2.innerHTML = defaultOpt;
@@ -307,17 +279,15 @@ function initTimeSelect() {
   });
 
   mealStart.addEventListener('change', calcWorkHours);
-  // 把工时计算函数暴露到全局，让编辑按钮可以调用
   window.calcWorkHours = calcWorkHours;
 }
 
-// 防重复请求 + 自动重试，解决首次打开加载失败
+// 防重复请求 + 自动重试
 let isLoading = false;
 async function loadData(retryCount = 0, autoRender = true) {
   if (isLoading) return;
   isLoading = true;
 
-  // 自动渲染模式下显示加载动画
   if (autoRender) {
     document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'inline-block');
     document.getElementById('total-wage-num').style.opacity = '0.5';
@@ -327,20 +297,18 @@ async function loadData(retryCount = 0, autoRender = true) {
   try {
     const query = new AV.Query(Bill);
     query.descending('createdAt');
-    // ✅ 新增：把查询数量从默认100条增加到1000条
     query.limit(1000);
     const res = await query.find();
     
     allBillList = res;
     recordDates = new Set(res.map(i => i.get('date') || ''));
 
-    // 自动渲染模式下更新页面
     if (autoRender) {
       renderData(res);
-      renderSalaryCalendar();
+      renderUserCalendar();
+      renderAdminCalendar();
       renderTotalAndStat();
 
-      // 隐藏加载动画
       document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
       document.getElementById('total-wage-num').style.opacity = '1';
       document.getElementById('current-cycle').style.opacity = '1';
@@ -374,7 +342,6 @@ function renderData(list) {
     return;
   }
 
-  // 按计薪周期分组（复用用户页相同逻辑）
   const cycleMap = {};
   list.forEach(item => {
     const dateStr = item.get('date') || '';
@@ -393,12 +360,10 @@ function renderData(list) {
     cycleMap[cycleKey].push(item);
   });
 
-  // 每个周期的记录提前按日期降序排序，所有地方共用
   Object.values(cycleMap).forEach(records => {
     records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
   });
 
-  // 渲染周期列表（和用户页样式一致）
   Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
     const records = cycleMap[cycleKey];
     const group = document.createElement('div');
@@ -411,7 +376,6 @@ function renderData(list) {
     `;
     adminList.appendChild(group);
 
-    // 点击周期打开详情弹窗（带编辑删除）
     group.querySelector('.cycle-header').addEventListener('click', () => {
       openAdminCycleDetailPopup(cycleKey, records);
     });
@@ -445,8 +409,8 @@ function clearForm() {
   selectedDate = '';
 }
 
-// ========== 渲染工资日历和计薪周期 ==========
-function renderSalaryCalendar() {
+// 渲染用户页面日历
+function renderUserCalendar() {
   const calendarBody = document.getElementById('calendar-body');
   const calendarTitle = document.getElementById('calendar-title');
   const currentCycle = document.getElementById('current-cycle');
@@ -487,31 +451,99 @@ function renderSalaryCalendar() {
     calendarBody.appendChild(el);
   }
 
-days.forEach(date => {
-  const dateStr = formatDate(date);
-  const el = document.createElement('div');
-  el.className = 'calendar-day';
+  days.forEach(date => {
+    const dateStr = formatDate(date);
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
 
-  const record = allBillList.find(item => item.get('date') === dateStr);
-  if (record) {
-    const shift = record.get('shift') || '';
-    // 休息日期加浅绿色，其他班次加蓝色
-    if (shift === '休息') {
-      el.classList.add('rest');
+    const record = allBillList.find(item => item.get('date') === dateStr);
+    if (record) {
+      const shift = record.get('shift') || '';
+      if (shift === '休息') {
+        el.classList.add('rest');
+      } else {
+        el.classList.add('has-record');
+      }
+      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
     } else {
-      el.classList.add('has-record');
+      el.textContent = date.getDate();
     }
-    el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+
+    if (selectedDate === dateStr) el.classList.add('selected');
+    el.addEventListener('click', () => {
+      selectedDate = dateStr;
+      renderUserCalendar();
+      renderAdminCalendar();
+    });
+    calendarBody.appendChild(el);
+  });
+}
+
+// 渲染管理员页面日历
+function renderAdminCalendar() {
+  const calendarBody = document.getElementById('admin-calendar-body');
+  const calendarTitle = document.getElementById('admin-calendar-title');
+  
+  if (!calendarBody || !calendarTitle) return;
+
+  const today = new Date();
+  let cycleStart, cycleEnd;
+
+  if (today.getDate() >= 26) {
+    cycleStart = new Date(currentYear, currentMonth, 26);
+    cycleEnd = new Date(currentYear, currentMonth + 1, 25);
   } else {
-    el.textContent = date.getDate();
+    cycleStart = new Date(currentYear, currentMonth - 1, 26);
+    cycleEnd = new Date(currentYear, currentMonth, 25);
   }
+
+  const startStr = formatDate(cycleStart);
+  const endStr = formatDate(cycleEnd);
+  const cycleDisplayText = startStr + '~' + endStr;
+
+  calendarTitle.innerText = cycleDisplayText;
+
+  calendarBody.innerHTML = '';
+
+  const days = [];
+  const s = new Date(cycleStart);
+  while (s <= cycleEnd) {
+    days.push(new Date(s));
+    s.setDate(s.getDate() + 1);
+  }
+
+  const firstDay = days[0].getDay();
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'calendar-day other';
+    calendarBody.appendChild(el);
+  }
+
+  days.forEach(date => {
+    const dateStr = formatDate(date);
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
+
+    const record = allBillList.find(item => item.get('date') === dateStr);
+    if (record) {
+      const shift = record.get('shift') || '';
+      if (shift === '休息') {
+        el.classList.add('rest');
+      } else {
+        el.classList.add('has-record');
+      }
+      el.innerHTML = `${date.getDate()}<div class="shift-tag">${shift}</div>`;
+    } else {
+      el.textContent = date.getDate();
+    }
 
     if (selectedDate === dateStr) el.classList.add('selected');
     el.addEventListener('click', () => {
       selectedDate = dateStr;
       const dateInput = document.getElementById('record-date');
       if (dateInput) dateInput.value = dateStr;
-      renderSalaryCalendar();
+      renderUserCalendar();
+      renderAdminCalendar();
     });
     calendarBody.appendChild(el);
   });
@@ -528,7 +560,7 @@ function renderTotalAndStat() {
   const statAllowance = document.getElementById('stat-allowance');
   const cycleGroupList = document.getElementById('cycle-group-list');
 
-  if (!totalWageNum || !statWorkHours || !statWorkDays || !stat21hDays || !stat22hDays || !stat23hDays || !statBaseMoney || !statAllowance || !cycleGroupList) return;
+  if (!totalWageNum) return;
 
   const now = new Date();
   let cycleStart, cycleEnd;
@@ -579,7 +611,6 @@ function renderTotalAndStat() {
     if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
     totalWorkHours += h;
 
-    // ✅ 根据日期自动计算当日时薪
     const HOURLY_WAGE = getBaseWageByDate(dateStr);
     const wage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
     totalWage += Math.round((wage + allow) * 1000) / 1000;
@@ -607,38 +638,37 @@ function renderTotalAndStat() {
     cycleMap[cycleKey].push(item);
   });
 
-  // 每个周期的记录提前按日期降序排序，所有地方共用
   Object.values(cycleMap).forEach(records => {
     records.sort((a,b) => new Date(b.get('date')) - new Date(a.get('date')));
   });
 
-  cycleGroupList.innerHTML = '';
-  // 按时间倒序排列，最新的周期在最上面（和管理员页一致）
-  Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
-    const records = cycleMap[cycleKey];
-    const group = document.createElement('div');
-    group.className = 'cycle-group';
-    group.innerHTML = `
-      <div class="cycle-header" data-cycle="${cycleKey}">
-        <span>${cycleKey}</span>
-        <span style="color:#8e8e93;font-size:12px;">${records.length} 条记录</span>
-      </div>
-    `;
-    cycleGroupList.appendChild(group);
-    group.querySelector('.cycle-header').addEventListener('click', () => {
-      openCycleDetailPopup(cycleKey, records);
+  if (cycleGroupList) {
+    cycleGroupList.innerHTML = '';
+    Object.keys(cycleMap).sort().reverse().forEach(cycleKey => {
+      const records = cycleMap[cycleKey];
+      const group = document.createElement('div');
+      group.className = 'cycle-group';
+      group.innerHTML = `
+        <div class="cycle-header" data-cycle="${cycleKey}">
+          <span>${cycleKey}</span>
+          <span style="color:#8e8e93;font-size:12px;">${records.length} 条记录</span>
+        </div>
+      `;
+      cycleGroupList.appendChild(group);
+      group.querySelector('.cycle-header').addEventListener('click', () => {
+        openCycleDetailPopup(cycleKey, records);
+      });
     });
-  });
+  }
 
   totalWageNum.innerText = totalWage.toFixed(2);
-  // ✅ 修复：统计项赋值时带上单位，和HTML结构匹配
-  statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
-  statWorkDays.innerText = workDays + ' 天';
-  stat21hDays.innerText = day21 + ' 天';
-  stat22hDays.innerText = day22 + ' 天';
-  stat23hDays.innerText = day23 + ' 天';
-  statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
-  statAllowance.innerText = '¥' + totalAllow.toFixed(2);
+  if (statWorkHours) statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
+  if (statWorkDays) statWorkDays.innerText = workDays + ' 天';
+  if (stat21hDays) stat21hDays.innerText = day21 + ' 天';
+  if (stat22hDays) stat22hDays.innerText = day22 + ' 天';
+  if (stat23hDays) stat23hDays.innerText = day23 + ' 天';
+  if (statBaseMoney) statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
+  if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 }
 
 // ========== 周期明细弹窗 ==========
@@ -652,16 +682,13 @@ function openCycleDetailPopup(cycleKey, records) {
   cycleDetailTitle.innerText = cycleKey;
   list.innerHTML = '';
 
-  // ✅ 修复：查看本期总工资按钮有左右间距
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
   calcBtn.className = 'cycle-calc-btn';
   
   calcBtn.onclick = function (e) {
-    // 阻止事件冒泡和默认行为
     e.stopPropagation();
     e.preventDefault();
-    // 点击后立即失去焦点
     this.blur();
 
     let totalHours = 0;
@@ -693,7 +720,6 @@ function openCycleDetailPopup(cycleKey, records) {
       if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
       totalHours += h;
 
-      // ✅ 根据日期自动计算当日时薪
       const HOURLY_WAGE = getBaseWageByDate(item.get('date'));
       const dayWage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
       totalBase += dayWage;
@@ -711,7 +737,7 @@ function openCycleDetailPopup(cycleKey, records) {
     `;
 
     document.getElementById('cycle-total-overlay').classList.add('show');
-    disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+    disableBodyScroll();
   };
 
   list.appendChild(calcBtn);
@@ -740,7 +766,6 @@ function openCycleDetailPopup(cycleKey, records) {
       timeInfo = `${sStart}-${sEnd}`;
     }
 
-    // 拼接饭点行（自动计算结束时间，显示完整时间段）
     let mealLine = '';
     if (meal) {
       const [h, m] = meal.split(':').map(Number);
@@ -760,9 +785,10 @@ function openCycleDetailPopup(cycleKey, records) {
   });
 
   cycleDetailOverlay.classList.add('show');
-  disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+  disableBodyScroll();
 }
-// 管理员周期详情弹窗（带编辑删除按钮）
+
+// 管理员周期详情弹窗
 function openAdminCycleDetailPopup(cycleKey, records) {
   const cycleDetailTitle = document.getElementById('cycle-detail-title');
   const list = document.getElementById('cycle-detail-record-list');
@@ -773,16 +799,13 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   cycleDetailTitle.innerText = cycleKey;
   list.innerHTML = '';
 
-  // ✅ 修复：查看本期总工资按钮有左右间距
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
   calcBtn.className = 'cycle-calc-btn';
   
   calcBtn.onclick = function (e) {
-    // 阻止事件冒泡和默认行为
     e.stopPropagation();
     e.preventDefault();
-    // 点击后立即失去焦点
     this.blur();
 
     let totalHours = 0;
@@ -814,7 +837,6 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       if (shift !== '拼班' && meal) h = Math.max(0, h - 1);
       totalHours += h;
 
-      // ✅ 根据日期自动计算当日时薪
       const HOURLY_WAGE = getBaseWageByDate(item.get('date'));
       const dayWage = Math.round(h * HOURLY_WAGE * 1000) / 1000;
       totalBase += dayWage;
@@ -832,12 +854,11 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     `;
 
     document.getElementById('cycle-total-overlay').classList.add('show');
-    disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+    disableBodyScroll();
   };
 
   list.appendChild(calcBtn);
 
-  // 渲染带编辑删除的记录列表
   records.forEach(item => {
     const workDate = item.get('date') || '';
     const createdTime = new Date(item.createdAt);
@@ -863,7 +884,6 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       timeInfo = `${sStart}-${sEnd}`;
     }
 
-    // 拼接饭点行（自动计算结束时间，显示完整时间段）
     let mealLine = '';
     if (meal) {
       const [h, m] = meal.split(':').map(Number);
@@ -898,19 +918,14 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     `;
     list.appendChild(itemEl);
 
-    // 绑定编辑按钮事件
     itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
-      // 关闭弹窗
       cycleDetailOverlay.classList.remove('show');
-      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+      enableBodyScroll();
       
-      // 1. 获取所有DOM元素
       const dateInput = document.getElementById('record-date');
       const shiftSelect = document.getElementById('record-shift');
       const shiftStart = document.getElementById('shift-start');
@@ -923,50 +938,40 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       const remarkInput = document.getElementById('record-remark');
       const editId = document.getElementById('edit-id');
 
-      // 2. 先填充日期和班次
       if (dateInput) dateInput.value = this.dataset.date;
       if (shiftSelect) shiftSelect.value = this.dataset.shift;
 
-      // 3. 触发班次change事件，显示对应时间行
       shiftSelect.dispatchEvent(new Event('change'));
 
-      // 4. 填充第一段上班时间 → 触发change生成下班和饭点选项 → 再填充下班和饭点
       if (shiftStart) shiftStart.value = this.dataset.shiftStart;
       if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
       if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
       if (mealStart) mealStart.value = this.dataset.mealStart;
 
-      // 5. 填充第二段上班时间 → 触发change生成第二段下班选项 → 再填充第二段下班
       if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
       if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
       if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
 
-      // 6. 填充其他字段
       if (allowanceInput) allowanceInput.value = this.dataset.allowance;
       if (moneyInput) moneyInput.value = this.dataset.money;
       if (remarkInput) remarkInput.value = this.dataset.remark;
       if (editId) editId.value = this.dataset.id;
       
-      // 7. 计算并显示有效工时
       window.calcWorkHours();
 
-      // 8. 更新选中日期和日历
       selectedDate = this.dataset.date;
-      renderSalaryCalendar();
+      renderUserCalendar();
+      renderAdminCalendar();
 
-      // 9. 延迟100ms执行回顶和提示，确保所有DOM操作完成
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
       }, 100);
     });
 
-    // 绑定删除按钮事件
     itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       if (!confirm('确定删除该条记录？')) return;
@@ -975,7 +980,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
         loadData();
         showToast('删除成功', 'success');
         cycleDetailOverlay.classList.remove('show');
-        enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+        enableBodyScroll();
       } catch (e) {
         showToast('删除失败', 'error');
       }
@@ -983,7 +988,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   });
 
   cycleDetailOverlay.classList.add('show');
-  disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+  disableBodyScroll();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -999,7 +1004,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const now = new Date();
   const todayStr = formatDate(now);
 
-  // ✅ 修复：无论用户还是管理员页面，都自动选中今天的日期
   selectedDate = todayStr;
 
   if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
@@ -1010,52 +1014,44 @@ document.addEventListener('DOMContentLoaded', function () {
     if (dateInput) dateInput.value = todayStr;
     loadData();
   } else {
-    // ✅ 修复：用户页面加载完成后自动渲染日历并选中今天
     loadData().then(() => {
-      renderSalaryCalendar();
+      renderUserCalendar();
     });
   }
 
   initTimeSelect();
 
-  // ✅ 修复：管理员入口点击事件绑定（确保在DOM加载完成后执行）
   if (adminEntrance && loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
     adminEntrance.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       loginOverlay.classList.add('show');
       adminPwdInput.value = '';
       adminPwdInput.focus();
-      disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+      disableBodyScroll();
     });
 
     loginCancelBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       loginOverlay.classList.remove('show');
-      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+      enableBodyScroll();
     });
 
     loginConfirmBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       const pwd = adminPwdInput.value.trim();
       if (pwd === 'admin123') {
         localStorage.setItem('isAdminLoggedIn', 'true');
         loginOverlay.classList.remove('show');
-        enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+        enableBodyScroll();
         userView.classList.add('hidden');
         adminView.classList.remove('hidden');
         adminEntrance.classList.add('hidden');
@@ -1075,10 +1071,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const backUserBtn = document.getElementById('back-user');
   if (backUserBtn && adminView && userView && adminEntrance) {
     backUserBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       localStorage.removeItem('isAdminLoggedIn');
@@ -1087,8 +1081,7 @@ document.addEventListener('DOMContentLoaded', function () {
       adminEntrance.classList.remove('hidden');
       clearForm();
       renderTotalAndStat();
-      // ✅ 返回用户页面后重新渲染日历并选中今天
-      renderSalaryCalendar();
+      renderUserCalendar();
       showToast('已返回用户页面', 'success');
     });
   }
@@ -1096,10 +1089,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', async function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       const dateInput = document.getElementById('record-date');
@@ -1149,7 +1140,6 @@ document.addEventListener('DOMContentLoaded', function () {
         loadData();
         showToast('保存成功', 'success');
 
-        // 保存后自动重置表单到初始状态
         if (shiftSelect) {
           shiftSelect.value = '';
           shiftSelect.dispatchEvent(new Event('change'));
@@ -1161,29 +1151,49 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // 用户页面日历按钮
   const prevMonthBtn = document.getElementById('prev-month-btn');
   const nextMonthBtn = document.getElementById('next-month-btn');
   if (prevMonthBtn && nextMonthBtn) {
     prevMonthBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       currentMonth--;
-      renderSalaryCalendar();
+      renderUserCalendar();
     });
 
     nextMonthBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       currentMonth++;
-      renderSalaryCalendar();
+      renderUserCalendar();
+    });
+  }
+
+  // 管理员页面日历按钮
+  const adminPrevMonthBtn = document.getElementById('admin-prev-month-btn');
+  const adminNextMonthBtn = document.getElementById('admin-next-month-btn');
+  if (adminPrevMonthBtn && adminNextMonthBtn) {
+    adminPrevMonthBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
+
+      currentMonth--;
+      renderAdminCalendar();
+    });
+
+    adminNextMonthBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
+
+      currentMonth++;
+      renderAdminCalendar();
     });
   }
 
@@ -1192,26 +1202,22 @@ document.addEventListener('DOMContentLoaded', function () {
   const detailClose = document.getElementById('detail-close');
   if (detailBtn && detailOverlay && detailClose) {
     detailBtn.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       renderTotalAndStat();
       detailOverlay.classList.add('show');
-      disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
+      disableBodyScroll();
     });
 
     detailClose.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       detailOverlay.classList.remove('show');
-      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+      enableBodyScroll();
     });
   }
 
@@ -1219,14 +1225,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
   if (cycleDetailClose && cycleDetailOverlay) {
     cycleDetailClose.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       cycleDetailOverlay.classList.remove('show');
-      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+      enableBodyScroll();
     });
   }
 
@@ -1234,18 +1238,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const cycleTotalOverlay = document.getElementById('cycle-total-overlay');
   if (cycleTotalClose && cycleTotalOverlay) {
     cycleTotalClose.addEventListener('click', function (e) {
-      // 阻止事件冒泡和默认行为
       e.stopPropagation();
       e.preventDefault();
-      // 点击后立即失去焦点
       this.blur();
 
       cycleTotalOverlay.classList.remove('show');
-      enableBodyScroll(); // ✅ 关闭弹窗时恢复底层滚动
+      enableBodyScroll();
     });
   }
 
-  // ✅ 点击弹窗遮罩层关闭弹窗并恢复滚动
+  // 点击弹窗遮罩层关闭弹窗
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
       if (e.target === this) {
@@ -1254,7 +1256,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // ✅ 只阻止遮罩层本身的滚动，不影响弹窗内部
     overlay.addEventListener('touchmove', function(e) {
       if (e.target === this) {
         e.preventDefault();
@@ -1262,53 +1263,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: false });
   });
 
-// 延迟 500 毫秒加载，解决 SDK 未初始化完成导致的失败
-setTimeout(() => {
-  loadData();
-}, 500);
+  // 延迟加载数据
+  setTimeout(() => {
+    loadData();
+  }, 500);
 });
 
-// ✅ 核心修复：动画与数据刷新完全同步，保证动画至少播放1秒
+// 刷新按钮
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
-  // 阻止事件冒泡和默认行为
   e.stopPropagation();
   e.preventDefault();
-  // 点击后立即失去焦点
   this.blur();
 
-  // 防止重复点击
   if (this.classList.contains('spinning') || isLoading) return;
 
-  // 添加旋转动画
   this.classList.add('spinning');
 
-  // 显示加载动画
   document.querySelector('#current-cycle').innerHTML = '<span class="loading-spinner"></span>';
   document.querySelector('#total-wage-num').innerHTML = '<span class="loading-spinner"></span>';
   document.getElementById('total-wage-num').style.opacity = '0.5';
   document.getElementById('current-cycle').style.opacity = '0.5';
   
-  // 同时执行：数据加载 + 1秒动画保证（无论数据多快，动画都至少播放1秒）
   const [data] = await Promise.all([
-    loadData(0, false), // 只加载数据，不自动渲染
-    new Promise(resolve => setTimeout(resolve, 1000)) // 强制动画最小时长
+    loadData(0, false),
+    new Promise(resolve => setTimeout(resolve, 1000))
   ]);
 
-  // 动画结束后，一次性渲染所有数据
   if (data) {
     renderData(data);
-    renderSalaryCalendar();
+    renderUserCalendar();
+    renderAdminCalendar();
     renderTotalAndStat();
   }
 
-  // 隐藏加载动画
   document.querySelectorAll('.loading-spinner').forEach(el => el.style.display = 'none');
   document.getElementById('total-wage-num').style.opacity = '1';
   document.getElementById('current-cycle').style.opacity = '1';
 
-  // 移除旋转动画
   this.classList.remove('spinning');
   
-  // 数据和动画同时完成后，立即显示成功提示
   showToast('数据刷新成功','success');
 })
