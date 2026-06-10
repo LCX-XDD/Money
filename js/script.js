@@ -1296,26 +1296,25 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   const data = await loadData(0, false, true, false);
   
   // 数据加载完成立即渲染并显示Toast
-  if (data) {
-    renderData(data);
-    renderUserCalendar();
-    renderAdminCalendar();
-    renderTotalAndStat();
-  }
-// 等DOM渲染完成后再显示Toast
-setTimeout(() => {
-  showToast('数据刷新成功','success');
-}, 0);
+// 先渲染数据
+if (data) {
+  renderData(data);
+  renderUserCalendar();
+  renderAdminCalendar();
+  renderTotalAndStat();
+}
 
-  // 单独等待动画时长
-  const elapsed = Date.now() - startTime;
-  if (elapsed < minAnimationDuration) {
-    await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
-  }
+// 等待动画完全结束
+const elapsed = Date.now() - startTime;
+if (elapsed < minAnimationDuration) {
+  await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
+}
 
-  // 动画结束后停止加载状态
-  const wageBox = document.querySelector('.total-wage-box');
-  const refreshBtn = document.getElementById('refresh-data-btn');
-  if (wageBox) wageBox.classList.remove('loading');
-  if (refreshBtn) refreshBtn.classList.remove('spinning');
-});
+// 停止加载动画
+const wageBox = document.querySelector('.total-wage-box');
+const refreshBtn = document.getElementById('refresh-data-btn');
+if (wageBox) wageBox.classList.remove('loading');
+if (refreshBtn) refreshBtn.classList.remove('spinning');
+
+// ✅ 最后显示Toast（此时数据和页面都已完全更新）
+showToast('数据刷新成功','success');
