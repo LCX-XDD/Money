@@ -652,16 +652,10 @@ function openCycleDetailPopup(cycleKey, records) {
   cycleDetailTitle.innerText = cycleKey;
   list.innerHTML = '';
 
-  const btnBox = document.createElement('div');
-  btnBox.style.textAlign = 'center';
-  btnBox.style.marginBottom = '10px';
-  
+  // ✅ 修复：查看本期总工资按钮有左右间距
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
-  calcBtn.className = 'btn-primary';
-  calcBtn.style.padding = '6px 14px';
-  calcBtn.style.borderRadius = '12px';
-  calcBtn.style.cursor = 'pointer';
+  calcBtn.className = 'cycle-calc-btn';
   
   calcBtn.onclick = function (e) {
     // 阻止事件冒泡和默认行为
@@ -720,8 +714,7 @@ function openCycleDetailPopup(cycleKey, records) {
     disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
   };
 
-  btnBox.appendChild(calcBtn);
-  list.appendChild(btnBox);
+  list.appendChild(calcBtn);
 
   records.forEach(item => {
     const workDate = item.get('date') || '';
@@ -780,17 +773,10 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   cycleDetailTitle.innerText = cycleKey;
   list.innerHTML = '';
 
-  // 顶部统计
-  const btnBox = document.createElement('div');
-  btnBox.style.textAlign = 'center';
-  btnBox.style.marginBottom = '10px';
-  
+  // ✅ 修复：查看本期总工资按钮有左右间距
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
-  calcBtn.className = 'btn-primary';
-  calcBtn.style.padding = '6px 14px';
-  calcBtn.style.borderRadius = '12px';
-  calcBtn.style.cursor = 'pointer';
+  calcBtn.className = 'cycle-calc-btn';
   
   calcBtn.onclick = function (e) {
     // 阻止事件冒泡和默认行为
@@ -849,8 +835,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     disableBodyScroll(); // ✅ 打开弹窗时禁止底层滚动
   };
 
-  btnBox.appendChild(calcBtn);
-  list.appendChild(btnBox);
+  list.appendChild(calcBtn);
 
   // 渲染带编辑删除的记录列表
   records.forEach(item => {
@@ -894,7 +879,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
       ${mealLine}
       <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-      <div class="item-op" style="margin-top:8px;gap:8px;">
+      <div class="item-op" style="margin-top:12px;gap:12px;">
         <button class="btn-sm btn-edit" 
           data-id="${id}" 
           data-date="${workDate}" 
