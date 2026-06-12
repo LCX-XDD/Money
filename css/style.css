@@ -848,3 +848,23 @@ body.admin-active .progress-window {
     padding: 68px 32px 36px;
   }
 }
+/* 移动端适配 */
+@media (max-width: 480px) {
+  .btn-back {
+    top: 12px;
+    left: 12px;
+  }
+  
+  .btn-back button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .btn-back button::before {
+    font-size: 16px;
+  }
+
+  #admin-view {
+    padding: 56px 12px 20px;
+  }
+}
