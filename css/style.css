@@ -42,7 +42,7 @@
     /* ✅ 新增：进度条颜色变量（深色模式，降低饱和度） */
     --progress-fill: rgba(255, 255, 255, 0.7);
     --progress-bg: rgba(255, 255, 255, 0.15);
-    --progress-text-color: rgba(255, 255, 255, 0.9); /* 夜间模式文字颜色 *
+    --progress-text-color: rgba(255, 255, 255, 0.9); /* 夜间模式文字颜色 */
   }
 }
 
@@ -734,18 +734,6 @@ body.admin-active .calendar-wrap {
   display: block;
 }
 
-/* ✅ 独立进度条窗格（和蓝色卡片风格一致） */
-.progress-window {
-  background: var(--card-gradient);
-  border-radius: 20px;
-  padding: 32px 24px;
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
 
 /* 进度条窗格：flex布局，文字+进度条并排 */
 .progress-window {
