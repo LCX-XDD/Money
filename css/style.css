@@ -95,9 +95,9 @@ body {
   transition: all 0.3s ease;
 }
 
-/* 管理员页面：隐藏用户端白色窗口（含工资卡片） */
+/* 管理员页面：彻底隐藏用户端白色窗口（含工资卡片） */
 body.admin-active .white-window {
-  display: none;
+  display: none !important;
 }
 
 @media (min-width: 768px) {
@@ -699,12 +699,13 @@ body.admin-active .white-window {
   background: var(--scroll-thumb-hover);
 }
 
-/* 管理员页面恢复可滚动 */
+/* 管理员页面：改为垂直布局+居中+支持滚动 */
 body.admin-active {
-  align-items: flex-start !important;
+  flex-direction: column;
+  align-items: center;
   padding-top: 20px;
   padding-bottom: 40px;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 /* 确保窗口底部有足够边距 */
