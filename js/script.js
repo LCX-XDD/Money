@@ -1104,7 +1104,6 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
 
   cycleDetailOverlay.classList.add('show');
   disableBodyScroll();
-}
 
 document.addEventListener('DOMContentLoaded', function () {
   // 第一步：先获取所有元素
@@ -1394,18 +1393,19 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 点击弹窗遮罩层关闭弹窗
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', function(e) {
-      if (e.target === this) {
-        this.classList.remove('show');
-        enableBodyScroll();
-      }
-    });
-
-overlay.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-}, { passive: false });
+// 弹窗遮罩代码（正常写）
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('show');
+      enableBodyScroll();
+    }
   });
+
+  overlay.addEventListener('touchmove', function(e) {
+    e.preventDefault(); // 可以删掉多余的 if 判断
+  }, { passive: false });
+});
 
 // 刷新按钮：双进度条同步动画
 document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
@@ -1473,4 +1473,5 @@ const miniText = document.getElementById('cycle-progress-text');
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
   showToast('数据刷新成功','success');
+});
 });
