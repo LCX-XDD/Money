@@ -383,13 +383,13 @@ body.admin-active .white-window {
   margin-top: 8px;
 }
 
-/* 返回按钮：固定屏幕左上角，iOS毛玻璃透明风格 + 安全区适配 */
+/* 返回按钮：白色卡片内部左上角，毛玻璃透明风格 */
 .btn-back {
-  position: fixed;
-  top: calc(16px + env(safe-area-inset-top));
-  left: calc(16px + env(safe-area-inset-left));
+  position: absolute;
+  top: 16px;
+  left: 16px;
   margin: 0;
-  z-index: 9999;
+  z-index: 10;
   opacity: 0.75;
   transition: opacity 0.3s ease;
 }
@@ -409,7 +409,7 @@ body.admin-active .white-window {
   -webkit-backdrop-filter: blur(12px);
   font-size: 0;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -852,8 +852,8 @@ body.admin-active .progress-window {
 /* 移动端适配 */
 @media (max-width: 480px) {
   .btn-back {
-    top: calc(10px + env(safe-area-inset-top));
-    left: calc(10px + env(safe-area-inset-left));
+    top: 12px;
+    left: 12px;
   }
   
   .btn-back button {
@@ -866,6 +866,6 @@ body.admin-active .progress-window {
   }
 
   #admin-view {
-    padding: 52px 12px 20px;
+    padding: 56px 12px 20px;
   }
 }
