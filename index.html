@@ -11,27 +11,29 @@
 </head>
 <body>
   <!-- 主窗口 -->
-  <div class="white-window">
-    <h1 class="title">LCX</h1>
-
-<!-- 用户页面：只显示总工资，隐藏日历 -->
-<div id="user-view">
-<!-- 总工资卡片（内容全部靠左对齐） -->
-<div class="total-wage-box">
-  <!-- ✅ 无闪烁加载覆盖层（核心解决闪烁） -->
-  <div class="loading-overlay">
-    <span class="loading-spinner"></span>
+<div class="white-window">
+  <h1 class="title">LCX</h1>
+  
+  <!-- 蓝色总工资卡片 -->
+  <div class="total-wage-box">
+    <div class="loading-overlay"><div class="loading-spinner"></div></div>
+    <button class="refresh-btn" id="refresh-data-btn">↻</button>
+    <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+    <div class="total-wage-label">悬赏金</div>
+    <div class="total-wage-value" id="total-wage-num">0.00</div>
+    <button class="btn-detail" id="detail-btn">查看详细信息</button>
   </div>
-  <button id="refresh-data-btn" class="refresh-btn">↻</button>
-  <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
-  <div class="total-wage-label">悬赏金</div>
-  <div class="total-wage-value" id="total-wage-num">0.00</div>
-  <button id="detail-btn" class="btn-detail">查看详细信息</button>
-    <!-- ✅ 新增：圆形进度条 -->
-  <div class="progress-container">
+
+  <!-- ✅ 新增：独立进度条窗格（在蓝色卡片下方） -->
+  <div class="progress-window">
     <div class="progress-circle">
       <div class="progress-text" id="progress-text">0%</div>
     </div>
+  </div>
+
+  <!-- 管理员页面内容 -->
+  <div id="admin-calendar" class="hidden">
+    <!-- 原有日历和表单内容不变 -->
   </div>
 </div>
 
