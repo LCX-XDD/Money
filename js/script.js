@@ -1038,71 +1038,75 @@ function openAdminCycleDetailPopup(cycleKey, records) {
     `;
     list.appendChild(itemEl);
 
-itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
+    // 编辑按钮事件
+    itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
 
-  cycleDetailOverlay.classList.remove('show');
-  enableBodyScroll();
-  
-  const dateInput = document.getElementById('record-date');
-  const shiftSelect = document.getElementById('record-shift');
-  const shiftStart = document.getElementById('shift-start');
-  const shiftEnd = document.getElementById('shift-end');
-  const shiftStart2 = document.getElementById('shift-start2');
-  const shiftEnd2 = document.getElementById('shift-end2');
-  const mealStart = document.getElementById('meal-start');
-  const allowanceInput = document.getElementById('record-allowance');
-  const moneyInput = document.getElementById('record-money');
-  const remarkInput = document.getElementById('record-remark');
-  const editId = document.getElementById('edit-id');
-
-  if (dateInput) dateInput.value = this.dataset.date;
-  if (shiftSelect) shiftSelect.value = this.dataset.shift;
-
-  shiftSelect.dispatchEvent(new Event('change'));
-
-  if (shiftStart) shiftStart.value = this.dataset.shiftStart;
-  if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
-  if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-  if (mealStart) mealStart.value = this.dataset.mealStart;
-
-  if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-  if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
-  if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
-
-  if (allowanceInput) allowanceInput.value = this.dataset.allowance;
-  if (moneyInput) moneyInput.value = this.dataset.money;
-  if (remarkInput) remarkInput.value = this.dataset.remark;
-  if (editId) editId.value = this.dataset.id;
-  
-  window.calcWorkHours();
-
-  selectedDate = this.dataset.date;
-  renderUserCalendar();
-  renderAdminCalendar();
-
-  // 绑定删除按钮事件
-  itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.blur();
-
-    if (!confirm('确定删除该条记录？')) return;
-    try {
-      await AV.Object.createWithoutData('Bill', id).destroy();
-      loadData();
-      showToast('删除成功', 'success');
       cycleDetailOverlay.classList.remove('show');
       enableBodyScroll();
-    } catch (e) {
-      showToast('删除失败', 'error');
-    }
+      
+      const dateInput = document.getElementById('record-date');
+      const shiftSelect = document.getElementById('record-shift');
+      const shiftStart = document.getElementById('shift-start');
+      const shiftEnd = document.getElementById('shift-end');
+      const shiftStart2 = document.getElementById('shift-start2');
+      const shiftEnd2 = document.getElementById('shift-end2');
+      const mealStart = document.getElementById('meal-start');
+      const allowanceInput = document.getElementById('record-allowance');
+      const moneyInput = document.getElementById('record-money');
+      const remarkInput = document.getElementById('record-remark');
+      const editId = document.getElementById('edit-id');
+
+      if (dateInput) dateInput.value = this.dataset.date;
+      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+
+      shiftSelect.dispatchEvent(new Event('change'));
+
+      if (shiftStart) shiftStart.value = this.dataset.shiftStart;
+      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
+      if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
+      if (mealStart) mealStart.value = this.dataset.mealStart;
+
+      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
+      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
+
+      if (allowanceInput) allowanceInput.value = this.dataset.allowance;
+      if (moneyInput) moneyInput.value = this.dataset.money;
+      if (remarkInput) remarkInput.value = this.dataset.remark;
+      if (editId) editId.value = this.dataset.id;
+      
+      window.calcWorkHours();
+
+      selectedDate = this.dataset.date;
+      renderUserCalendar();
+      renderAdminCalendar();
+
+      // 删除按钮事件（嵌套在编辑内部）
+      itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.blur();
+
+        if (!confirm('确定删除该条记录？')) return;
+        try {
+          await AV.Object.createWithoutData('Bill', id).destroy();
+          loadData();
+          showToast('删除成功', 'success');
+          cycleDetailOverlay.classList.remove('show');
+          enableBodyScroll();
+        } catch (e) {
+          showToast('删除失败', 'error');
+        }
+      });
+    }); // ✅ 补上缺失的【编辑事件闭合】，这就是报错元凶
+
   });
 
   cycleDetailOverlay.classList.add('show');
-  disableBodyScroll();
+  enableBodyScroll();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
