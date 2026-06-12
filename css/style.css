@@ -789,11 +789,13 @@ body.admin-active .calendar-wrap {
 /* 顶部进度卡片：调换左右布局（圆环在左，文字在右），其余样式完全不变 */
 .top-progress-window {
   flex-direction: row-reverse;
+  margin-bottom: 16px; /* 新增：和下方卡片的间距 */
 }
 
 /* 管理员页面隐藏顶部进度卡片（和下方规则保持一致） */
 body.admin-active .top-progress-window {
   display: none;
+  margin-bottom: 16px; /* 新增：和下方卡片的间距 */
 }
 
 /* 抓捕进度文字 */
