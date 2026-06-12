@@ -1,3 +1,8 @@
+@property --progress {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 :root {
   /* 全局色彩变量 - 日间模式 */
   --bg-primary: #f5f5f7;
@@ -735,7 +740,7 @@ body.admin-active .calendar-wrap {
 }
 
 
-/* 进度条窗格：flex布局，文字+进度条并排 */
+/* 进度条窗格：文字+进度条并排 */
 .progress-window {
   background: var(--card-gradient);
   border-radius: 20px;
@@ -756,7 +761,7 @@ body.admin-active .calendar-wrap {
   margin: 0;
 }
 
-/* 圆形进度条主体 */
+/* ✅ 环形圆形进度条主体 */
 .progress-circle {
   width: 100px;
   height: 100px;
@@ -768,18 +773,20 @@ body.admin-active .calendar-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background 1s ease-out; /* 关键：1秒平滑过渡动画 */
+  transition: background 1s ease-out; /* 1秒平滑动画 */
   position: relative;
 }
 
-/* ✅ 进度条内部背景改为完全透明，透出窗格背景 */
+/* ✅ 环形内部背景：和窗格同色，盖住中间形成环形 */
 .progress-circle::before {
   content: '';
   position: absolute;
-  width: 75px;
-  height: 75px;
+  width: 76px; /* 环形宽度12px：100-2*12 */
+  height: 76px;
   border-radius: 50%;
-  background: transparent; /* 完全透明，和窗格背景融为一体 */
+  background: var(--card-gradient);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 /* 进度百分比文字 */
