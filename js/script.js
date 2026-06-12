@@ -1428,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // 刷新按钮：双进度条同步动画
-document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
+document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
   e.stopPropagation();
   e.preventDefault();
   this.blur();
