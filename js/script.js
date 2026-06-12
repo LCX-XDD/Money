@@ -1303,6 +1303,7 @@ backUserBtn.addEventListener('click', function (e) {
 // ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
 // ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
 // 刷新按钮
+// 刷新按钮
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1315,19 +1316,17 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
 
-  // ✅ 第一步：进度条从当前值平滑回退到0（1秒动画）
+  // ✅ 第一步：进度条从当前值平滑回滚到0（1秒动画）
   if (progressCircle && progressText) {
-    // 直接设置为0，CSS transition会自动播放回退动画
     progressCircle.style.setProperty('--progress', 0);
     progressText.textContent = '0%';
-    // 等待回退动画完全完成
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 等待回退动画完成
   }
 
-  // 第二步：加载数据（不自动停止动画）
+  // 第二步：加载数据
   const data = await loadData(0, false, true, false);
   
-  // 第三步：渲染数据（renderTotalAndStat会自动触发进度条从0前进到新值的动画）
+  // 第三步：渲染数据（自动触发进度条从0到新值的1秒动画）
   if (data) {
     renderData(data);
     renderUserCalendar();
@@ -1337,8 +1336,8 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   // 等待所有动画完成
   const elapsed = Date.now() - startTime;
-  if (elapsed < minAnimationDuration + 1000) { // 加上回退动画的1秒
-    await new Promise(resolve => setTimeout(resolve, minAnimationDuration + 1000 - elapsed));
+  if (elapsed < 2000) { // 回退1秒+前进1秒=总2秒
+    await new Promise(resolve => setTimeout(resolve, 2000 - elapsed));
   }
 
   // 停止加载动画
@@ -1347,6 +1346,6 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
 
-  // 最后显示Toast
+  // 最后显示Toast（和进度条动画完成同时出现）
   showToast('数据刷新成功','success');
 });
