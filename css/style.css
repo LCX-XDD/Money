@@ -73,10 +73,16 @@ html {
 html, body {
   touch-action: pan-x pan-y;
   -webkit-touch-callout: none;
+  /* 删除全局 user-select: none */
+}
+
+/* 全局禁止选中，但表单例外 */
+*:not(input):not(select):not(textarea) {
   -webkit-user-select: none;
   user-select: none;
 }
 
+/* 普通用户页面 禁止滚动 */
 body {
   background-color: var(--bg-primary);
   min-height: 100vh;
@@ -86,8 +92,7 @@ body {
   align-items: center;
   padding: 20px 10px;
   transition: background-color 0.3s ease;
-  /* ✅ 禁止所有方向的页面滚动 */
-  overflow: hidden;
+  overflow: hidden; /* 仅用户页生效 */
 }
 
 .white-window {
@@ -734,13 +739,14 @@ body:not(.admin-active) .btn-back {
   background: var(--scroll-thumb-hover);
 }
 
-/* 管理员页面：改为垂直布局+居中+支持滚动 */
+/* 管理员页面 允许滚动 */
 body.admin-active {
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
   padding-bottom: 40px;
-  overflow-y: auto;
+  overflow-y: auto !important; /* 覆盖全局，允许垂直滚动 */
+  overflow-x: hidden;
 }
 
 /* 确保窗口底部有足够边距 */
@@ -792,11 +798,6 @@ body.admin-active .calendar-wrap {
   margin-bottom: 16px; /* 新增：和下方卡片的间距 */
 }
 
-/* 管理员页面隐藏顶部进度卡片（和下方规则保持一致） */
-body.admin-active .top-progress-window {
-  display: none;
-  margin-bottom: 16px; /* 新增：和下方卡片的间距 */
-}
 
 /* 抓捕进度文字 */
 .progress-label {
