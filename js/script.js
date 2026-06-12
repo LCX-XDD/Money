@@ -1137,23 +1137,27 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const backUserBtn = document.getElementById('back-user');
-  if (backUserBtn && adminView && userView && adminEntrance) {
-backUserBtn.addEventListener('click', function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
+  // 仅判断按钮本身是否存在，内部操作单独容错，确保事件一定绑定成功
+  if (backUserBtn) {
+    backUserBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
 
-  localStorage.removeItem('isAdminLoggedIn');
-  // ✅ 返回用户页面移除管理员模式类，恢复垂直居中
-  document.body.classList.remove('admin-active');
-  adminView.classList.add('hidden');
-  userView.classList.remove('hidden');
-  adminEntrance.classList.remove('hidden');
-  clearForm();
-  renderTotalAndStat();
-  renderUserCalendar();
-  showToast('已返回用户页面', 'success');
-});
+      // 清除登录状态（核心逻辑，不受其他元素影响）
+      localStorage.removeItem('isAdminLoggedIn');
+      document.body.classList.remove('admin-active');
+      
+      // 视图切换（元素不存在也不影响核心状态）
+      if (adminView) adminView.classList.add('hidden');
+      if (userView) userView.classList.remove('hidden');
+      if (adminEntrance) adminEntrance.classList.remove('hidden');
+      
+      clearForm();
+      renderTotalAndStat();
+      renderUserCalendar();
+      showToast('已返回用户页面', 'success');
+    });
   }
 
   const saveBtn = document.getElementById('save-btn');
