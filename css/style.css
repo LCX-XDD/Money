@@ -73,10 +73,8 @@ html {
 html, body {
   touch-action: pan-x pan-y;
   -webkit-touch-callout: none;
-  /* 删除全局 user-select: none */
 }
 
-/* 全局禁止选中，但表单例外 */
 *:not(input):not(select):not(textarea) {
   -webkit-user-select: none;
   user-select: none;
@@ -92,7 +90,16 @@ body {
   align-items: center;
   padding: 20px 10px;
   transition: background-color 0.3s ease;
-  overflow: hidden; /* 仅用户页生效 */
+  overflow: hidden;
+}
+
+body.admin-active {
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  padding-bottom: 40px;
+  overflow-y: auto !important;
+  overflow-x: hidden;
 }
 
 .white-window {
