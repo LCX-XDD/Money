@@ -660,7 +660,8 @@ function renderTotalAndStat() {
     });
   }
 
-  totalWageNum.innerText = totalWage.toFixed(2);
+totalWageNum.innerText = totalWage.toFixed(2);
+  
   if (statWorkHours) statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
   if (statWorkDays) statWorkDays.innerText = workDays + ' 天';
   if (stat21hDays) stat21hDays.innerText = day21 + ' 天';
@@ -668,6 +669,26 @@ function renderTotalAndStat() {
   if (stat23hDays) stat23hDays.innerText = day23 + ' 天';
   if (statBaseMoney) statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
   if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
+
+  // ✅ 圆形进度条逻辑
+  const progressText = document.getElementById('progress-text');
+  const progressCircle = document.querySelector('.progress-circle');
+  if (progressText && progressCircle) {
+    // 计算百分比（取整，最大100%）
+    const percentage = Math.min(Math.round(totalWage / 2900 * 100), 100);
+    
+    // 先重置为0，触发动画
+    progressCircle.style.setProperty('--progress', 0);
+    progressText.textContent = '0%';
+    
+    // 下一帧开始播放动画
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        progressCircle.style.setProperty('--progress', percentage);
+        progressText.textContent = `${percentage}%`;
+      }, 10);
+    });
+  }
 }
 
 // ========== 周期明细弹窗 ==========
