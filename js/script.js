@@ -1012,95 +1012,97 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
     }
 
-    const itemEl = document.createElement('div');
-    itemEl.className = 'cycle-detail-item';
-    itemEl.innerHTML = `
-      <span class="date-text">${timeStr}</span>
-      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-      ${mealLine}
-      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-      <div class="item-op" style="margin-top:12px;gap:12px;">
-        <button class="btn-sm btn-edit" 
-          data-id="${id}" 
-          data-date="${workDate}" 
-          data-shift="${shift}"
-          data-shift-start="${sStart}" 
-          data-shift-end="${sEnd}"
-          data-shift-start2="${sStart2}" 
-          data-shift-end2="${sEnd2}"
-          data-meal-start="${meal}"
-          data-allowance="${allow}"
-          data-money="${money}"
-          data-remark="${r}"
-        >编辑</button>
-        <button class="btn-sm btn-del" data-id="${id}">删除</button>
-      </div>
-    `;
-    list.appendChild(itemEl);
+const itemEl = document.createElement('div');
+itemEl.className = 'cycle-detail-item';
+itemEl.innerHTML = `
+  <span class="date-text">${timeStr}</span>
+  <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+  ${mealLine}
+  <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+  <div class="item-op" style="margin-top:12px;gap:12px;">
+    <button class="btn-sm btn-edit" 
+      data-id="${id}" 
+      data-date="${workDate}" 
+      data-shift="${shift}"
+      data-shift-start="${sStart}" 
+      data-shift-end="${sEnd}"
+      data-shift-start2="${sStart2}" 
+      data-shift-end2="${sEnd2}"
+      data-meal-start="${meal}"
+      data-allowance="${allow}"
+      data-money="${money}"
+      data-remark="${r}"
+    >编辑</button>
+    <button class="btn-sm btn-del" data-id="${id}">删除</button>
+  </div>
+`;
+list.appendChild(itemEl);
 
-    // 编辑按钮事件
-    itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
+// ========== 修复：平级绑定事件，不再嵌套 ==========
+// 编辑按钮事件
+itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-      cycleDetailOverlay.classList.remove('show');
-      enableBodyScroll();
-      
-      const dateInput = document.getElementById('record-date');
-      const shiftSelect = document.getElementById('record-shift');
-      const shiftStart = document.getElementById('shift-start');
-      const shiftEnd = document.getElementById('shift-end');
-      const shiftStart2 = document.getElementById('shift-start2');
-      const shiftEnd2 = document.getElementById('shift-end2');
-      const mealStart = document.getElementById('meal-start');
-      const allowanceInput = document.getElementById('record-allowance');
-      const moneyInput = document.getElementById('record-money');
-      const remarkInput = document.getElementById('record-remark');
-      const editId = document.getElementById('edit-id');
+  cycleDetailOverlay.classList.remove('show');
+  enableBodyScroll();
+  
+  const dateInput = document.getElementById('record-date');
+  const shiftSelect = document.getElementById('record-shift');
+  const shiftStart = document.getElementById('shift-start');
+  const shiftEnd = document.getElementById('shift-end');
+  const shiftStart2 = document.getElementById('shift-start2');
+  const shiftEnd2 = document.getElementById('shift-end2');
+  const mealStart = document.getElementById('meal-start');
+  const allowanceInput = document.getElementById('record-allowance');
+  const moneyInput = document.getElementById('record-money');
+  const remarkInput = document.getElementById('record-remark');
+  const editId = document.getElementById('edit-id');
 
-      if (dateInput) dateInput.value = this.dataset.date;
-      if (shiftSelect) shiftSelect.value = this.dataset.shift;
+  if (dateInput) dateInput.value = this.dataset.date;
+  if (shiftSelect) shiftSelect.value = this.dataset.shift;
 
-      shiftSelect.dispatchEvent(new Event('change'));
+  shiftSelect.dispatchEvent(new Event('change'));
 
-      if (shiftStart) shiftStart.value = this.dataset.shiftStart;
-      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
-      if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-      if (mealStart) mealStart.value = this.dataset.mealStart;
+  if (shiftStart) shiftStart.value = this.dataset.shiftStart;
+  if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
+  if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
+  if (mealStart) mealStart.value = this.dataset.mealStart;
 
-      if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
-      if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
+  if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
+  if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+  if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
 
-      if (allowanceInput) allowanceInput.value = this.dataset.allowance;
-      if (moneyInput) moneyInput.value = this.dataset.money;
-      if (remarkInput) remarkInput.value = this.dataset.remark;
-      if (editId) editId.value = this.dataset.id;
-      
-      window.calcWorkHours();
+  if (allowanceInput) allowanceInput.value = this.dataset.allowance;
+  if (moneyInput) moneyInput.value = this.dataset.money;
+  if (remarkInput) remarkInput.value = this.dataset.remark;
+  if (editId) editId.value = this.dataset.id;
+  
+  window.calcWorkHours();
 
-      selectedDate = this.dataset.date;
-      renderUserCalendar();
-      renderAdminCalendar();
+  selectedDate = this.dataset.date;
+  renderUserCalendar();
+  renderAdminCalendar();
+});
 
-      // 删除按钮事件（嵌套在编辑内部）
-      itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        this.blur();
+// 删除按钮事件（移到外层，立即绑定）
+itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-        if (!confirm('确定删除该条记录？')) return;
-        try {
-          await AV.Object.createWithoutData('Bill', id).destroy();
-          loadData();
-          showToast('删除成功', 'success');
-          cycleDetailOverlay.classList.remove('show');
-          enableBodyScroll();
-        } catch (e) {
-          showToast('删除失败', 'error');
-        }
-      });
+  if (!confirm('确定删除该条记录？')) return;
+  try {
+    await AV.Object.createWithoutData('Bill', id).destroy();
+    loadData();
+    showToast('删除成功', 'success');
+    cycleDetailOverlay.classList.remove('show');
+    enableBodyScroll();
+  } catch (e) {
+    showToast('删除失败', 'error');
+  }
+});
     }); // ✅ 补上缺失的【编辑事件闭合】，这就是报错元凶
 
   });
