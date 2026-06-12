@@ -1061,23 +1061,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 第二步：执行原来的登录状态判断和初始化
+  // 第二步：处理登录状态（与DOM元素判断分离）
   const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
   const now = new Date();
   const todayStr = formatDate(now);
 
   selectedDate = todayStr;
 
-  if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
+  if (isAdminLoggedIn === 'true') {
+    // 先设置页面整体状态
     document.body.classList.add('admin-active');
-    userView.classList.add('hidden');
-    adminView.classList.remove('hidden');
-    adminEntrance.classList.add('hidden');
+    // 再单独处理每个元素，元素不存在不影响状态
+    if (userView) userView.classList.add('hidden');
+    if (adminView) adminView.classList.remove('hidden');
+    if (adminEntrance) adminEntrance.classList.add('hidden');
+    
     const dateInput = document.getElementById('record-date');
     if (dateInput) dateInput.value = todayStr;
     loadData();
   } else {
     document.body.classList.remove('admin-active');
+    if (userView) userView.classList.remove('hidden');
+    if (adminView) adminView.classList.add('hidden');
+    if (adminEntrance) adminEntrance.classList.remove('hidden');
+    
     loadData().then(() => {
       renderUserCalendar();
     });
