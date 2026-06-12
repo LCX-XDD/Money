@@ -1,14 +1,45 @@
+:root {
+  /* 全局色彩变量 - 日间模式 */
+  --bg-primary: #f5f5f7;
+  --card-primary: #ffffff;
+  --card-secondary: #f5f5f7;
+  --text-primary: #1d1d1f;
+  --text-secondary: #8e8e93;
+  --border-color: #e5e5ea;
+  --shadow-primary: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --admin-btn-bg: rgba(0, 0, 0, 0.1);
+  --scroll-track: #f5f5f7;
+  --scroll-thumb: #c7c7cc;
+  --scroll-thumb-hover: #8e8e93;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 全局色彩变量 - 夜间模式 */
+    --bg-primary: #1c1c1e;
+    --card-primary: #2c2c2e;
+    --card-secondary: #3a3a3c;
+    --text-primary: #f5f5f7;
+    --text-secondary: #aeaeb2;
+    --border-color: #48484a;
+    --shadow-primary: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --admin-btn-bg: rgba(255, 255, 255, 0.1);
+    --scroll-track: #3a3a3c;
+    --scroll-thumb: #636366;
+    --scroll-thumb-hover: #8e8e93;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  /* 禁止双击放大 */
   touch-action: manipulation;
 }
 
-/* 全局禁止缩放 */
+/* 全局禁止缩放 + 修复桌面端高度问题 */
 html {
   height: 100%;
 }
@@ -21,7 +52,7 @@ html, body {
 }
 
 body {
-  background-color: #f5f5f7;
+  background-color: var(--bg-primary);
   min-height: 100vh;
   min-height: -webkit-fill-available;
   display: flex;
@@ -32,10 +63,10 @@ body {
 }
 
 .white-window {
-  background: white;
+  background: var(--card-primary);
   border-radius: 24px;
   padding: 24px 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-primary);
   width: 100%;
   max-width: 420px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -60,7 +91,7 @@ body {
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -73,10 +104,10 @@ body {
   margin-bottom: 24px;
   position: relative;
   text-align: left;
-  min-height: 200px; /* 固定最小高度，避免加载时页面跳动 */
+  min-height: 200px;
 }
 
-/* 无闪烁加载覆盖层（核心解决闪烁） */
+/* 无闪烁加载覆盖层 */
 .total-wage-box .loading-overlay {
   position: absolute;
   top: 0;
@@ -99,7 +130,7 @@ body {
   visibility: visible;
 }
 
-/* 刷新按钮在加载层之上，随时可点击 */
+/* 刷新按钮在加载层之上 */
 .refresh-btn {
   position: absolute;
   top: 16px;
@@ -165,7 +196,7 @@ body {
 }
 
 .calendar-wrap {
-  background: #f5f5f7;
+  background: var(--card-secondary);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 24px;
@@ -178,7 +209,7 @@ body {
   align-items: center;
   margin-bottom: 12px;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -202,7 +233,7 @@ body {
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-size: 12px;
-  color: #8e8e93;
+  color: var(--text-secondary);
   margin-bottom: 8px;
   transition: color 0.3s ease;
 }
@@ -224,7 +255,7 @@ body {
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
-  color: #1d1d1f;
+  color: var(--text-primary);
 }
 
 .calendar-day.other {
@@ -255,13 +286,13 @@ body {
 .form-input {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid #e5e5ea;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   font-size: 16px;
   margin-bottom: 12px;
   outline: none;
-  background: white;
-  color: #1d1d1f;
+  background: var(--card-primary);
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
@@ -279,20 +310,20 @@ body {
 .time-row label {
   width: 80px;
   font-size: 16px;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
 .time-select {
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid #e5e5ea;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   font-size: 16px;
   outline: none;
   min-width: 140px;
-  background: white;
-  color: #1d1d1f;
+  background: var(--card-primary);
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
@@ -303,7 +334,7 @@ body {
 .time-tip {
   text-align: right;
   font-size: 14px;
-  color: #8e8e93;
+  color: var(--text-secondary);
   margin-bottom: 12px;
   padding-right: 4px;
   transition: color 0.3s ease;
@@ -331,7 +362,7 @@ body {
   padding: 10px 20px;
   border: 1px solid #ff3b30;
   border-radius: 12px;
-  background: white;
+  background: var(--card-primary);
   color: #ff3b30;
   font-size: 14px;
   cursor: pointer;
@@ -342,7 +373,7 @@ body {
   font-size: 18px;
   font-weight: 600;
   margin: 24px 0 12px;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -351,7 +382,7 @@ body {
 }
 
 .cycle-group {
-  background: #f5f5f7;
+  background: var(--card-secondary);
   border-radius: 12px;
   margin-bottom: 8px;
   overflow: hidden;
@@ -364,7 +395,7 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -395,7 +426,7 @@ body {
 }
 
 .modal-box {
-  background: white;
+  background: var(--card-primary);
   border-radius: 20px;
   width: 90%;
   max-width: 400px;
@@ -424,7 +455,7 @@ body {
   font-size: 18px;
   font-weight: 600;
   text-align: center;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -432,18 +463,18 @@ body {
   width: calc(100% - 40px);
   margin: 0 20px 16px;
   padding: 12px 16px;
-  border: 1px solid #e5e5ea;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   font-size: 16px;
   outline: none;
-  background: white;
-  color: #1d1d1f;
+  background: var(--card-secondary);
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 .modal-btn-group {
   display: flex;
-  border-top: 1px solid #e5e5ea;
+  border-top: 1px solid var(--border-color);
   transition: border-color 0.3s ease;
 }
 
@@ -451,15 +482,15 @@ body {
   flex: 1;
   padding: 16px;
   border: none;
-  background: white;
+  background: var(--card-primary);
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .modal-btn.cancel {
-  color: #8e8e93;
-  border-right: 1px solid #e5e5ea;
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
@@ -473,7 +504,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 16px;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -486,14 +517,14 @@ body {
   padding: 16px 20px 8px;
   font-size: 16px;
   font-weight: 600;
-  border-top: 1px solid #e5e5ea;
+  border-top: 1px solid var(--border-color);
   margin-top: 8px;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 .cycle-detail-item {
-  background: #f5f5f7;
+  background: var(--card-secondary);
   border-radius: 12px;
   padding: 16px;
   margin: 0 20px 12px;
@@ -502,7 +533,7 @@ body {
 
 .date-text {
   font-size: 12px;
-  color: #8e8e93;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 6px;
   transition: color 0.3s ease;
@@ -512,7 +543,7 @@ body {
   font-size: 14px;
   margin-bottom: 4px;
   line-height: 1.4;
-  color: #1d1d1f;
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -607,8 +638,8 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.1);
-  color: #8e8e93;
+  background: var(--admin-btn-bg);
+  color: var(--text-secondary);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -624,153 +655,21 @@ body {
 }
 
 .modal-content::-webkit-scrollbar-track {
-  background: #f5f5f7;
+  background: var(--scroll-track);
   border-radius: 3px;
   margin: 10px 0;
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: #c7c7cc;
+  background: var(--scroll-thumb);
   border-radius: 3px;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: #8e8e93;
+  background: var(--scroll-thumb-hover);
 }
 
-/* ==================== 夜间模式（跟随系统） ==================== */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1c1c1e;
-  }
-
-  .white-window {
-    background: #2c2c2e;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  .title {
-    color: #f5f5f7;
-  }
-
-  .calendar-wrap {
-    background: #3a3a3c;
-  }
-
-  .calendar-head {
-    color: #f5f5f7;
-  }
-
-  .calendar-week {
-    color: #aeaeb2;
-  }
-
-  .calendar-day {
-    color: #f5f5f7;
-  }
-
-  .form-input {
-    background: #3a3a3c;
-    border-color: #48484a;
-    color: #f5f5f7;
-  }
-
-  .time-row label {
-    color: #f5f5f7;
-  }
-
-  .time-select {
-    background: #3a3a3c;
-    border-color: #48484a;
-    color: #f5f5f7;
-  }
-
-  .time-tip {
-    color: #aeaeb2;
-  }
-
-  .btn-back button {
-    background: #2c2c2e;
-  }
-
-  .sub-title {
-    color: #f5f5f7;
-  }
-
-  .cycle-group {
-    background: #3a3a3c;
-  }
-
-  .cycle-header {
-    color: #f5f5f7;
-  }
-
-  .modal-box {
-    background: #2c2c2e;
-  }
-
-  .modal-title {
-    color: #f5f5f7;
-  }
-
-  .modal-input {
-    background: #3a3a3c;
-    border-color: #48484a;
-    color: #f5f5f7;
-  }
-
-  .modal-btn-group {
-    border-top-color: #48484a;
-  }
-
-  .modal-btn {
-    background: #2c2c2e;
-  }
-
-  .modal-btn.cancel {
-    border-right-color: #48484a;
-  }
-
-  .detail-item {
-    color: #f5f5f7;
-  }
-
-  .detail-list-title {
-    border-top-color: #48484a;
-    color: #f5f5f7;
-  }
-
-  .cycle-detail-item {
-    background: #3a3a3c;
-  }
-
-  .date-text {
-    color: #aeaeb2;
-  }
-
-  .info-line {
-    color: #f5f5f7;
-  }
-
-  .admin-entrance {
-    background: rgba(255, 255, 255, 0.1);
-    color: #aeaeb2;
-  }
-
-  .modal-content::-webkit-scrollbar-track {
-    background: #3a3a3c;
-  }
-
-  .modal-content::-webkit-scrollbar-thumb {
-    background: #636366;
-  }
-
-  .modal-content::-webkit-scrollbar-thumb:hover {
-    background: #8e8e93;
-  }
-}
-/* 在文件最后添加 */
-/* 管理员模式：页面顶部对齐，避免内容溢出截断 */
+/* 管理员模式：页面顶部对齐 */
 body.admin-active {
   align-items: flex-start !important;
   padding-top: 20px;
@@ -781,10 +680,11 @@ body.admin-active {
 .white-window {
   margin-bottom: 20px;
 }
-/* ✅ 修复iOS日期输入框自动拉伸变高的问题 */
+
+/* 修复iOS日期输入框自动拉伸变高的问题 */
 input[type="date"].form-input {
   -webkit-appearance: none;
   appearance: none;
-  height: 52px; /* 和其他输入框保持完全一致的高度 */
+  height: 52px;
   line-height: 1;
 }
