@@ -11,6 +11,8 @@
   --scroll-track: #f5f5f7;
   --scroll-thumb: #c7c7cc;
   --scroll-thumb-hover: #8e8e93;
+  /* ✅ 新增：总工资卡片渐变 */
+  --card-gradient: linear-gradient(135deg, #007aff, #5856d6);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,6 +29,8 @@
     --scroll-track: #3a3a3c;
     --scroll-thumb: #636366;
     --scroll-thumb-hover: #8e8e93;
+    /* ✅ 新增：夜间模式暗色调渐变（亮度降低40%） */
+    --card-gradient: linear-gradient(135deg, #005bb5, #4240a8);
   }
 }
 
@@ -97,7 +101,7 @@ body {
 
 /* 总工资卡片：固定高度+无闪烁加载 */
 .total-wage-box {
-  background: linear-gradient(135deg, #007aff, #5856d6);
+  background: var(--card-gradient); /* ✅ 改成变量 */
   border-radius: 20px;
   padding: 32px 24px;
   color: white;
@@ -114,7 +118,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #007aff, #5856d6);
+  background: var(--card-gradient); /* ✅ 改成变量 */
   border-radius: 20px;
   display: flex;
   justify-content: center;
