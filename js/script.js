@@ -1101,10 +1101,10 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
     }
   });
 
-// ✅ 闭合 openAdminCycleDetailPopup 函数
+  cycleDetailOverlay.classList.add('show');
+  disableBodyScroll();
 }
 
-// ========== 页面初始化（确保下面的代码和你原来的一样，直接复制） ==========
 document.addEventListener('DOMContentLoaded', function () {
   // 第一步：先获取所有元素
   const adminEntrance = document.getElementById('admin-entrance');
@@ -1401,76 +1401,75 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    overlay.addEventListener('touchmove', function(e) {
-      e.preventDefault();
-    }, { passive: false });
+overlay.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+}, { passive: false });
   });
 
-  // 刷新按钮：双进度条同步动画
-  document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.blur();
+// 刷新按钮：双进度条同步动画
+document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-    if (this.classList.contains('spinning') || isLoading) return;
+  if (this.classList.contains('spinning') || isLoading) return;
 
-    // 获取所有进度条/加载元素
-    const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
-    const progressText = document.getElementById('progress-text');
-    const miniCircle = document.querySelector('.progress-circle.mini-progress');
-    const miniText = document.getElementById('cycle-progress-text');
-    const wageBox = document.querySelector('.total-wage-box');
-    const refreshBtn = document.getElementById('refresh-data-btn');
+  // 获取所有进度条/加载元素
+const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
+const progressText = document.getElementById('progress-text');
+const miniCircle = document.querySelector('.progress-circle.mini-progress');
+const miniText = document.getElementById('cycle-progress-text');
+  const wageBox = document.querySelector('.total-wage-box');
+  const refreshBtn = document.getElementById('refresh-data-btn');
 
-    // 1. 立即开启加载动画
-    if (wageBox) wageBox.classList.add('loading');
-    if (refreshBtn) refreshBtn.classList.add('spinning');
+  // 1. 立即开启加载动画
+  if (wageBox) wageBox.classList.add('loading');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
 
-    // 2. 两个进度条【同步回退到 0】
-    const rollbackAll = new Promise((resolve) => {
-      if (progressCircle && progressText) animateProgress(0);
-      if (miniCircle && miniText) animateMiniProgress(0);
-      setTimeout(resolve, 1000);
-    });
+  // 2. 两个进度条【同步回退到 0】
+  const rollbackAll = new Promise((resolve) => {
+    if (progressCircle && progressText) animateProgress(0);
+    if (miniCircle && miniText) animateMiniProgress(0);
+    setTimeout(resolve, 1000);
+  });
 
-    // 3. 加载数据（关闭内部自动加载动画）
-    const dataTask = loadData(0, false, false, false);
+  // 3. 加载数据（关闭内部自动加载动画）
+  const dataTask = loadData(0, false, false, false);
 
-    // 4. 等待 数据加载 + 双进度回退 全部完成
-    const [data] = await Promise.all([dataTask, rollbackAll]);
+  // 4. 等待 数据加载 + 双进度回退 全部完成
+  const [data] = await Promise.all([dataTask, rollbackAll]);
 
-    // 5. 渲染页面数据
-    if (data) {
-      renderData(data);
-      renderUserCalendar();
-      renderAdminCalendar();
-      renderTotalAndStat();
+  // 5. 渲染页面数据
+  if (data) {
+    renderData(data);
+    renderUserCalendar();
+    renderAdminCalendar();
+    renderTotalAndStat();
+  }
+
+  // 6. 双进度条【同步向前动画】到各自目标值
+  const forwardAll = new Promise((resolve) => {
+    // 工资进度百分比
+    const totalWageNum = document.getElementById('total-wage-num');
+    let wagePercent = 0;
+    if(totalWageNum){
+      const totalWage = parseFloat(totalWageNum.textContent) || 0;
+      wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
     }
+    // 周期进度百分比
+    const cyclePercent = calculateCycleProgress();
 
-    // 6. 双进度条【同步向前动画】到各自目标值
-    const forwardAll = new Promise((resolve) => {
-      // 工资进度百分比
-      const totalWageNum = document.getElementById('total-wage-num');
-      let wagePercent = 0;
-      if(totalWageNum){
-        const totalWage = parseFloat(totalWageNum.textContent) || 0;
-        wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
-      }
-      // 周期进度百分比
-      const cyclePercent = calculateCycleProgress();
+    // 同时执行前进动画
+    if (progressCircle && progressText) animateProgress(wagePercent);
+    if (miniCircle && miniText) animateMiniProgress(cyclePercent);
 
-      // 同时执行前进动画
-      if (progressCircle && progressText) animateProgress(wagePercent);
-      if (miniCircle && miniText) animateMiniProgress(cyclePercent);
-
-      setTimeout(resolve, 1000);
-    });
-
-    await forwardAll;
-
-    // 7. 全部动画结束：关闭加载动画 + 提示
-    if (wageBox) wageBox.classList.remove('loading');
-    if (refreshBtn) refreshBtn.classList.remove('spinning');
-    showToast('数据刷新成功','success');
+    setTimeout(resolve, 1000);
   });
+
+  await forwardAll;
+
+  // 7. 全部动画结束：关闭加载动画 + 提示
+  if (wageBox) wageBox.classList.remove('loading');
+  if (refreshBtn) refreshBtn.classList.remove('spinning');
+  showToast('数据刷新成功','success');
 });
