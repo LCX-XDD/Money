@@ -773,7 +773,6 @@ body.admin-active .calendar-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background 1s ease-out; /* 1秒平滑动画 */
   position: relative;
 }
 
