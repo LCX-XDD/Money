@@ -725,3 +725,52 @@ body.admin-active .title,
 body.admin-active .calendar-wrap {
   display: block;
 }
+
+/* 圆形进度条容器 */
+.progress-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* 圆形进度条主体 */
+.progress-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(
+    rgba(255, 255, 255, 0.9) calc(var(--progress, 0) * 1%),
+    rgba(255, 255, 255, 0.2) calc(var(--progress, 0) * 1%)
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 1s ease-out;
+  position: relative;
+}
+
+/* 进度条内部背景（和卡片保持一致） */
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--card-gradient);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 进度百分比文字 */
+.progress-text {
+  position: relative;
+  z-index: 1;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+}
+
+/* 管理员页面隐藏进度条 */
+body.admin-active .progress-container {
+  display: none;
+}
