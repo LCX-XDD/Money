@@ -767,7 +767,7 @@ totalWageNum.innerText = totalWage.toFixed(2);
 // ✅ 更新圆形进度条（逐帧动画）
 const progressText = document.getElementById('progress-text');
 // 【已修正】精准选中下方抓捕进度条
-const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
+const progressCircle = document.getElementById('bottom-progress');
 if (progressText && progressCircle) {
   const percentage = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
   currentProgress = percentage;
@@ -779,7 +779,7 @@ if (progressText && progressCircle) {
   
   // 同步更新顶部周期小圆进度条
   const cyclePercent = calculateCycleProgress();
-  const miniCircle = document.querySelector('.progress-circle.mini-progress');
+  const miniCircle = document.getElementById('top-progress');
   const miniText = document.getElementById('cycle-progress-text');
   if(miniCircle && miniText){
     miniCircle.style.setProperty('--mini-progress', 0);
@@ -788,7 +788,7 @@ if (progressText && progressCircle) {
   }
 }
 
-// 👉 这里补上函数的闭合大括号！
+// 补上函数闭合大括号
 }
 
 // ========== 周期明细弹窗 ==========
@@ -1083,39 +1083,24 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
   renderUserCalendar();
   renderAdminCalendar();
 
-// 延迟统一入场动画
-setTimeout(() => {
-  const cyclePercent = calculateCycleProgress();
-  currentMiniProgress = cyclePercent;
-  animateMiniProgress(cyclePercent);
+  // 绑定删除按钮事件
+  itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.blur();
 
-  const totalWageNum = document.getElementById('total-wage-num');
-  let wagePercent = 0;
-  if(totalWageNum){
-    const totalWage = parseFloat(totalWageNum.textContent) || 0;
-    // 【已修正】限制 0 ~ 100，杜绝负数
-    wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
-  }
-  animateProgress(wagePercent);
-}, 200);
-
-    itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
-
-      if (!confirm('确定删除该条记录？')) return;
-      try {
-        await AV.Object.createWithoutData('Bill', id).destroy();
-        loadData();
-        showToast('删除成功', 'success');
-        cycleDetailOverlay.classList.remove('show');
-        enableBodyScroll();
-      } catch (e) {
-        showToast('删除失败', 'error');
-      }
-    });
+    if (!confirm('确定删除该条记录？')) return;
+    try {
+      await AV.Object.createWithoutData('Bill', id).destroy();
+      loadData();
+      showToast('删除成功', 'success');
+      cycleDetailOverlay.classList.remove('show');
+      enableBodyScroll();
+    } catch (e) {
+      showToast('删除失败', 'error');
+    }
   });
+});
 
   cycleDetailOverlay.classList.add('show');
   disableBodyScroll();
