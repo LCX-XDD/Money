@@ -874,38 +874,50 @@ body.admin-active .progress-window {
     padding: 56px 12px 20px;
   }
 }
-/* ========== 顶部小方块卡片样式 ========== */
+
+
+/* ========== 顶部小卡片样式（和下方卡片100%统一） ========== */
 .top-mini-cards {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
 }
 
+/* 基础卡片样式：正方形 + 蓝紫渐变背景（和下方卡片同色） */
 .mini-card {
   flex: 1;
-  background: var(--card-primary);
+  aspect-ratio: 1 / 1; /* 强制正方形，宽高1:1 */
+  background: linear-gradient(135deg, #4A90E2, #8E7DEE); /* 和下方卡片同色渐变 */
   border-radius: 16px;
-  padding: 12px;
   box-shadow: var(--shadow-primary);
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左侧：周期进度卡片（带进度条） */
+.progress-mini-card {
+  flex-direction: column;
   gap: 8px;
+  padding: 12px;
 }
 
-.mini-card-label {
+.progress-mini-card .mini-card-label {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.8); /* 白色文字适配深色背景 */
+  margin: 0;
 }
 
-/* 左侧：周期进度小圆环 */
+/* 左侧进度条：和下方圆形进度条样式/动画完全一致 */
 .mini-progress-circle {
-  width: 60px;
-  height: 60px;
+  width: 70%; /* 占卡片宽度70%，自适应大小 */
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: conic-gradient(
-    var(--progress-fill) calc(var(--mini-progress, 0) * 1%),
-    var(--progress-bg) calc(var(--mini-progress, 0) * 1%)
+    #fff calc(var(--mini-progress, 0) * 1%), /* 填充色：白色，和下方进度条一致 */
+    rgba(255,255,255,0.2) calc(var(--mini-progress, 0) * 1%) /* 背景色：半透明白色 */
   );
   display: flex;
   justify-content: center;
@@ -913,13 +925,14 @@ body.admin-active .progress-window {
   position: relative;
 }
 
+/* 伪元素实现圆环效果，和下方进度条结构完全一致 */
 .mini-progress-circle::before {
   content: '';
   position: absolute;
-  width: 46px;
-  height: 46px;
+  width: calc(100% - 8px); /* 圆环宽度和下方进度条一致 */
+  height: calc(100% - 8px);
   border-radius: 50%;
-  background: var(--card-primary);
+  background: linear-gradient(135deg, #4A90E2, #8E7DEE); /* 和卡片同背景，做出内圈效果 */
 }
 
 .mini-progress-text {
@@ -927,28 +940,35 @@ body.admin-active .progress-window {
   z-index: 1;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff; /* 白色文字适配深色背景 */
 }
 
-/* 右侧：表情包卡片 */
+/* 右侧：表情包卡片（无文字，图片撑满裁切） */
+.meme-mini-card {
+  padding: 0; /* 去掉内边距，让图片完全撑满 */
+}
+
+/* 隐藏文字标签 */
+.meme-mini-card .mini-card-label {
+  display: none;
+}
+
+/* 图片容器：撑满卡片，保持圆角 */
 .meme-image-wrap {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
   overflow: hidden;
-  background: var(--card-secondary);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .meme-image-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* 自动裁切多余部分，保持图片不变形 */
+  display: block;
 }
 
-/* 管理员页面自动隐藏顶部小卡片 */
+/* 管理员页面自动隐藏顶部卡片 */
 body.admin-active .top-mini-cards {
   display: none;
 }
@@ -957,23 +977,12 @@ body.admin-active .top-mini-cards {
 @media (max-width: 480px) {
   .top-mini-cards {
     gap: 8px;
+    margin-bottom: 12px;
   }
   .mini-card {
-    padding: 10px;
-  }
-  .mini-progress-circle {
-    width: 50px;
-    height: 50px;
-  }
-  .mini-progress-circle::before {
-    width: 38px;
-    height: 38px;
+    border-radius: 12px;
   }
   .mini-progress-text {
     font-size: 14px;
-  }
-  .meme-image-wrap {
-    width: 50px;
-    height: 50px;
   }
 }
