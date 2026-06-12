@@ -1402,15 +1402,10 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    overlay.addEventListener('touchmove', function(e) {
-      if (e.target === this) {
-        e.preventDefault();
-      }
-    }, { passive: false });
+overlay.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+}, { passive: false });
   });
-
-  // ✅ 已删除重复的loadData调用，彻底解决刷新页面加载两次的问题
-});
 
 // 刷新按钮：双进度条同步动画
 document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
