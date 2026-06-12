@@ -779,7 +779,6 @@ totalWageNum.innerText = totalWage.toFixed(2);
   if (statBaseMoney) statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
   if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 
-// ✅ 更新圆形进度条
 // ✅ 更新圆形进度条（逐帧动画）
 const progressText = document.getElementById('progress-text');
 const progressCircle = document.querySelector('.progress-circle');
@@ -792,7 +791,8 @@ if (progressText && progressCircle) {
   progressCircle.style.setProperty('--progress', 0);
   progressText.textContent = '0%';
   animateProgress(percentage);
-    // 同步更新顶部周期小圆进度条
+  
+  // 同步更新顶部周期小圆进度条
   const cyclePercent = calculateCycleProgress();
   const miniCircle = document.querySelector('.mini-progress-circle');
   const miniText = document.getElementById('cycle-progress-text');
@@ -800,7 +800,10 @@ if (progressText && progressCircle) {
     miniCircle.style.setProperty('--mini-progress', 0);
     miniText.textContent = '0%';
     animateMiniProgress(cyclePercent);
+  }
 }
+
+// 👉 这里补上函数的闭合大括号！
 }
 
 // ========== 周期明细弹窗 ==========
