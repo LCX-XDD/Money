@@ -1303,7 +1303,6 @@ backUserBtn.addEventListener('click', function (e) {
 // ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
 // ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
 // 刷新按钮
-// 刷新按钮
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1313,31 +1312,40 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   const startTime = Date.now();
   const minAnimationDuration = 1000;
+  const progressCircle = document.querySelector('.progress-circle');
+  const progressText = document.getElementById('progress-text');
 
-  // 加载数据（不自动停止动画）
+  // ✅ 第一步：进度条先从当前值回退到0
+  if (progressCircle && progressText) {
+    progressCircle.style.setProperty('--progress', 0);
+    progressText.textContent = '0%';
+    // 等待回退动画完成（1秒）
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  // 第二步：加载数据（不自动停止动画）
   const data = await loadData(0, false, true, false);
   
-  // 数据加载完成立即渲染并显示Toast
-// 先渲染数据
-if (data) {
-  renderData(data);
-  renderUserCalendar();
-  renderAdminCalendar();
-  renderTotalAndStat();
-}
+  // 第三步：渲染数据
+  if (data) {
+    renderData(data);
+    renderUserCalendar();
+    renderAdminCalendar();
+    renderTotalAndStat(); // 这里会自动触发进度条从0到新值的动画
+  }
 
-// 等待动画完全结束
-const elapsed = Date.now() - startTime;
-if (elapsed < minAnimationDuration) {
-  await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
-}
+  // 等待动画完全结束
+  const elapsed = Date.now() - startTime;
+  if (elapsed < minAnimationDuration) {
+    await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
+  }
 
-// 停止加载动画
-const wageBox = document.querySelector('.total-wage-box');
-const refreshBtn = document.getElementById('refresh-data-btn');
-if (wageBox) wageBox.classList.remove('loading');
-if (refreshBtn) refreshBtn.classList.remove('spinning');
+  // 停止加载动画
+  const wageBox = document.querySelector('.total-wage-box');
+  const refreshBtn = document.getElementById('refresh-data-btn');
+  if (wageBox) wageBox.classList.remove('loading');
+  if (refreshBtn) refreshBtn.classList.remove('spinning');
 
-// ✅ 最后显示Toast（此时数据和页面都已完全更新）
-showToast('数据刷新成功','success');
+  // 最后显示Toast
+  showToast('数据刷新成功','success');
 });
