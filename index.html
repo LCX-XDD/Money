@@ -14,15 +14,16 @@
 <div class="white-window">
   <h1 class="title">LCX</h1>
   
-<!-- 顶部周期进度卡片（复刻下方抓捕进度样式） -->
+<!-- 顶部周期进度卡片：完全复用下方进度样式，仅调换左右布局 -->
 <div class="top-mini-cards">
-  <div class="mini-card progress-mini-card">
-    <!-- 左侧：周期进度圆环（和下方进度条样式完全一致） -->
-    <div class="mini-progress-circle">
-      <div class="mini-progress-text" id="cycle-progress-text">0%</div>
+  <!-- 复用下方 .progress-window 基础样式 + 自定义布局类 -->
+  <div class="progress-window top-progress-window">
+    <!-- 文字 -->
+    <h3 class="progress-label">周期进度</h3>
+    <!-- 进度圆环：复用原生进度条，加自定义类绑定 mini 变量 -->
+    <div class="progress-circle mini-progress">
+      <div class="progress-text" id="cycle-progress-text">0%</div>
     </div>
-    <!-- 右侧：文字标签 -->
-    <div class="mini-card-text">周期进度</div>
   </div>
 </div>
   
