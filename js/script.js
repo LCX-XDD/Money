@@ -1102,7 +1102,8 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
   });
 });
 
-
+}
+                  
 document.addEventListener('DOMContentLoaded', function () {
   // 第一步：先获取所有元素
   const adminEntrance = document.getElementById('admin-entrance');
