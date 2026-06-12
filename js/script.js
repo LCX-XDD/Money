@@ -769,7 +769,7 @@ const progressText = document.getElementById('progress-text');
 const progressCircle = document.querySelector('.progress-circle');
 if (progressText && progressCircle) {
   // 计算百分比（取整，最大100%）
-  const percentage = Math.min(Math.round(totalWage / 2900 * 100), 100);
+  const percentage = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
   currentProgress = percentage;
   
   // 先重置为0，再播放动画
@@ -1472,7 +1472,7 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
     let wagePercent = 0;
     if(totalWageNum){
       const totalWage = parseFloat(totalWageNum.textContent) || 0;
-      wagePercent = Math.min(Math.round(totalWage / 2900 * 100), 100);
+      wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
     }
     // 周期进度百分比
     const cyclePercent = calculateCycleProgress();
