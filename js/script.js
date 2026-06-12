@@ -2,6 +2,7 @@
 let savedScrollTop = 0;
 let clickBlocker = null;
 let currentProgress = 0; // 保存当前进度百分比
+let currentMiniProgress = 0; // 顶部小圆进度条变量
 
 
 
@@ -22,6 +23,90 @@ function animateProgress(targetPercent) {
       clearInterval(interval);
     }
   }, 10); // 动画速度，和参考代码一致
+}
+
+
+// ========== 顶部小圆周期进度条动画 ==========
+function animateMiniProgress(targetPercent) {
+  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniText = document.getElementById('cycle-progress-text');
+  if (!miniCircle || !miniText) return;
+
+  let current = parseInt(miniCircle.style.getPropertyValue('--mini-progress')) || 0;
+  const step = targetPercent > current ? 1 : -1;
+  const interval = setInterval(() => {
+    current += step;
+    miniCircle.style.setProperty('--mini-progress', current);
+    miniText.textContent = `${current}%`;
+
+    if (current === targetPercent) {
+      clearInterval(interval);
+    }
+  }, 10);
+}
+
+// 计算周期进度百分比（26号~次月25号）
+function calculateCycleProgress() {
+  const now = new Date();
+  let cycleStart, cycleEnd;
+
+  if (now.getDate() >= 26) {
+    cycleStart = new Date(now.getFullYear(), now.getMonth(), 26);
+    cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+  } else {
+    cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, 26);
+    cycleEnd = new Date(now.getFullYear(), now.getMonth(), 25);
+  }
+
+  const totalMs = cycleEnd - cycleStart;
+  const passedMs = now - cycleStart;
+  const percent = Math.min(Math.round((passedMs / totalMs) * 100), 100);
+  return percent;
+}
+
+// 随机加载表情包（打工人/窝囊费/抽象）
+async function loadRandomMeme() {
+  const imgEl = document.getElementById('random-meme-img');
+  if (!imgEl) return;
+
+  const keywords = ['打工人', '窝囊费', '抽象表情包', '上班摸鱼', '打工日常'];
+  const randomId = Math.floor(Math.random() * 2000);
+  // 随机图片接口，无跨域
+  imgEl.src = `https://picsum.photos/200/200?sig=${randomId}`;
+  imgEl.onerror = () => {
+    imgEl.src = `https://picsum.photos/200/200?sig=0`;
+  };
+}
+
+// 初始化顶部双卡片（进度+表情包）
+function initTopMiniCards() {
+  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniText = document.getElementById('cycle-progress-text');
+  const progressCircle = document.querySelector('.progress-circle');
+  const progressText = document.getElementById('progress-text');
+
+  // 先重置两个进度条为 0
+  if(miniCircle) miniCircle.style.setProperty('--mini-progress', 0);
+  if(miniText) miniText.textContent = '0%';
+  if(progressCircle) progressCircle.style.setProperty('--progress', 0);
+  if(progressText) progressText.textContent = '0%';
+
+  // 延迟统一入场动画
+  setTimeout(() => {
+    const cyclePercent = calculateCycleProgress();
+    currentMiniProgress = cyclePercent;
+    animateMiniProgress(cyclePercent);
+
+    const totalWageNum = document.getElementById('total-wage-num');
+    let wagePercent = 0;
+    if(totalWageNum){
+      const totalWage = parseFloat(totalWageNum.textContent) || 0;
+      wagePercent = Math.min(Math.round(totalWage / 2900 * 100), 100);
+    }
+    animateProgress(wagePercent);
+  }, 200);
+
+  loadRandomMeme();
 }
 
 
@@ -707,6 +792,14 @@ if (progressText && progressCircle) {
   progressCircle.style.setProperty('--progress', 0);
   progressText.textContent = '0%';
   animateProgress(percentage);
+    // 同步更新顶部周期小圆进度条
+  const cyclePercent = calculateCycleProgress();
+  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniText = document.getElementById('cycle-progress-text');
+  if(miniCircle && miniText){
+    miniCircle.style.setProperty('--mini-progress', 0);
+    miniText.textContent = '0%';
+    animateMiniProgress(cyclePercent);
 }
 }
 
@@ -1089,7 +1182,10 @@ document.addEventListener('DOMContentLoaded', function () {
       renderUserCalendar();
     });
   }
-
+  // 初始化顶部进度+表情包卡片（仅用户页面）
+  if (isAdminLoggedIn !== 'true') {
+    initTopMiniCards();
+  }
   initTimeSelect();
 
   // 第三步：单独绑定每个登录相关事件（分开判断，避免互相影响）
@@ -1340,10 +1436,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ✅ 已删除重复的loadData调用，彻底解决刷新页面加载两次的问题
 });
 
-// ✅ 修复：刷新按钮点击后立即显示Toast，不再延迟
-// ✅ 完美修复：数据加载完成立即显示Toast，动画单独保证时长
-// 刷新按钮
-// 刷新按钮
+// 刷新按钮：双进度条同步动画 + 同步刷新表情包
 document.getElementById('refresh-data-btn').addEventListener('click',async function (e) {
   e.stopPropagation();
   e.preventDefault();
@@ -1351,32 +1444,32 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   if (this.classList.contains('spinning') || isLoading) return;
 
+  // 获取所有进度条/加载元素
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
+  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniText = document.getElementById('cycle-progress-text');
   const wageBox = document.querySelector('.total-wage-box');
   const refreshBtn = document.getElementById('refresh-data-btn');
 
-  // 1. 立即启动加载动画
+  // 1. 立即开启加载动画
   if (wageBox) wageBox.classList.add('loading');
   if (refreshBtn) refreshBtn.classList.add('spinning');
 
-  // 2. 进度条回退动画（1秒）
-  const rollbackPromise = new Promise((resolve) => {
-    if (progressCircle && progressText) {
-      animateProgress(0);
-      setTimeout(resolve, 1000);
-    } else {
-      resolve();
-    }
+  // 2. 两个进度条【同步回退到 0】
+  const rollbackAll = new Promise((resolve) => {
+    if (progressCircle && progressText) animateProgress(0);
+    if (miniCircle && miniText) animateMiniProgress(0);
+    setTimeout(resolve, 1000);
   });
 
-  // 3. 发起数据请求（手动控制加载动画，关闭函数内部自动加载动画）
-  const dataPromise = loadData(0, false, false, false);
+  // 3. 加载数据（关闭内部自动加载动画）
+  const dataTask = loadData(0, false, false, false);
 
-  // 4. 等待「回退动画」和「数据加载」都完成
-  const [data] = await Promise.all([dataPromise, rollbackPromise]);
+  // 4. 等待 数据加载 + 双进度回退 全部完成
+  const [data] = await Promise.all([dataTask, rollbackAll]);
 
-  // 5. 渲染数据，同时触发进度条前进动画
+  // 5. 渲染页面数据
   if (data) {
     renderData(data);
     renderUserCalendar();
@@ -1384,11 +1477,31 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
     renderTotalAndStat();
   }
 
-  // 6. 等待进度条前进动画完成（1秒）
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // 6. 双进度条【同步向前动画】到各自目标值
+  const forwardAll = new Promise((resolve) => {
+    // 工资进度百分比
+    const totalWageNum = document.getElementById('total-wage-num');
+    let wagePercent = 0;
+    if(totalWageNum){
+      const totalWage = parseFloat(totalWageNum.textContent) || 0;
+      wagePercent = Math.min(Math.round(totalWage / 2900 * 100), 100);
+    }
+    // 周期进度百分比
+    const cyclePercent = calculateCycleProgress();
 
-  // 7. 同时结束：关闭加载动画 + 弹出成功提示
+    // 同时执行前进动画
+    if (progressCircle && progressText) animateProgress(wagePercent);
+    if (miniCircle && miniText) animateMiniProgress(cyclePercent);
+
+    setTimeout(resolve, 1000);
+  });
+
+  await forwardAll;
+
+  // 7. 全部动画结束：关闭加载动画 + 刷新表情包 + 提示
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
+  // 刷新右侧表情包
+  loadRandomMeme();
   showToast('数据刷新成功','success');
 });
