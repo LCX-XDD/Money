@@ -1351,29 +1351,32 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
 
   if (this.classList.contains('spinning') || isLoading) return;
 
-  const startTime = Date.now();
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
   const wageBox = document.querySelector('.total-wage-box');
   const refreshBtn = document.getElementById('refresh-data-btn');
 
-  // 封装进度条回退为Promise
+  // 1. 立即启动加载动画
+  if (wageBox) wageBox.classList.add('loading');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+
+  // 2. 进度条回退动画（1秒）
   const rollbackPromise = new Promise((resolve) => {
     if (progressCircle && progressText) {
       animateProgress(0);
-      setTimeout(resolve, 1000); // 回退动画固定1秒
+      setTimeout(resolve, 1000);
     } else {
       resolve();
     }
   });
 
-  // 封装数据加载为Promise（加载动画同步启动）
-  const loadPromise = loadData(0, false, true, false);
+  // 3. 发起数据请求（手动控制加载动画，关闭函数内部自动加载动画）
+  const dataPromise = loadData(0, false, false, false);
 
-  // ✅ 两个动画同时开始，等待全部完成
-  const [data] = await Promise.all([loadPromise, rollbackPromise]);
+  // 4. 等待「回退动画」和「数据加载」都完成
+  const [data] = await Promise.all([dataPromise, rollbackPromise]);
 
-  // 渲染数据
+  // 5. 渲染数据，同时触发进度条前进动画
   if (data) {
     renderData(data);
     renderUserCalendar();
@@ -1381,12 +1384,10 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
     renderTotalAndStat();
   }
 
-  // 进度条前进动画（1秒）
-  await new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
+  // 6. 等待进度条前进动画完成（1秒）
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // 同时结束：关闭加载动画 + 弹出提示
+  // 7. 同时结束：关闭加载动画 + 弹出成功提示
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
   showToast('数据刷新成功','success');
