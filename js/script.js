@@ -64,18 +64,51 @@ function calculateCycleProgress() {
   return percent;
 }
 
-// 随机加载表情包（打工人/窝囊费/抽象）
+// 随机加载表情包（抽象/打工人/窝囊费主题，带淡入淡出动画）
 async function loadRandomMeme() {
   const imgEl = document.getElementById('random-meme-img');
   if (!imgEl) return;
 
-  const keywords = ['打工人', '窝囊费', '抽象表情包', '上班摸鱼', '打工日常'];
-  const randomId = Math.floor(Math.random() * 2000);
-  // 随机图片接口，无跨域
-  imgEl.src = `https://picsum.photos/200/200?sig=${randomId}`;
-  imgEl.onerror = () => {
-    imgEl.src = `https://picsum.photos/200/200?sig=0`;
-  };
+  // 先设置图片为透明，准备淡入
+  imgEl.classList.remove('loaded');
+  imgEl.style.opacity = 0;
+
+  // 选择符合关键词的表情包API（无跨域、免费）
+  const memeApis = [
+    'https://meme-api.com/gimme/abstractmemes', // 抽象表情包
+    'https://meme-api.com/gimme/antiwork',      // 打工人/反内卷梗图
+    'https://meme-api.com/gimme/workmemes',     // 打工日常梗图
+    'https://meme-api.com/gimme/dankmemes'      // 通用抽象梗图
+  ];
+  const randomApi = memeApis[Math.floor(Math.random() * memeApis.length)];
+
+  try {
+    const response = await fetch(randomApi);
+    const data = await response.json();
+    // 获取表情包URL（API返回的图片地址）
+    const memeUrl = data.url;
+    // 设置图片src，加载完成后淡入
+    imgEl.onload = function() {
+      imgEl.classList.add('loaded');
+      imgEl.style.opacity = 1;
+    };
+    imgEl.onerror = function() {
+      // 加载失败时，用备用抽象图片
+      imgEl.src = `https://picsum.photos/200/200?blur=3&sig=${Math.floor(Math.random() * 1000)}`;
+      imgEl.onload = function() {
+        imgEl.classList.add('loaded');
+        imgEl.style.opacity = 1;
+      };
+    };
+    imgEl.src = memeUrl;
+  } catch (error) {
+    // API请求失败时，用备用图片
+    imgEl.src = `https://picsum.photos/200/200?blur=3&sig=${Math.floor(Math.random() * 1000)}`;
+    imgEl.onload = function() {
+      imgEl.classList.add('loaded');
+      imgEl.style.opacity = 1;
+    };
+  }
 }
 
 // 初始化顶部双卡片（进度+表情包）
