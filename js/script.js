@@ -1315,29 +1315,30 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
 
-  // ✅ 第一步：进度条先从当前值回退到0
+  // ✅ 第一步：进度条从当前值平滑回退到0（1秒动画）
   if (progressCircle && progressText) {
+    // 直接设置为0，CSS transition会自动播放回退动画
     progressCircle.style.setProperty('--progress', 0);
     progressText.textContent = '0%';
-    // 等待回退动画完成（1秒）
+    // 等待回退动画完全完成
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // 第二步：加载数据（不自动停止动画）
   const data = await loadData(0, false, true, false);
   
-  // 第三步：渲染数据
+  // 第三步：渲染数据（renderTotalAndStat会自动触发进度条从0前进到新值的动画）
   if (data) {
     renderData(data);
     renderUserCalendar();
     renderAdminCalendar();
-    renderTotalAndStat(); // 这里会自动触发进度条从0到新值的动画
+    renderTotalAndStat();
   }
 
-  // 等待动画完全结束
+  // 等待所有动画完成
   const elapsed = Date.now() - startTime;
-  if (elapsed < minAnimationDuration) {
-    await new Promise(resolve => setTimeout(resolve, minAnimationDuration - elapsed));
+  if (elapsed < minAnimationDuration + 1000) { // 加上回退动画的1秒
+    await new Promise(resolve => setTimeout(resolve, minAnimationDuration + 1000 - elapsed));
   }
 
   // 停止加载动画
