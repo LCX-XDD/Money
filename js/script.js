@@ -28,7 +28,7 @@ function animateProgress(targetPercent) {
 
 // ========== 顶部小圆周期进度条动画 ==========
 function animateMiniProgress(targetPercent) {
-  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniCircle = document.querySelector('.progress-circle.mini-progress');
   const miniText = document.getElementById('cycle-progress-text');
   if (!miniCircle || !miniText) return;
 
@@ -67,9 +67,9 @@ function calculateCycleProgress() {
 
 // 初始化顶部周期进度条
 function initTopMiniCards() {
-  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniCircle = document.querySelector('.progress-circle.mini-progress');
   const miniText = document.getElementById('cycle-progress-text');
-  const progressCircle = document.querySelector('.progress-circle');
+  const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
   const progressText = document.getElementById('progress-text');
 
   // 先重置两个进度条为 0
@@ -88,7 +88,7 @@ function initTopMiniCards() {
     let wagePercent = 0;
     if(totalWageNum){
       const totalWage = parseFloat(totalWageNum.textContent) || 0;
-      wagePercent = Math.min(Math.round(totalWage / 2900 * 100), 100);
+      wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
     }
     animateProgress(wagePercent);
   }, 200);
@@ -766,9 +766,9 @@ totalWageNum.innerText = totalWage.toFixed(2);
 
 // ✅ 更新圆形进度条（逐帧动画）
 const progressText = document.getElementById('progress-text');
-const progressCircle = document.querySelector('.progress-circle');
+// 【已修正】精准选中下方抓捕进度条
+const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
 if (progressText && progressCircle) {
-  // 计算百分比（取整，最大100%）
   const percentage = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
   currentProgress = percentage;
   
@@ -779,7 +779,7 @@ if (progressText && progressCircle) {
   
   // 同步更新顶部周期小圆进度条
   const cyclePercent = calculateCycleProgress();
-  const miniCircle = document.querySelector('.mini-progress-circle');
+  const miniCircle = document.querySelector('.progress-circle.mini-progress');
   const miniText = document.getElementById('cycle-progress-text');
   if(miniCircle && miniText){
     miniCircle.style.setProperty('--mini-progress', 0);
@@ -1083,18 +1083,21 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
   renderUserCalendar();
   renderAdminCalendar();
 
-  setTimeout(() => {
-    // 自动滚动到班次选择框
-    const formTarget = document.getElementById('record-shift');
-    if (formTarget) {
-      formTarget.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-    showToast('已进入编辑模式，修改后点击保存即可', 'normal', 2000);
-  }, 100);
-});
+// 延迟统一入场动画
+setTimeout(() => {
+  const cyclePercent = calculateCycleProgress();
+  currentMiniProgress = cyclePercent;
+  animateMiniProgress(cyclePercent);
+
+  const totalWageNum = document.getElementById('total-wage-num');
+  let wagePercent = 0;
+  if(totalWageNum){
+    const totalWage = parseFloat(totalWageNum.textContent) || 0;
+    // 【已修正】限制 0 ~ 100，杜绝负数
+    wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
+  }
+  animateProgress(wagePercent);
+}, 200);
 
     itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
       e.stopPropagation();
@@ -1433,10 +1436,10 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   if (this.classList.contains('spinning') || isLoading) return;
 
   // 获取所有进度条/加载元素
-  const progressCircle = document.querySelector('.progress-circle');
-  const progressText = document.getElementById('progress-text');
-  const miniCircle = document.querySelector('.mini-progress-circle');
-  const miniText = document.getElementById('cycle-progress-text');
+const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
+const progressText = document.getElementById('progress-text');
+const miniCircle = document.querySelector('.progress-circle.mini-progress');
+const miniText = document.getElementById('cycle-progress-text');
   const wageBox = document.querySelector('.total-wage-box');
   const refreshBtn = document.getElementById('refresh-data-btn');
 
