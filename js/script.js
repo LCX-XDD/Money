@@ -1341,23 +1341,28 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   if (this.classList.contains('spinning') || isLoading) return;
 
   const startTime = Date.now();
-  const minAnimationDuration = 1000;
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
+  const wageBox = document.querySelector('.total-wage-box');
+  const refreshBtn = document.getElementById('refresh-data-btn');
 
-// ✅ 第一步：进度条从当前值逐帧回退到0
-if (progressCircle && progressText) {
-  await new Promise(resolve => {
-    animateProgress(0);
-    // 等待回退动画完成（10ms/帧 * 100帧 = 1秒）
-    setTimeout(resolve, 1000);
+  // 封装进度条回退为Promise
+  const rollbackPromise = new Promise((resolve) => {
+    if (progressCircle && progressText) {
+      animateProgress(0);
+      setTimeout(resolve, 1000); // 回退动画固定1秒
+    } else {
+      resolve();
+    }
   });
-}
 
-  // 第二步：加载数据
-  const data = await loadData(0, false, true, false);
-  
-  // 第三步：渲染数据（自动触发进度条从0到新值的1秒动画）
+  // 封装数据加载为Promise（加载动画同步启动）
+  const loadPromise = loadData(0, false, true, false);
+
+  // ✅ 两个动画同时开始，等待全部完成
+  const [data] = await Promise.all([loadPromise, rollbackPromise]);
+
+  // 渲染数据
   if (data) {
     renderData(data);
     renderUserCalendar();
@@ -1365,18 +1370,13 @@ if (progressCircle && progressText) {
     renderTotalAndStat();
   }
 
-  // 等待所有动画完成
-  const elapsed = Date.now() - startTime;
-  if (elapsed < 2000) { // 回退1秒+前进1秒=总2秒
-    await new Promise(resolve => setTimeout(resolve, 2000 - elapsed));
-  }
+  // 进度条前进动画（1秒）
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  });
 
-  // 停止加载动画
-  const wageBox = document.querySelector('.total-wage-box');
-  const refreshBtn = document.getElementById('refresh-data-btn');
+  // 同时结束：关闭加载动画 + 弹出提示
   if (wageBox) wageBox.classList.remove('loading');
   if (refreshBtn) refreshBtn.classList.remove('spinning');
-
-  // 最后显示Toast（和进度条动画完成同时出现）
   showToast('数据刷新成功','success');
 });
