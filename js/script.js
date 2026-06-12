@@ -1,6 +1,7 @@
 // ========== 禁止/恢复页面滚动 ==========
 let savedScrollTop = 0;
 let clickBlocker = null;
+let currentProgress = 0; // 保存当前进度百分比
 
 function disableBodyScroll() {
   savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -670,25 +671,25 @@ totalWageNum.innerText = totalWage.toFixed(2);
   if (statBaseMoney) statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
   if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 
-  // ✅ 圆形进度条逻辑
-  const progressText = document.getElementById('progress-text');
-  const progressCircle = document.querySelector('.progress-circle');
-  if (progressText && progressCircle) {
-    // 计算百分比（取整，最大100%）
-    const percentage = Math.min(Math.round(totalWage / 2900 * 100), 100);
-    
-    // 先重置为0，触发动画
-    progressCircle.style.setProperty('--progress', 0);
-    progressText.textContent = '0%';
-    
-    // 下一帧开始播放动画
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        progressCircle.style.setProperty('--progress', percentage);
-        progressText.textContent = `${percentage}%`;
-      }, 10);
-    });
-  }
+// ✅ 更新圆形进度条
+const progressText = document.getElementById('progress-text');
+const progressCircle = document.querySelector('.progress-circle');
+if (progressText && progressCircle) {
+  // 计算百分比（取整，最大100%）
+  const percentage = Math.min(Math.round(totalWage / 2900 * 100), 100);
+  currentProgress = percentage;
+  
+  // 页面初始化/数据更新时从0开始动画
+  progressCircle.style.setProperty('--progress', 0);
+  progressText.textContent = '0%';
+  
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      progressCircle.style.setProperty('--progress', percentage);
+      progressText.textContent = `${percentage}%`;
+    }, 10);
+  });
+}
 }
 
 // ========== 周期明细弹窗 ==========
