@@ -10,122 +10,116 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-  <!-- 主窗口 -->
-<div class="white-window">
-  <h1 class="title">LCX</h1>
-  
-<!-- 顶部 周期进度 卡片 -->
-<div class="progress-window top-progress-window">
-  <h3 class="progress-label">抓🐷进度</h3>
-<!-- 顶部进度圆环 -->
-<div class="progress-circle mini-progress" id="top-progress">
-  <div class="progress-text" id="cycle-progress-text">0%</div>
-</div>
-
-</div>
-  
-  <!-- 蓝色总工资卡片 -->
-  <div class="total-wage-box">
-    <div class="loading-overlay"><div class="loading-spinner"></div></div>
-    <button class="refresh-btn" id="refresh-data-btn">↻</button>
-    <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
-    <div class="total-wage-label">悬赏金</div>
-    <div class="total-wage-value" id="total-wage-num">0.00</div>
-    <button class="btn-detail" id="detail-btn">查看详细信息</button>
-  </div>
-
-<!-- 下方 抓捕进度 卡片 -->
-<div class="progress-window">
-  <h3 class="progress-label">悬赏💰进度</h3>
-<!-- 底部进度圆环 -->
-<div class="progress-circle" id="bottom-progress">
-  <div class="progress-text" id="progress-text">0%</div>
-</div>
-</div>
-</div>
-
-  <!-- 管理员页面内容 -->
-  <div id="admin-calendar" class="hidden">
-    <!-- 原有日历和表单内容不变 -->
-  </div>
-</div>
-
-  <!-- ✅ 隐藏用户页面日历（添加hidden类） -->
-  <div class="calendar-wrap hidden">
-    <div class="calendar-head">
-      <button id="prev-month-btn">&lt;</button>
-      <span id="calendar-title">2026-05-26~2026-06-25</span>
-      <button id="next-month-btn">&gt;</button>
-    </div>
-    <div class="calendar-week">
-      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-    </div>
-    <div class="calendar-body" id="calendar-body"></div>
-  </div>
-</div>
-
-    <!-- 管理员页面：不显示总工资，只显示日历+表单+列表 -->
-    <div id="admin-view" class="hidden">
-      <!-- 管理员页面日历 -->
-      <div class="calendar-wrap">
-        <div class="calendar-head">
-          <button id="admin-prev-month-btn">&lt;</button>
-          <span id="admin-calendar-title">2026-05-26~2026-06-25</span>
-          <button id="admin-next-month-btn">&gt;</button>
+  <!-- 用户页面内容容器 -->
+  <div id="user-view">
+    <!-- 主窗口 -->
+    <div class="white-window">
+      <h1 class="title">LCX</h1>
+      
+      <!-- 顶部 周期进度 卡片 -->
+      <div class="progress-window top-progress-window">
+        <h3 class="progress-label">抓🐷进度</h3>
+        <!-- 顶部进度圆环（固定ID：top-progress） -->
+        <div class="progress-circle mini-progress" id="top-progress">
+          <div class="progress-text" id="cycle-progress-text">0%</div>
         </div>
-        <div class="calendar-week">
-          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      
+      <!-- 蓝色总工资卡片 -->
+      <div class="total-wage-box">
+        <div class="loading-overlay"><div class="loading-spinner"></div></div>
+        <button class="refresh-btn" id="refresh-data-btn">↻</button>
+        <div class="cycle-text" id="current-cycle">2026-05-26~2026-06-25</div>
+        <div class="total-wage-label">悬赏金</div>
+        <div class="total-wage-value" id="total-wage-num">0.00</div>
+        <button class="btn-detail" id="detail-btn">查看详细信息</button>
+      </div>
+
+      <!-- 下方 抓捕进度 卡片 -->
+      <div class="progress-window">
+        <h3 class="progress-label">悬赏💰进度</h3>
+        <!-- 底部进度圆环（固定ID：bottom-progress） -->
+        <div class="progress-circle" id="bottom-progress">
+          <div class="progress-text" id="progress-text">0%</div>
         </div>
-        <div class="calendar-body" id="admin-calendar-body"></div>
       </div>
-
-      <!-- 记录表单 -->
-      <input type="date" id="record-date" class="form-input">
-      <select id="record-shift" class="form-input">
-        <option value="">请选择班次</option>
-        <option value="早班">早班</option>
-        <option value="中班">中班</option>
-        <option value="晚班">晚班</option>
-        <option value="拼班">拼班</option>
-        <option value="休息">休息</option>
-      </select>
-
-      <div id="normal-time-row" class="time-row hidden">
-        <label>上班时间：</label>
-        <select id="shift-start" class="time-select"></select>
-      </div>
-      <div id="normal-end-row" class="time-row hidden">
-        <label>下班时间：</label>
-        <select id="shift-end" class="time-select"></select>
-      </div>
-      <div id="part2-start-row" class="time-row hidden">
-        <label>第二段上班：</label>
-        <select id="shift-start2" class="time-select"></select>
-      </div>
-      <div id="part2-end-row" class="time-row hidden">
-        <label>第二段下班：</label>
-        <select id="shift-end2" class="time-select"></select>
-      </div>
-      <div id="meal-wrap" class="time-row hidden">
-        <label>饭点开始：</label>
-        <select id="meal-start" class="time-select"></select>
-      </div>
-
-      <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
-      <input type="text" id="record-money" class="form-input" placeholder="当日基本工资（自动计算）" readonly>
-      <input type="text" id="record-allowance" class="form-input" placeholder="加班补贴（自动）">
-      <input type="text" id="record-remark" class="form-input" placeholder="备注信息">
-      <input type="hidden" id="edit-id">
-
-      <button id="save-btn" class="btn-primary">保存记录</button>
-      <div class="btn-back">
-        <button id="back-user">返回用户页</button>
-      </div>
-
-      <!-- 管理列表 -->
-      <h3 class="sub-title">管理列表</h3>
-      <div class="list" id="admin-list"></div>
     </div>
+
+    <!-- ✅ 用户页面日历（默认隐藏） -->
+    <div class="calendar-wrap hidden">
+      <div class="calendar-head">
+        <button id="prev-month-btn">&lt;</button>
+        <span id="calendar-title">2026-05-26~2026-06-25</span>
+        <button id="next-month-btn">&gt;</button>
+      </div>
+      <div class="calendar-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="calendar-body" id="calendar-body"></div>
+    </div>
+  </div>
+
+  <!-- 管理员页面 -->
+  <div id="admin-view" class="hidden">
+    <!-- 管理员日历 -->
+    <div class="calendar-wrap">
+      <div class="calendar-head">
+        <button id="admin-prev-month-btn">&lt;</button>
+        <span id="admin-calendar-title">2026-05-26~2026-06-25</span>
+        <button id="admin-next-month-btn">&gt;</button>
+      </div>
+      <div class="calendar-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="calendar-body" id="admin-calendar-body"></div>
+    </div>
+
+    <!-- 记录表单 -->
+    <input type="date" id="record-date" class="form-input">
+    <select id="record-shift" class="form-input">
+      <option value="">请选择班次</option>
+      <option value="早班">早班</option>
+      <option value="中班">中班</option>
+      <option value="晚班">晚班</option>
+      <option value="拼班">拼班</option>
+      <option value="休息">休息</option>
+    </select>
+
+    <div id="normal-time-row" class="time-row hidden">
+      <label>上班时间：</label>
+      <select id="shift-start" class="time-select"></select>
+    </div>
+    <div id="normal-end-row" class="time-row hidden">
+      <label>下班时间：</label>
+      <select id="shift-end" class="time-select"></select>
+    </div>
+    <div id="part2-start-row" class="time-row hidden">
+      <label>第二段上班：</label>
+      <select id="shift-start2" class="time-select"></select>
+    </div>
+    <div id="part2-end-row" class="time-row hidden">
+      <label>第二段下班：</label>
+      <select id="shift-end2" class="time-select"></select>
+    </div>
+    <div id="meal-wrap" class="time-row hidden">
+      <label>饭点开始：</label>
+      <select id="meal-start" class="time-select"></select>
+    </div>
+
+    <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
+    <input type="text" id="record-money" class="form-input" placeholder="当日基本工资（自动计算）" readonly>
+    <input type="text" id="record-allowance" class="form-input" placeholder="加班补贴（自动）">
+    <input type="text" id="record-remark" class="form-input" placeholder="备注信息">
+    <input type="hidden" id="edit-id">
+
+    <button id="save-btn" class="btn-primary">保存记录</button>
+    <div class="btn-back">
+      <button id="back-user">返回用户页</button>
+    </div>
+
+    <!-- 管理列表 -->
+    <h3 class="sub-title">管理列表</h3>
+    <div class="list" id="admin-list"></div>
   </div>
 
   <!-- 管理员入口（右下角） -->
@@ -213,7 +207,7 @@
     </div>
   </div>
 
-  <!-- Toast提示（保持顶部显示） -->
+  <!-- Toast提示 -->
   <div id="toast" class="toast"></div>
 
   <!-- LeanCloud SDK -->
