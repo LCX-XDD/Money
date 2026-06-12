@@ -1102,8 +1102,6 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
   });
 });
 
-  cycleDetailOverlay.classList.add('show');
-  disableBodyScroll();
 
 document.addEventListener('DOMContentLoaded', function () {
   // 第一步：先获取所有元素
