@@ -15,6 +15,9 @@
   --card-gradient: linear-gradient(135deg, rgba(0, 122, 255, 0.85), rgba(88, 86, 214, 0.85));
   /* ✅ 新增：加载层完全不透明渐变（和卡片同色系） */
   --loading-gradient: linear-gradient(135deg, #007aff, #5856d6);
+  /* ✅ 新增：进度条颜色变量（日间模式） */
+  --progress-fill: rgba(255, 255, 255, 0.9);
+  --progress-bg: rgba(255, 255, 255, 0.2);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +38,9 @@
     --card-gradient: linear-gradient(135deg, rgba(0, 110, 219, 0.75), rgba(75, 73, 185, 0.75));
     /* ✅ 新增：夜间模式加载层完全不透明渐变 */
     --loading-gradient: linear-gradient(135deg, #005bb5, #4240a8);
+    /* ✅ 新增：进度条颜色变量（深色模式，降低饱和度） */
+    --progress-fill: rgba(255, 255, 255, 0.7);
+    --progress-bg: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -726,21 +732,27 @@ body.admin-active .calendar-wrap {
   display: block;
 }
 
-/* 圆形进度条容器 */
-.progress-container {
+/* ✅ 独立进度条窗格（和蓝色卡片风格一致） */
+.progress-window {
+  background: var(--card-gradient);
+  border-radius: 20px;
+  padding: 32px 24px;
+  margin-top: 24px;
   display: flex;
   justify-content: center;
-  margin-top: 24px;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 /* 圆形进度条主体 */
 .progress-circle {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   background: conic-gradient(
-    rgba(255, 255, 255, 0.9) calc(var(--progress, 0) * 1%),
-    rgba(255, 255, 255, 0.2) calc(var(--progress, 0) * 1%)
+    var(--progress-fill) calc(var(--progress, 0) * 1%),
+    var(--progress-bg) calc(var(--progress, 0) * 1%)
   );
   display: flex;
   justify-content: center;
@@ -749,28 +761,37 @@ body.admin-active .calendar-wrap {
   position: relative;
 }
 
-/* 进度条内部背景（和卡片保持一致） */
+/* 进度条内部背景 */
 .progress-circle::before {
   content: '';
   position: absolute;
-  width: 90px;
-  height: 90px;
+  width: 105px;
+  height: 105px;
   border-radius: 50%;
   background: var(--card-gradient);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* 进度百分比文字 */
+/* 进度百分比文字（更大字号） */
 .progress-text {
   position: relative;
   z-index: 1;
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 700;
   color: white;
 }
 
-/* 管理员页面隐藏进度条 */
-body.admin-active .progress-container {
+/* 管理员页面隐藏进度条窗格 */
+body.admin-active .progress-window {
   display: none;
+}
+
+/* 隐藏用户页面标题 */
+.title {
+  display: none;
+}
+
+body.admin-active .title {
+  display: block;
 }
