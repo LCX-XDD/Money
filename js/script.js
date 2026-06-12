@@ -1085,8 +1085,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   initTimeSelect();
 
-  // 第三步：绑定其他登录相关事件
-  if (loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
+  // 第三步：单独绑定每个登录相关事件（分开判断，避免互相影响）
+  if (loginCancelBtn && loginOverlay) {
     loginCancelBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -1095,7 +1095,10 @@ document.addEventListener('DOMContentLoaded', function () {
       loginOverlay.classList.remove('show');
       enableBodyScroll();
     });
+  }
 
+  // ✅ 登录确认按钮单独绑定，确保一定生效
+  if (loginConfirmBtn && adminPwdInput && loginOverlay) {
     loginConfirmBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -1106,10 +1109,12 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('isAdminLoggedIn', 'true');
         loginOverlay.classList.remove('show');
         enableBodyScroll();
+        
         document.body.classList.add('admin-active');
-        userView.classList.add('hidden');
-        adminView.classList.remove('hidden');
-        adminEntrance.classList.add('hidden');
+        if (userView) userView.classList.add('hidden');
+        if (adminView) adminView.classList.remove('hidden');
+        if (adminEntrance) adminEntrance.classList.add('hidden');
+        
         const dateInput = document.getElementById('record-date');
         if (dateInput) dateInput.value = todayStr;
         setTimeout(() => loadData(), 300);
@@ -1118,6 +1123,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
+    // 回车登录
     adminPwdInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') loginConfirmBtn.click();
     });
