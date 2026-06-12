@@ -1100,7 +1100,6 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
       showToast('删除失败', 'error');
     }
   });
-});
 
 // ✅ 闭合 openAdminCycleDetailPopup 函数
 }
