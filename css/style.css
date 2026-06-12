@@ -113,6 +113,7 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
 /* 无闪烁加载覆盖层 */
 .total-wage-box .loading-overlay {
   position: absolute;
@@ -120,7 +121,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--card-gradient); /* ✅ 改成变量 */
+  /* ✅ 加载层使用完全不透明的渐变，彻底挡住下面的内容 */
+  background: linear-gradient(135deg, #007aff, #5856d6);
   border-radius: 20px;
   display: flex;
   justify-content: center;
