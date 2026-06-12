@@ -781,6 +781,21 @@ body.admin-active .calendar-wrap {
   -webkit-backdrop-filter: blur(10px);
 }
 
+/* 顶部进度圆环：继承原生进度条样式，修改变量为 --mini-progress */
+.progress-circle.mini-progress {
+  --progress: var(--mini-progress, 0);
+}
+
+/* 顶部进度卡片：调换左右布局（圆环在左，文字在右），其余样式完全不变 */
+.top-progress-window {
+  flex-direction: row-reverse;
+}
+
+/* 管理员页面隐藏顶部进度卡片（和下方规则保持一致） */
+body.admin-active .top-progress-window {
+  display: none;
+}
+
 /* 抓捕进度文字 */
 .progress-label {
   font-size: 24px;
