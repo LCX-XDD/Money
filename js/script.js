@@ -3,6 +3,29 @@ let savedScrollTop = 0;
 let clickBlocker = null;
 let currentProgress = 0; // 保存当前进度百分比
 
+
+
+// 圆形进度条逐帧动画（和参考的线性进度条逻辑一致）
+function animateProgress(targetPercent) {
+  const progressCircle = document.querySelector('.progress-circle');
+  const progressText = document.getElementById('progress-text');
+  if (!progressCircle || !progressText) return;
+
+  let current = parseInt(progressCircle.style.getPropertyValue('--progress')) || 0;
+  const step = targetPercent > current ? 1 : -1;
+  const interval = setInterval(() => {
+    current += step;
+    progressCircle.style.setProperty('--progress', current);
+    progressText.textContent = `${current}%`;
+
+    if (current === targetPercent) {
+      clearInterval(interval);
+    }
+  }, 10); // 动画速度，和参考代码一致
+}
+
+
+
 function disableBodyScroll() {
   savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
   document.body.style.position = 'fixed';
@@ -672,6 +695,7 @@ totalWageNum.innerText = totalWage.toFixed(2);
   if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 
 // ✅ 更新圆形进度条
+// ✅ 更新圆形进度条（逐帧动画）
 const progressText = document.getElementById('progress-text');
 const progressCircle = document.querySelector('.progress-circle');
 if (progressText && progressCircle) {
@@ -679,16 +703,10 @@ if (progressText && progressCircle) {
   const percentage = Math.min(Math.round(totalWage / 2900 * 100), 100);
   currentProgress = percentage;
   
-  // 页面初始化/数据更新时从0开始动画
+  // 先重置为0，再播放动画
   progressCircle.style.setProperty('--progress', 0);
   progressText.textContent = '0%';
-  
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      progressCircle.style.setProperty('--progress', percentage);
-      progressText.textContent = `${percentage}%`;
-    }, 10);
-  });
+  animateProgress(percentage);
 }
 }
 
@@ -1020,6 +1038,7 @@ itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 第一步：先获取所有元素
   const adminEntrance = document.getElementById('admin-entrance');
   const loginOverlay = document.getElementById('login-overlay');
   const adminPwdInput = document.getElementById('admin-pwd-input');
@@ -1028,30 +1047,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const userView = document.getElementById('user-view');
   const adminView = document.getElementById('admin-view');
 
-const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
-const now = new Date();
-const todayStr = formatDate(now);
-
-selectedDate = todayStr;
-
-if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
-  document.body.classList.add('admin-active'); // 管理员页顶部对齐
-  userView.classList.add('hidden');
-  adminView.classList.remove('hidden');
-  adminEntrance.classList.add('hidden');
-  const dateInput = document.getElementById('record-date');
-  if (dateInput) dateInput.value = todayStr;
-  loadData();
-} else {
-  document.body.classList.remove('admin-active'); // 用户页垂直居中
-  loadData().then(() => {
-    renderUserCalendar();
-  });
-}
-
-  initTimeSelect();
-
-  if (adminEntrance && loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
+  // ✅ 先绑定管理员入口点击事件（放在最前面，不包裹任何条件）
+  if (adminEntrance && loginOverlay && adminPwdInput) {
     adminEntrance.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -1062,7 +1059,34 @@ if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
       adminPwdInput.focus();
       disableBodyScroll();
     });
+  }
 
+  // 第二步：执行原来的登录状态判断和初始化
+  const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+  const now = new Date();
+  const todayStr = formatDate(now);
+
+  selectedDate = todayStr;
+
+  if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
+    document.body.classList.add('admin-active');
+    userView.classList.add('hidden');
+    adminView.classList.remove('hidden');
+    adminEntrance.classList.add('hidden');
+    const dateInput = document.getElementById('record-date');
+    if (dateInput) dateInput.value = todayStr;
+    loadData();
+  } else {
+    document.body.classList.remove('admin-active');
+    loadData().then(() => {
+      renderUserCalendar();
+    });
+  }
+
+  initTimeSelect();
+
+  // 第三步：绑定其他登录相关事件
+  if (loginOverlay && adminPwdInput && loginCancelBtn && loginConfirmBtn && userView && adminView) {
     loginCancelBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -1072,28 +1096,27 @@ if (isAdminLoggedIn === 'true' && userView && adminView && adminEntrance) {
       enableBodyScroll();
     });
 
-loginConfirmBtn.addEventListener('click', function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
+    loginConfirmBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
 
-  const pwd = adminPwdInput.value.trim();
-  if (pwd === 'admin123') {
-    localStorage.setItem('isAdminLoggedIn', 'true');
-    loginOverlay.classList.remove('show');
-    enableBodyScroll();
-    // ✅ 登录成功添加管理员模式类
-    document.body.classList.add('admin-active');
-    userView.classList.add('hidden');
-    adminView.classList.remove('hidden');
-    adminEntrance.classList.add('hidden');
-    const dateInput = document.getElementById('record-date');
-    if (dateInput) dateInput.value = todayStr;
-    setTimeout(() => loadData(), 300);
-  } else {
-    showToast('密码错误', 'error');
-  }
-});
+      const pwd = adminPwdInput.value.trim();
+      if (pwd === 'admin123') {
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        loginOverlay.classList.remove('show');
+        enableBodyScroll();
+        document.body.classList.add('admin-active');
+        userView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        adminEntrance.classList.add('hidden');
+        const dateInput = document.getElementById('record-date');
+        if (dateInput) dateInput.value = todayStr;
+        setTimeout(() => loadData(), 300);
+      } else {
+        showToast('密码错误', 'error');
+      }
+    });
 
     adminPwdInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') loginConfirmBtn.click();
@@ -1316,12 +1339,14 @@ document.getElementById('refresh-data-btn').addEventListener('click',async funct
   const progressCircle = document.querySelector('.progress-circle');
   const progressText = document.getElementById('progress-text');
 
-  // ✅ 第一步：进度条从当前值平滑回滚到0（1秒动画）
-  if (progressCircle && progressText) {
-    progressCircle.style.setProperty('--progress', 0);
-    progressText.textContent = '0%';
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 等待回退动画完成
-  }
+// ✅ 第一步：进度条从当前值逐帧回退到0
+if (progressCircle && progressText) {
+  await new Promise(resolve => {
+    animateProgress(0);
+    // 等待回退动画完成（10ms/帧 * 100帧 = 1秒）
+    setTimeout(resolve, 1000);
+  });
+}
 
   // 第二步：加载数据
   const data = await loadData(0, false, true, false);
