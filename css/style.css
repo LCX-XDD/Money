@@ -383,35 +383,46 @@ body.admin-active .white-window {
   margin-top: 8px;
 }
 
-/* 返回用户按钮：固定屏幕左上角，圆形，半透明 */
+/* 返回按钮：固定屏幕左上角，iOS毛玻璃透明风格 */
 .btn-back {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   margin: 0;
   z-index: 9999;
-  opacity: 0.6;
+  opacity: 0.75;
   transition: opacity 0.3s ease;
 }
+
 .btn-back:hover {
   opacity: 1;
 }
+
 .btn-back button {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.95);
-  color: #ff3b30;
-  font-size: 13px;
-  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 0; /* 隐藏原有文字 */
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
 }
+/* 插入返回箭头图标 */
+.btn-back button::before {
+  content: '←';
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff3b30;
+  line-height: 1;
+}
+
 /* 用户页面自动隐藏返回按钮 */
 body:not(.admin-active) .btn-back {
   display: none;
