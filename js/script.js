@@ -788,9 +788,6 @@ if (progressText && progressCircle) {
   }
 }
 
-// 补上函数闭合大括号
-}
-
 // ========== 周期明细弹窗 ==========
 function openCycleDetailPopup(cycleKey, records) {
   const cycleDetailTitle = document.getElementById('cycle-detail-title');
@@ -1103,7 +1100,6 @@ itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
     showToast('删除失败', 'error');
   }
 });
-    }); // ✅ 补上缺失的【编辑事件闭合】，这就是报错元凶
 
 
   cycleDetailOverlay.classList.add('show');
@@ -1250,53 +1246,62 @@ document.addEventListener('DOMContentLoaded', function () {
       const shiftStart2 = document.getElementById('shift-start2');
       const shiftEnd2 = document.getElementById('shift-end2');
       const mealStart = document.getElementById('meal-start');
-      const allowanceInput = document.getElementById('record-allowance');
       const moneyInput = document.getElementById('record-money');
+      const allowanceInput = document.getElementById('record-allowance');
       const remarkInput = document.getElementById('record-remark');
       const editId = document.getElementById('edit-id');
 
-      if (!dateInput || !shiftSelect || !shiftStart || !shiftEnd || !moneyInput) return;
-
-      const d = dateInput.value.trim();
-      const shift = shiftSelect.value.trim();
+      const date = dateInput.value.trim();
+      const shift = shiftSelect.value;
       const sStart = shiftStart.value;
       const sEnd = shiftEnd.value;
-      const sStart2 = shiftStart2 ? shiftStart2.value : '';
-      const sEnd2 = shiftEnd2 ? shiftEnd2.value : '';
-      const mStart = mealStart ? mealStart.value : '';
-      const allowance = parseFloat(allowanceInput ? allowanceInput.value : 0) || 0;
-      const money = parseFloat(moneyInput.value);
-      const r = remarkInput ? remarkInput.value.trim() : '';
-      const editIdVal = editId ? editId.value : '';
+      const sStart2 = shiftStart2.value;
+      const sEnd2 = shiftEnd2.value;
+      const meal = mealStart.value;
+      const money = parseFloat(moneyInput.value) || 0;
+      const allowance = parseFloat(allowanceInput.value) || 0;
+      const remark = remarkInput.value.trim();
+      const editObjId = editId.value.trim();
 
-      if (!d || !shift) { showToast('请选择日期和班次', 'error'); return; }
-      if (shift !== '休息' && (isNaN(money) || money <= 0)) { showToast('工时或工资异常', 'error'); return; }
+      if (!date || !shift) {
+        showToast('请选择日期和班次', 'error');
+        return;
+      }
 
       try {
-        const bill = editIdVal ? AV.Object.createWithoutData('Bill', editIdVal) : new Bill();
-        bill.set('date', d);
-        bill.set('shift', shift);
-        bill.set('shiftStart', sStart);
-        bill.set('shiftEnd', sEnd);
-        bill.set('shiftStart2', sStart2);
-        bill.set('shiftEnd2', sEnd2);
-        bill.set('mealStart', mStart);
-        bill.set('allowance', allowance);
-        bill.set('money', money);
-        bill.set('title', r);
-        bill.set('type', 'income');
-        await bill.save();
+        if (editObjId) {
+          const obj = AV.Object.createWithoutData('Bill', editObjId);
+          obj.set('date', date);
+          obj.set('shift', shift);
+          obj.set('shiftStart', sStart);
+          obj.set('shiftEnd', sEnd);
+          obj.set('shiftStart2', sStart2);
+          obj.set('shiftEnd2', sEnd2);
+          obj.set('mealStart', meal);
+          obj.set('money', money);
+          obj.set('allowance', allowance);
+          obj.set('title', remark);
+          await obj.save();
+          showToast('修改成功', 'success');
+        } else {
+          const bill = new Bill();
+          bill.set('date', date);
+          bill.set('shift', shift);
+          bill.set('shiftStart', sStart);
+          bill.set('shiftEnd', sEnd);
+          bill.set('shiftStart2', sStart2);
+          bill.set('shiftEnd2', sEnd2);
+          bill.set('mealStart', meal);
+          bill.set('money', money);
+          bill.set('allowance', allowance);
+          bill.set('title', remark);
+          await bill.save();
+          showToast('保存成功', 'success');
+        }
         clearForm();
         loadData();
-        showToast('保存成功', 'success');
-
-        if (shiftSelect) {
-          shiftSelect.value = '';
-          shiftSelect.dispatchEvent(new Event('change'));
-        }
-      } catch (e) {
+      } catch (err) {
         showToast('保存失败', 'error');
-        console.error(e);
       }
     });
   }
