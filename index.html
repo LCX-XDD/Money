@@ -44,34 +44,28 @@
         </div>
       </div>
     </div>
-
-    <!-- ✅ 用户页面日历（默认隐藏） -->
-    <div class="calendar-wrap hidden">
-      <div class="calendar-head">
-        <button id="prev-month-btn">&lt;</button>
-        <span id="calendar-title">2026-05-26~2026-06-25</span>
-        <button id="next-month-btn">&gt;</button>
-      </div>
-      <div class="calendar-week">
-        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-      </div>
-      <div class="calendar-body" id="calendar-body"></div>
-    </div>
   </div>
 
   <!-- 管理员页面 -->
   <div id="admin-view" class="hidden">
-    <!-- 管理员日历 -->
-    <div class="calendar-wrap">
-      <div class="calendar-head">
-        <button id="admin-prev-month-btn">&lt;</button>
-        <span id="admin-calendar-title">2026-05-26~2026-06-25</span>
-        <button id="admin-next-month-btn">&gt;</button>
+    <!-- ✅ 管理员日历：新左右按钮布局，ID唯一 -->
+    <div class="calendar-container">
+      <!-- 左：上一月按钮 -->
+      <button id="admin-prev-month-btn" class="calendar-btn prev-btn">‹</button>
+      
+      <!-- 中间：日历主体 -->
+      <div class="calendar-wrap">
+        <div class="calendar-head">
+          <span id="admin-calendar-title"></span>
+        </div>
+        <div class="calendar-week">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div id="admin-calendar-body" class="calendar-body"></div>
       </div>
-      <div class="calendar-week">
-        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-      </div>
-      <div class="calendar-body" id="admin-calendar-body"></div>
+      
+      <!-- 右：下一月按钮 -->
+      <button id="admin-next-month-btn" class="calendar-btn next-btn">›</button>
     </div>
 
     <!-- 记录表单 -->
@@ -215,4 +209,3 @@
   <script src="./js/script.js"></script>
 </body>
 </html>
-
