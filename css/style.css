@@ -3,6 +3,7 @@
   inherits: false;
   initial-value: 0;
 }
+
 @property --mini-progress {
   syntax: '<number>';
   inherits: false;
