@@ -753,9 +753,9 @@ function renderTotalAndStat() {
       });
     });
   }
-}
+
 totalWageNum.innerText = totalWage.toFixed(2);
-  
+
   if (statWorkHours) statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
   if (statWorkDays) statWorkDays.innerText = workDays + ' 天';
   if (stat21hDays) stat21hDays.innerText = day21 + ' 天';
@@ -1042,7 +1042,7 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   cycleDetailOverlay.classList.add('show');
   disableBodyScroll();
 }
-
+}
 document.addEventListener('DOMContentLoaded', function () {
   // ========== 周期详情列表事件委托（根治重复绑定+ID作用域问题） ==========
   const recordList = document.getElementById('cycle-detail-record-list');
