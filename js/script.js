@@ -3,44 +3,81 @@ let savedScrollTop = 0;
 let clickBlocker = null;
 let currentProgress = 0; // 保存当前进度百分比
 let currentMiniProgress = 0; // 顶部小圆进度条变量
+let progressTimer = null;
+let miniProgressTimer = null;
 
 
-
-// 圆形进度条逐帧动画（和参考的线性进度条逻辑一致）
+// 底部悬赏金进度条动画
 function animateProgress(targetPercent) {
-  const progressCircle = document.querySelector('.progress-circle');
+  const progressCircle = document.getElementById('bottom-progress');
   const progressText = document.getElementById('progress-text');
   if (!progressCircle || !progressText) return;
 
-  let current = parseInt(progressCircle.style.getPropertyValue('--progress')) || 0;
+  // 先清除上一个动画定时器，彻底杜绝多动画叠加
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+
+  // 强制数值合法化：非数字→0，严格限制在0-100
+  targetPercent = Number(targetPercent);
+  if (isNaN(targetPercent)) targetPercent = 0;
+  targetPercent = Math.max(0, Math.min(100, targetPercent));
+
+  // 当前值同样合法化
+  let current = parseInt(progressCircle.style.getPropertyValue('--progress'));
+  if (isNaN(current)) current = 0;
+  current = Math.max(0, Math.min(100, current));
+
   const step = targetPercent > current ? 1 : -1;
-  const interval = setInterval(() => {
+
+  progressTimer = setInterval(() => {
     current += step;
+    // 每一步都强制边界，绝对不会出现负数
+    current = Math.max(0, Math.min(100, current));
+
     progressCircle.style.setProperty('--progress', current);
     progressText.textContent = `${current}%`;
 
     if (current === targetPercent) {
-      clearInterval(interval);
+      clearInterval(progressTimer);
+      progressTimer = null;
     }
-  }, 10); // 动画速度，和参考代码一致
+  }, 10);
 }
 
 
-// ========== 顶部小圆周期进度条动画 ==========
+// 顶部抓猪进度条动画
 function animateMiniProgress(targetPercent) {
-  const miniCircle = document.querySelector('.progress-circle.mini-progress');
+  const miniCircle = document.getElementById('top-progress');
   const miniText = document.getElementById('cycle-progress-text');
   if (!miniCircle || !miniText) return;
 
-  let current = parseInt(miniCircle.style.getPropertyValue('--mini-progress')) || 0;
+  if (miniProgressTimer) {
+    clearInterval(miniProgressTimer);
+    miniProgressTimer = null;
+  }
+
+  targetPercent = Number(targetPercent);
+  if (isNaN(targetPercent)) targetPercent = 0;
+  targetPercent = Math.max(0, Math.min(100, targetPercent));
+
+  let current = parseInt(miniCircle.style.getPropertyValue('--mini-progress'));
+  if (isNaN(current)) current = 0;
+  current = Math.max(0, Math.min(100, current));
+
   const step = targetPercent > current ? 1 : -1;
-  const interval = setInterval(() => {
+
+  miniProgressTimer = setInterval(() => {
     current += step;
+    current = Math.max(0, Math.min(100, current));
+
     miniCircle.style.setProperty('--mini-progress', current);
     miniText.textContent = `${current}%`;
 
     if (current === targetPercent) {
-      clearInterval(interval);
+      clearInterval(miniProgressTimer);
+      miniProgressTimer = null;
     }
   }, 10);
 }
@@ -381,7 +418,7 @@ function initTimeSelect() {
 // 防重复请求 + 自动重试
 let isLoading = false;
 async function loadData(retryCount = 0, autoRender = true, showLoading = true, autoStopLoading = true) {
-  if (isLoading) return;
+  if (isLoading) return null;
   isLoading = true;
 
   const wageBox = document.querySelector('.total-wage-box');
@@ -410,16 +447,17 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
 
     return res;
   } catch (e) {
+    // 修复：重试时用await等待结果，确保Promise完整执行
     if (retryCount < 3) {
-      setTimeout(() => {
-        loadData(retryCount + 1, autoRender, showLoading, autoStopLoading);
-      }, 1000);
-      return;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const retryResult = await loadData(retryCount + 1, autoRender, false, autoStopLoading);
+      return retryResult;
     }
     showToast('数据加载失败，请刷新', 'error');
+    return null;
   } finally {
-    isLoading = false;
     if (autoStopLoading) {
+      isLoading = false;
       if (wageBox) wageBox.classList.remove('loading');
       if (refreshBtn) refreshBtn.classList.remove('spinning');
     }
@@ -754,7 +792,7 @@ function renderTotalAndStat() {
     });
   }
 
-totalWageNum.innerText = totalWage.toFixed(2);
+  totalWageNum.innerText = totalWage.toFixed(2);
 
   if (statWorkHours) statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
   if (statWorkDays) statWorkDays.innerText = workDays + ' 天';
@@ -764,27 +802,29 @@ totalWageNum.innerText = totalWage.toFixed(2);
   if (statBaseMoney) statBaseMoney.innerText = '¥' + totalBase.toFixed(2);
   if (statAllowance) statAllowance.innerText = '¥' + totalAllow.toFixed(2);
 
-// ✅ 更新圆形进度条（逐帧动画）
-const progressText = document.getElementById('progress-text');
-// 【已修正】精准选中下方抓捕进度条
-const progressCircle = document.getElementById('bottom-progress');
-if (progressText && progressCircle) {
-  const percentage = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
-  currentProgress = percentage;
+  // ✅ 更新圆形进度条（逐帧动画）
+  const progressText = document.getElementById('progress-text');
+  // 【已修正】精准选中下方抓捕进度条
+  const progressCircle = document.getElementById('bottom-progress');
+  if (progressText && progressCircle) {
+    const totalWage = parseFloat(totalWageNum.textContent) || 0;
+    const percentage = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
+    currentProgress = percentage;
   
-  // 先重置为0，再播放动画
-  progressCircle.style.setProperty('--progress', 0);
-  progressText.textContent = '0%';
-  animateProgress(percentage);
+    // 先重置为0，再播放动画
+    progressCircle.style.setProperty('--progress', 0);
+    progressText.textContent = '0%';
+    animateProgress(percentage);
   
-  // 同步更新顶部周期小圆进度条
-  const cyclePercent = calculateCycleProgress();
-  const miniCircle = document.getElementById('top-progress');
-  const miniText = document.getElementById('cycle-progress-text');
-  if(miniCircle && miniText){
-    miniCircle.style.setProperty('--mini-progress', 0);
-    miniText.textContent = '0%';
-    animateMiniProgress(cyclePercent);
+    // 同步更新顶部周期小圆进度条
+    const cyclePercent = calculateCycleProgress();
+    const miniCircle = document.getElementById('top-progress');
+    const miniText = document.getElementById('cycle-progress-text');
+    if(miniCircle && miniText){
+      miniCircle.style.setProperty('--mini-progress', 0);
+      miniText.textContent = '0%';
+      animateMiniProgress(cyclePercent);
+    }
   }
 }
 
@@ -1041,7 +1081,6 @@ function openAdminCycleDetailPopup(cycleKey, records) {
   // 修复：打开弹窗禁用页面滚动
   cycleDetailOverlay.classList.add('show');
   disableBodyScroll();
-}
 }
 document.addEventListener('DOMContentLoaded', function () {
   // ========== 周期详情列表事件委托（根治重复绑定+ID作用域问题） ==========
@@ -1421,7 +1460,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     overlay.addEventListener('touchmove', function(e) {
-      e.preventDefault();
+      // 只有点击的是遮罩背景本身时，才阻止滚动；弹窗内容区域允许滚动
+      if (e.target === this) {
+        e.preventDefault();
+      }
     }, { passive: false });
   });
 
