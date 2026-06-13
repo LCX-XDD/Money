@@ -1105,7 +1105,6 @@ itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
 });
     }); // ✅ 补上缺失的【编辑事件闭合】，这就是报错元凶
 
-  });
 
   cycleDetailOverlay.classList.add('show');
   enableBodyScroll();
