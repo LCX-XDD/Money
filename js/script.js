@@ -711,29 +711,58 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('cycle-detail-overlay')?.classList.remove('show');
         enableBodyScroll();
 
-        const fields = {
-          'record-date': 'date', 'record-shift': 'shift',
-          'shift-start': 'shiftStart', 'shift-end': 'shiftEnd',
-          'shift-start2': 'shiftStart2', 'shift-end2': 'shiftEnd2',
-          'meal-start': 'mealStart', 'record-allowance': 'allowance',
-          'record-money': 'money', 'record-remark': 'remark', 'edit-id': 'id'
-        };
-        Object.entries(fields).forEach(([elId, dataKey]) => {
-          const el = document.getElementById(elId);
-          if (el) el.value = editBtn.dataset[dataKey];
-        });
+        // 1. 先取所有数据
+        const data = editBtn.dataset;
+        const shiftSelect = document.getElementById('record-shift');
+        const shiftStart = document.getElementById('shift-start');
+        const shiftEnd = document.getElementById('shift-end');
+        const shiftStart2 = document.getElementById('shift-start2');
+        const shiftEnd2 = document.getElementById('shift-end2');
+        const mealStart = document.getElementById('meal-start');
 
-        document.getElementById('record-shift')?.dispatchEvent(new Event('change'));
+        // 2. 按依赖顺序分步赋值（核心修复：先触发上级change生成选项，再填下级值）
+        // 第一步：填日期和班次
+        document.getElementById('record-date').value = data.date;
+        if (shiftSelect) {
+          shiftSelect.value = data.shift;
+          shiftSelect.dispatchEvent(new Event('change'));
+        }
+
+        // 第二步：填第一时段上班时间，触发change生成下班选项
+        if (shiftStart) {
+          shiftStart.value = data.shiftStart;
+          shiftStart.dispatchEvent(new Event('change'));
+        }
+
+        // 第三步：填下班时间和饭点
+        if (shiftEnd) shiftEnd.value = data.shiftEnd;
+        if (mealStart) mealStart.value = data.mealStart;
+
+        // 第四步：如果是拼班，处理第二时段
+        if (data.shift === '拼班' && shiftStart2) {
+          shiftStart2.value = data.shiftStart2;
+          shiftStart2.dispatchEvent(new Event('change'));
+          if (shiftEnd2) shiftEnd2.value = data.shiftEnd2;
+        }
+
+        // 第五步：填剩余字段
+        document.getElementById('record-allowance').value = data.allowance;
+        document.getElementById('record-money').value = data.money;
+        document.getElementById('record-remark').value = data.remark;
+        document.getElementById('edit-id').value = data.id;
+
+        // 最后重新计算工时
         window.calcWorkHours?.();
-        selectedDate = editBtn.dataset.date;
+        selectedDate = data.date;
         renderUserCalendar();
         renderAdminCalendar();
 
         showToast('已进入编辑模式，修改完成后点击保存即可', 'success');
-        document.getElementById('record-shift')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        shiftSelect?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
+      // 删除按钮逻辑保持不变
       const delBtn = e.target.closest('.btn-del');
       if (delBtn) {
         e.stopPropagation();
