@@ -230,33 +230,26 @@ body.admin-active .white-window {
   cursor: pointer;
 }
 
-/* ========== 日历容器：按钮垂直居中，不再拉伸 ========== */
-.calendar-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-/* ========== 日历容器：设置为高度由内容撑开 ========== */
+/* ========== 日历容器：通用弹性布局 ========== */
 .calendar-container {
   display: flex;
   align-items: stretch;
-  gap: 12px;
+  gap: clamp(4px, 1.5vw, 8px); /* 间距随屏幕宽度自适应 */
   width: 100%;
+  box-sizing: border-box;
 }
 
-/* ========== 左右按钮：默认胶囊形 + 上下留白 ========== */
+/* ========== 左右按钮：自适应胶囊按钮 ========== */
 .calendar-btn {
-  flex: 0 0 44px;
+  flex: 0 0 clamp(30px, 7vw, 36px); /* 按钮宽度随屏幕宽度自适应 */
   margin: 16px 0;
   border: none;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-radius: 22px;
+  border-radius: clamp(15px, 3.5vw, 18px); /* 圆角随宽度同步变化 */
   cursor: pointer;
-  font-size: 28px;
+  font-size: clamp(18px, 4.5vw, 22px); /* 箭头大小自适应 */
   font-weight: 300;
   color: #007aff;
   display: flex;
@@ -266,10 +259,9 @@ body.admin-active .white-window {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
   position: relative;
-  overflow: hidden; /* 防止动画时内容溢出 */
+  overflow: hidden;
 }
 
-/* 鼠标悬停：只缩短上边距，下边距保持不变 */
 .calendar-btn:hover {
   margin-top: 0;
   background: rgba(255, 255, 255, 0.9);
@@ -279,23 +271,18 @@ body.admin-active .white-window {
   transform: scale(0.96);
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .calendar-btn {
-    background: rgba(44, 44, 46, 0.6);
-  }
-  .calendar-btn:hover {
-    background: rgba(58, 58, 60, 0.9);
-  }
-}
-
+/* ========== 日历卡片：全设备通用内边距 ========== */
 .calendar-wrap {
   flex: 1;
-  background: var(--card-secondary);
+  background: var(--card-primary);
   border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 24px;
+  /* 内边距随屏幕宽度自适应，小屏内边距更小 */
+  padding: 16px clamp(8px, 2vw, 16px);
+  box-shadow: var(--shadow-primary);
   transition: background-color 0.3s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .calendar-head {
@@ -308,25 +295,26 @@ body.admin-active .white-window {
   transition: color 0.3s ease;
 }
 
-/* 隐藏旧版标题内的按钮 */
 .calendar-head button {
   display: none;
 }
 
+/* ========== 星期栏：自适应文字大小 ========== */
 .calendar-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-size: 12px;
+  font-size: clamp(9px, 2.2vw, 12px); /* 文字大小随屏幕变化 */
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: clamp(4px, 1vw, 8px);
   transition: color 0.3s ease;
 }
 
+/* ========== 日期格子：全设备通用布局 ========== */
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: clamp(2px, 0.8vw, 4px); /* 格子间距自适应 */
 }
 
 .calendar-day {
@@ -335,19 +323,24 @@ body.admin-active .white-window {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: clamp(4px, 1vw, 8px); /* 圆角自适应 */
+  font-size: clamp(10px, 2.4vw, 14px); /* 日期文字自适应 */
   cursor: pointer;
   position: relative;
   color: var(--text-primary);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, box-shadow;
+  min-width: 0; /* 强制不被内容撑开 */
+  overflow: hidden;
 }
 
 .calendar-day .shift-tag {
-  font-size: 10px;
-  margin-top: 2px;
+  font-size: clamp(6px, 1.6vw, 10px); /* 班次文字自适应 */
+  margin-top: 1px;
   opacity: 0.9;
+  white-space: nowrap; /* 防止班次文字换行 */
+  text-overflow: ellipsis; /* 超出部分显示省略号 */
+  max-width: 100%;
 }
 
 .calendar-day.other {
@@ -371,7 +364,6 @@ body.admin-active .white-window {
   box-shadow: 0 0 0 2px white inset;
 }
 
-/* 日期悬停动画 */
 .calendar-day:not(.other):hover {
   transform: translateY(-4px) scale(1.08);
   box-shadow: 0 8px 20px rgba(0, 122, 255, 0.28);
@@ -385,6 +377,40 @@ body.admin-active .white-window {
 .calendar-day:not(.has-record):not(.rest):not(.other):hover {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
   background: var(--card-secondary);
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .calendar-btn {
+    background: rgba(44, 44, 46, 0.6);
+  }
+  .calendar-btn:hover {
+    background: rgba(58, 58, 60, 0.9);
+  }
+}
+
+/* ========== 小屏手机（<360px）额外适配 ========== */
+@media (max-width: 360px) {
+  .calendar-container {
+    gap: 4px;
+  }
+  .calendar-btn {
+    flex: 0 0 30px;
+    font-size: 18px;
+    border-radius: 15px;
+  }
+  .calendar-wrap {
+    padding: 16px 6px;
+  }
+  .calendar-week {
+    font-size: 9px;
+  }
+  .calendar-day {
+    font-size: 10px;
+  }
+  .calendar-day .shift-tag {
+    font-size: 6px;
+  }
 }
 
 /* 表单样式 */
@@ -930,7 +956,7 @@ body.admin-active .progress-window {
   }
 }
 
-/* ========== 最终生效强制规则（保留!important，和线上效果完全一致） ========== */
+/* ========== 最终生效强制规则 ========== */
 body {
   padding: 16px 8px !important;
 }
