@@ -753,7 +753,7 @@ function renderTotalAndStat() {
       });
     });
   }
-
+}
 totalWageNum.innerText = totalWage.toFixed(2);
   
   if (statWorkHours) statWorkHours.innerText = totalWorkHours.toFixed(1) + ' 小时';
@@ -940,13 +940,14 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       totalAllow += allow;
 
       let h = 0;
-      const s = parseInt((item.get('shiftStart') || '00:00').split(':')[0]);
-      const e = parseInt((item.get('shiftEnd') || '00:00').split(':')[0]);
+      // 修复：工时解析增加NaN兜底
+      const s = parseInt((item.get('shiftStart') || '00:00').split(':')[0] || 0);
+      const e = parseInt((item.get('shiftEnd') || '00:00').split(':')[0] || 0);
       if (e > s) h += e - s;
 
       if (shift === '拼班') {
-        const s2 = parseInt((item.get('shiftStart2') || '00:00').split(':')[0]);
-        const e2 = parseInt((item.get('shiftEnd2') || '00:00').split(':')[0]);
+        const s2 = parseInt((item.get('shiftStart2') || '00:00').split(':')[0] || 0);
+        const e2 = parseInt((item.get('shiftEnd2') || '00:00').split(':')[0] || 0);
         if (e2 > s2) h += e2 - s2;
       }
 
@@ -1009,104 +1010,117 @@ function openAdminCycleDetailPopup(cycleKey, records) {
       mealLine = `<div class="info-line">饭点：${meal}-${endMeal}</div>`;
     }
 
-const itemEl = document.createElement('div');
-itemEl.className = 'cycle-detail-item';
-itemEl.innerHTML = `
-  <span class="date-text">${timeStr}</span>
-  <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
-  ${mealLine}
-  <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
-  <div class="item-op" style="margin-top:12px;gap:12px;">
-    <button class="btn-sm btn-edit" 
-      data-id="${id}" 
-      data-date="${workDate}" 
-      data-shift="${shift}"
-      data-shift-start="${sStart}" 
-      data-shift-end="${sEnd}"
-      data-shift-start2="${sStart2}" 
-      data-shift-end2="${sEnd2}"
-      data-meal-start="${meal}"
-      data-allowance="${allow}"
-      data-money="${money}"
-      data-remark="${r}"
-    >编辑</button>
-    <button class="btn-sm btn-del" data-id="${id}">删除</button>
-  </div>
-`;
-list.appendChild(itemEl);
+    const itemEl = document.createElement('div');
+    itemEl.className = 'cycle-detail-item';
+    // 修复：移除末尾多余的 } 语法错误
+    itemEl.innerHTML = `
+      <span class="date-text">${timeStr}</span>
+      <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
+      ${mealLine}
+      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${r}</div>
+      <div class="item-op" style="margin-top:12px;gap:12px;">
+        <button class="btn-sm btn-edit" 
+          data-id="${id}" 
+          data-date="${workDate}" 
+          data-shift="${shift}"
+          data-shift-start="${sStart}" 
+          data-shift-end="${sEnd}"
+          data-shift-start2="${sStart2}" 
+          data-shift-end2="${sEnd2}"
+          data-meal-start="${meal}"
+          data-allowance="${allow}"
+          data-money="${money}"
+          data-remark="${r}"
+        >编辑</button>
+        <button class="btn-sm btn-del" data-id="${id}">删除</button>
+      </div>
+    `;
+    list.appendChild(itemEl);
+  });
 
-// ========== 修复：平级绑定事件，不再嵌套 ==========
-// 编辑按钮事件
-itemEl.querySelector('.btn-edit').addEventListener('click', function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
-
-  cycleDetailOverlay.classList.remove('show');
-  enableBodyScroll();
-  
-  const dateInput = document.getElementById('record-date');
-  const shiftSelect = document.getElementById('record-shift');
-  const shiftStart = document.getElementById('shift-start');
-  const shiftEnd = document.getElementById('shift-end');
-  const shiftStart2 = document.getElementById('shift-start2');
-  const shiftEnd2 = document.getElementById('shift-end2');
-  const mealStart = document.getElementById('meal-start');
-  const allowanceInput = document.getElementById('record-allowance');
-  const moneyInput = document.getElementById('record-money');
-  const remarkInput = document.getElementById('record-remark');
-  const editId = document.getElementById('edit-id');
-
-  if (dateInput) dateInput.value = this.dataset.date;
-  if (shiftSelect) shiftSelect.value = this.dataset.shift;
-
-  shiftSelect.dispatchEvent(new Event('change'));
-
-  if (shiftStart) shiftStart.value = this.dataset.shiftStart;
-  if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
-  if (shiftEnd) shiftEnd.value = this.dataset.shiftEnd;
-  if (mealStart) mealStart.value = this.dataset.mealStart;
-
-  if (shiftStart2) shiftStart2.value = this.dataset.shiftStart2;
-  if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
-  if (shiftEnd2) shiftEnd2.value = this.dataset.shiftEnd2;
-
-  if (allowanceInput) allowanceInput.value = this.dataset.allowance;
-  if (moneyInput) moneyInput.value = this.dataset.money;
-  if (remarkInput) remarkInput.value = this.dataset.remark;
-  if (editId) editId.value = this.dataset.id;
-  
-  window.calcWorkHours();
-
-  selectedDate = this.dataset.date;
-  renderUserCalendar();
-  renderAdminCalendar();
-});
-
-// 删除按钮事件（移到外层，立即绑定）
-itemEl.querySelector('.btn-del').addEventListener('click', async function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
-
-  if (!confirm('确定删除该条记录？')) return;
-  try {
-    await AV.Object.createWithoutData('Bill', id).destroy();
-    loadData();
-    showToast('删除成功', 'success');
-    cycleDetailOverlay.classList.remove('show');
-    enableBodyScroll();
-  } catch (e) {
-    showToast('删除失败', 'error');
-  }
-});
-
-
+  // 修复：打开弹窗禁用页面滚动
   cycleDetailOverlay.classList.add('show');
-  enableBodyScroll();
+  disableBodyScroll();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // ========== 周期详情列表事件委托（根治重复绑定+ID作用域问题） ==========
+  const recordList = document.getElementById('cycle-detail-record-list');
+  if (recordList) {
+    // 编辑按钮事件委托
+    recordList.addEventListener('click', function(e) {
+      const editBtn = e.target.closest('.btn-edit');
+      if (!editBtn) return;
+      e.stopPropagation();
+      e.preventDefault();
+      editBtn.blur();
+
+      const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
+      if (cycleDetailOverlay) cycleDetailOverlay.classList.remove('show');
+      enableBodyScroll();
+      
+      const dateInput = document.getElementById('record-date');
+      const shiftSelect = document.getElementById('record-shift');
+      const shiftStart = document.getElementById('shift-start');
+      const shiftEnd = document.getElementById('shift-end');
+      const shiftStart2 = document.getElementById('shift-start2');
+      const shiftEnd2 = document.getElementById('shift-end2');
+      const mealStart = document.getElementById('meal-start');
+      const allowanceInput = document.getElementById('record-allowance');
+      const moneyInput = document.getElementById('record-money');
+      const remarkInput = document.getElementById('record-remark');
+      const editId = document.getElementById('edit-id');
+
+      if (dateInput) dateInput.value = editBtn.dataset.date;
+      if (shiftSelect) shiftSelect.value = editBtn.dataset.shift;
+
+      shiftSelect.dispatchEvent(new Event('change'));
+
+      if (shiftStart) shiftStart.value = editBtn.dataset.shiftStart;
+      if (shiftStart.value) shiftStart.dispatchEvent(new Event('change'));
+      if (shiftEnd) shiftEnd.value = editBtn.dataset.shiftEnd;
+      if (mealStart) mealStart.value = editBtn.dataset.mealStart;
+
+      if (shiftStart2) shiftStart2.value = editBtn.dataset.shiftStart2;
+      if (shiftStart2.value) shiftStart2.dispatchEvent(new Event('change'));
+      if (shiftEnd2) shiftEnd2.value = editBtn.dataset.shiftEnd2;
+
+      if (allowanceInput) allowanceInput.value = editBtn.dataset.allowance;
+      if (moneyInput) moneyInput.value = editBtn.dataset.money;
+      if (remarkInput) remarkInput.value = editBtn.dataset.remark;
+      if (editId) editId.value = editBtn.dataset.id;
+      
+      window.calcWorkHours();
+
+      selectedDate = editBtn.dataset.date;
+      renderUserCalendar();
+      renderAdminCalendar();
+    });
+
+    // 删除按钮事件委托
+    recordList.addEventListener('click', async function(e) {
+      const delBtn = e.target.closest('.btn-del');
+      if (!delBtn) return;
+      e.stopPropagation();
+      e.preventDefault();
+      delBtn.blur();
+
+      if (!confirm('确定删除该条记录？')) return;
+      try {
+        // 修复：从按钮dataset取ID，避免作用域错误
+        const delId = delBtn.dataset.id;
+        await AV.Object.createWithoutData('Bill', delId).destroy();
+        loadData();
+        showToast('删除成功', 'success');
+        const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
+        if (cycleDetailOverlay) cycleDetailOverlay.classList.remove('show');
+        enableBodyScroll();
+      } catch (e) {
+        showToast('删除失败', 'error');
+      }
+    });
+  } // ✅ 这里是 if (recordList) 的闭合大括号，之前大概率漏掉了
+
   // 第一步：先获取所有元素
   const adminEntrance = document.getElementById('admin-entrance');
   const loginOverlay = document.getElementById('login-overlay');
@@ -1116,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const userView = document.getElementById('user-view');
   const adminView = document.getElementById('admin-view');
 
-  // ✅ 先绑定管理员入口点击事件（放在最前面，不包裹任何条件）
+  // 管理员入口点击事件
   if (adminEntrance && loginOverlay && adminPwdInput) {
     adminEntrance.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1130,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 第二步：处理登录状态（与DOM元素判断分离）
+  // 第二步：处理登录状态
   const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
   const now = new Date();
   const todayStr = formatDate(now);
@@ -1138,9 +1152,7 @@ document.addEventListener('DOMContentLoaded', function () {
   selectedDate = todayStr;
 
   if (isAdminLoggedIn === 'true') {
-    // 先设置页面整体状态
     document.body.classList.add('admin-active');
-    // 再单独处理每个元素，元素不存在不影响状态
     if (userView) userView.classList.add('hidden');
     if (adminView) adminView.classList.remove('hidden');
     if (adminEntrance) adminEntrance.classList.add('hidden');
@@ -1164,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   initTimeSelect();
 
-  // 第三步：单独绑定每个登录相关事件（分开判断，避免互相影响）
+  // 第三步：绑定登录相关事件
   if (loginCancelBtn && loginOverlay) {
     loginCancelBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1176,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ✅ 登录确认按钮单独绑定，确保一定生效
+  // 登录确认按钮
   if (loginConfirmBtn && adminPwdInput && loginOverlay) {
     loginConfirmBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1209,18 +1221,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const backUserBtn = document.getElementById('back-user');
-  // 仅判断按钮本身是否存在，内部操作单独容错，确保事件一定绑定成功
   if (backUserBtn) {
     backUserBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
       this.blur();
 
-      // 清除登录状态（核心逻辑，不受其他元素影响）
       localStorage.removeItem('isAdminLoggedIn');
       document.body.classList.remove('admin-active');
       
-      // 视图切换（元素不存在也不影响核心状态）
       if (adminView) adminView.classList.add('hidden');
       if (userView) userView.classList.remove('hidden');
       if (adminEntrance) adminEntrance.classList.remove('hidden');
@@ -1411,75 +1420,76 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-overlay.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-}, { passive: false });
+    overlay.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
   });
 
-// 刷新按钮：双进度条同步动画
-document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
-  e.stopPropagation();
-  e.preventDefault();
-  this.blur();
+  // 刷新按钮：双进度条同步动画
+  document.getElementById('refresh-data-btn').addEventListener('click', async function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.blur();
 
-  if (this.classList.contains('spinning') || isLoading) return;
+    if (this.classList.contains('spinning') || isLoading) return;
 
-  // 获取所有进度条/加载元素
-const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
-const progressText = document.getElementById('progress-text');
-const miniCircle = document.querySelector('.progress-circle.mini-progress');
-const miniText = document.getElementById('cycle-progress-text');
-  const wageBox = document.querySelector('.total-wage-box');
-  const refreshBtn = document.getElementById('refresh-data-btn');
+    // 获取所有进度条/加载元素
+    const progressCircle = document.querySelector('.progress-window:not(.top-progress-window) .progress-circle');
+    const progressText = document.getElementById('progress-text');
+    const miniCircle = document.querySelector('.progress-circle.mini-progress');
+    const miniText = document.getElementById('cycle-progress-text');
+    const wageBox = document.querySelector('.total-wage-box');
+    const refreshBtn = document.getElementById('refresh-data-btn');
 
-  // 1. 立即开启加载动画
-  if (wageBox) wageBox.classList.add('loading');
-  if (refreshBtn) refreshBtn.classList.add('spinning');
+    // 1. 立即开启加载动画
+    if (wageBox) wageBox.classList.add('loading');
+    if (refreshBtn) refreshBtn.classList.add('spinning');
 
-  // 2. 两个进度条【同步回退到 0】
-  const rollbackAll = new Promise((resolve) => {
-    if (progressCircle && progressText) animateProgress(0);
-    if (miniCircle && miniText) animateMiniProgress(0);
-    setTimeout(resolve, 1000);
-  });
+    // 2. 两个进度条同步回退到 0
+    const rollbackAll = new Promise((resolve) => {
+      if (progressCircle && progressText) animateProgress(0);
+      if (miniCircle && miniText) animateMiniProgress(0);
+      setTimeout(resolve, 1000);
+    });
 
-  // 3. 加载数据（关闭内部自动加载动画）
-  const dataTask = loadData(0, false, false, false);
+    // 3. 加载数据
+    const dataTask = loadData(0, false, false, false);
 
-  // 4. 等待 数据加载 + 双进度回退 全部完成
-  const [data] = await Promise.all([dataTask, rollbackAll]);
+    // 4. 等待数据加载 + 双进度回退全部完成
+    const [data] = await Promise.all([dataTask, rollbackAll]);
 
-  // 5. 渲染页面数据
-  if (data) {
-    renderData(data);
-    renderUserCalendar();
-    renderAdminCalendar();
-    renderTotalAndStat();
-  }
-
-  // 6. 双进度条【同步向前动画】到各自目标值
-  const forwardAll = new Promise((resolve) => {
-    // 工资进度百分比
-    const totalWageNum = document.getElementById('total-wage-num');
-    let wagePercent = 0;
-    if(totalWageNum){
-      const totalWage = parseFloat(totalWageNum.textContent) || 0;
-      wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
+    // 5. 渲染页面数据
+    if (data) {
+      renderData(data);
+      renderUserCalendar();
+      renderAdminCalendar();
+      renderTotalAndStat();
     }
-    // 周期进度百分比
-    const cyclePercent = calculateCycleProgress();
 
-    // 同时执行前进动画
-    if (progressCircle && progressText) animateProgress(wagePercent);
-    if (miniCircle && miniText) animateMiniProgress(cyclePercent);
+    // 6. 双进度条同步向前动画到各自目标值
+    const forwardAll = new Promise((resolve) => {
+      // 工资进度百分比
+      const totalWageNum = document.getElementById('total-wage-num');
+      let wagePercent = 0;
+      if(totalWageNum){
+        const totalWage = parseFloat(totalWageNum.textContent) || 0;
+        wagePercent = Math.max(0, Math.min(Math.round(totalWage / 2900 * 100), 100));
+      }
+      // 周期进度百分比
+      const cyclePercent = calculateCycleProgress();
 
-    setTimeout(resolve, 1000);
+      // 同时执行前进动画
+      if (progressCircle && progressText) animateProgress(wagePercent);
+      if (miniCircle && miniText) animateMiniProgress(cyclePercent);
+
+      setTimeout(resolve, 1000);
+    });
+
+    await forwardAll;
+
+    // 7. 全部动画结束：关闭加载动画 + 提示
+    if (wageBox) wageBox.classList.remove('loading');
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+    showToast('数据刷新成功','success');
   });
-
-  await forwardAll;
-
-  // 7. 全部动画结束：关闭加载动画 + 提示
-  if (wageBox) wageBox.classList.remove('loading');
-  if (refreshBtn) refreshBtn.classList.remove('spinning');
-  showToast('数据刷新成功','success');
 });
