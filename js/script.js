@@ -1134,6 +1134,12 @@ document.addEventListener('DOMContentLoaded', function () {
       selectedDate = editBtn.dataset.date;
       renderUserCalendar();
       renderAdminCalendar();
+
+      // 轻量 Toast 提示
+      showToast('已进入编辑模式，修改完成后点击保存即可', 'success');
+
+      // 自动平滑滚动到「班次选择框」位置，下方输入框完整可见
+      shiftSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     // 删除按钮事件委托
