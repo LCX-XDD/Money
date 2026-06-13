@@ -9,6 +9,7 @@
   inherits: false;
   initial-value: 0;
 }
+
 :root {
   --bg-primary: #f5f5f7;
   --card-primary: #ffffff;
@@ -26,8 +27,7 @@
   --progress-fill: rgba(255, 255, 255, 0.9);
   --progress-bg: rgba(255, 255, 255, 0.2);
   --progress-text-color: white;
-      /* 新增：深色模式下的超出红色 */
-    --exceed-color: #ff453a;
+  --exceed-color: #ff3b30;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,7 +48,6 @@
     --progress-fill: rgba(255, 255, 255, 0.7);
     --progress-bg: rgba(255, 255, 255, 0.15);
     --progress-text-color: rgba(255, 255, 255, 0.9);
-        /* 新增：深色模式下的超出红色 */
     --exceed-color: #ff453a;
   }
 }
@@ -76,7 +75,6 @@ html, body {
   user-select: none;
 }
 
-/* 2. 窗格边距 & 宽度修正 */
 body {
   background-color: var(--bg-primary);
   min-height: 100vh;
@@ -84,7 +82,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 上下边距12px，左右边距6px，数字越小边距越窄 */
   padding: 12px 6px;
   transition: background-color 0.3s ease;
   overflow: hidden;
@@ -104,7 +101,7 @@ body.admin-active {
   box-shadow: none;
   padding: 0;
   width: 100%;
-  max-width: 100%; /* 强制撑满可用宽度，不再限制最大宽度 */
+  max-width: 100%;
   transition: all 0.3s ease;
 }
 
@@ -133,16 +130,16 @@ body.admin-active .white-window {
   transition: color 0.3s ease;
 }
 
-/* 中间「悬赏金」卡片：底部间距 */
+/* 悬赏金卡片 */
 .total-wage-box {
   background: var(--card-gradient);
   border-radius: 20px;
-  padding: 24px 20px; /* 卡片内部内边距也同步改小，更紧凑 */
+  padding: 24px 20px;
   color: white;
-  margin-bottom: 10px; /* 原默认24px，改小 */
+  margin-bottom: 10px;
   position: relative;
   text-align: left;
-  min-height: 180px; /* 最小高度也同步缩小 */
+  min-height: 180px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -233,7 +230,67 @@ body.admin-active .white-window {
   cursor: pointer;
 }
 
+/* ========== 日历容器：按钮垂直居中，不再拉伸 ========== */
+.calendar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ========== 日历容器：设置为高度由内容撑开 ========== */
+.calendar-container {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ========== 左右按钮：默认胶囊形 + 上下留白 ========== */
+.calendar-btn {
+  flex: 0 0 44px;
+  margin: 16px 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 22px;
+  cursor: pointer;
+  font-size: 28px;
+  font-weight: 300;
+  color: #007aff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  position: relative;
+  overflow: hidden; /* 防止动画时内容溢出 */
+}
+
+/* 鼠标悬停：只缩短上边距，下边距保持不变 */
+.calendar-btn:hover {
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-btn:active {
+  transform: scale(0.96);
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .calendar-btn {
+    background: rgba(44, 44, 46, 0.6);
+  }
+  .calendar-btn:hover {
+    background: rgba(58, 58, 60, 0.9);
+  }
+}
+
 .calendar-wrap {
+  flex: 1;
   background: var(--card-secondary);
   border-radius: 16px;
   padding: 16px;
@@ -243,7 +300,7 @@ body.admin-active .white-window {
 
 .calendar-head {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 12px;
   font-weight: 600;
@@ -251,19 +308,9 @@ body.admin-active .white-window {
   transition: color 0.3s ease;
 }
 
+/* 隐藏旧版标题内的按钮 */
 .calendar-head button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: #007aff;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
+  display: none;
 }
 
 .calendar-week {
@@ -292,12 +339,21 @@ body.admin-active .white-window {
   font-size: 14px;
   cursor: pointer;
   position: relative;
-  transition: all 0.2s ease;
   color: var(--text-primary);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+}
+
+.calendar-day .shift-tag {
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.9;
 }
 
 .calendar-day.other {
   visibility: hidden;
+  cursor: default;
+  pointer-events: none;
 }
 
 .calendar-day.has-record {
@@ -313,14 +369,25 @@ body.admin-active .white-window {
 .calendar-day.selected {
   border: 3px solid #ff9500;
   box-shadow: 0 0 0 2px white inset;
-  transform: scale(1.05);
 }
 
-.shift-tag {
-  font-size: 10px;
-  margin-top: 2px;
+/* 日期悬停动画 */
+.calendar-day:not(.other):hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.28);
+  z-index: 2;
 }
 
+.calendar-day.rest:not(.other):hover {
+  box-shadow: 0 8px 20px rgba(52, 199, 89, 0.35);
+}
+
+.calendar-day:not(.has-record):not(.rest):not(.other):hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  background: var(--card-secondary);
+}
+
+/* 表单样式 */
 .form-input {
   width: 100%;
   padding: 14px 16px;
@@ -336,6 +403,13 @@ body.admin-active .white-window {
 
 .form-input:focus {
   border-color: #007aff;
+}
+
+input[type="date"].form-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 52px;
+  line-height: 1;
 }
 
 .time-row {
@@ -391,6 +465,7 @@ body.admin-active .white-window {
   margin-top: 8px;
 }
 
+/* 返回按钮 */
 .btn-back {
   position: absolute;
   top: 16px;
@@ -434,6 +509,23 @@ body:not(.admin-active) .btn-back {
   display: none;
 }
 
+@media (max-width: 480px) {
+  .btn-back {
+    top: 12px;
+    left: 12px;
+  }
+  .btn-back button {
+    width: 36px;
+    height: 36px;
+  }
+  .btn-back button::before {
+    font-size: 16px;
+  }
+  #admin-view {
+    padding: 56px 12px 20px;
+  }
+}
+
 .sub-title {
   font-size: 18px;
   font-weight: 600;
@@ -468,6 +560,7 @@ body:not(.admin-active) .btn-back {
   display: none !important;
 }
 
+/* 弹窗通用 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -555,7 +648,6 @@ body:not(.admin-active) .btn-back {
 .modal-btn.cancel {
   color: var(--text-secondary);
   border-right: 1px solid var(--border-color);
-  transition: all 0.3s ease;
 }
 
 .modal-btn.confirm {
@@ -563,6 +655,7 @@ body:not(.admin-active) .btn-back {
   font-weight: 600;
 }
 
+/* 详情列表 */
 .detail-item {
   padding: 10px 20px;
   display: flex;
@@ -655,6 +748,7 @@ body:not(.admin-active) .btn-back {
   color: white;
 }
 
+/* Toast */
 .toast {
   position: fixed;
   top: 20px;
@@ -694,11 +788,11 @@ body:not(.admin-active) .btn-back {
   animation: spin 0.8s linear infinite;
 }
 
-/* 1. 管理员入口按钮位置修正 */
+/* 管理员入口 */
 #admin-entrance {
-  position: fixed !important;
-  bottom: 20px !important;
-  right: 20px !important;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -709,10 +803,11 @@ body:not(.admin-active) .btn-back {
   align-items: center;
   font-size: 12px;
   cursor: pointer;
-  z-index: 999;
+  z-index: 9999;
   transition: all 0.3s ease;
 }
 
+/* 滚动条 */
 .modal-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -732,13 +827,7 @@ body:not(.admin-active) .btn-back {
   background: var(--scroll-thumb-hover);
 }
 
-input[type="date"].form-input {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 52px;
-  line-height: 1;
-}
-
+/* 标题和日历默认隐藏 */
 .title, .calendar-wrap {
   display: none;
 }
@@ -748,12 +837,12 @@ body.admin-active .calendar-wrap {
   display: block;
 }
 
-/* 底部「悬赏金进度」卡片：顶部间距 */
+/* 进度条卡片 */
 .progress-window {
   background: var(--card-gradient);
   border-radius: 20px;
-  padding: 20px 24px; /* 卡片内部内边距改小 */
-  margin-top: 0; /* 原默认24px，改为0，避免重复间距 */
+  padding: 20px 24px;
+  margin-top: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -761,16 +850,10 @@ body.admin-active .calendar-wrap {
   -webkit-backdrop-filter: blur(10px);
 }
 
-.progress-circle.mini-progress {
-  --progress: var(--mini-progress, 0);
-}
-
-/* 顶部「抓猪进度」卡片：底部间距 */
 .top-progress-window {
   flex-direction: row-reverse;
-  margin-bottom: 10px; /* 原默认16px，改小后卡片间隔更窄 */
+  margin-bottom: 10px;
 }
-
 
 .progress-label {
   font-size: 24px;
@@ -783,7 +866,6 @@ body.admin-active .calendar-wrap {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  /* 修改：支持超出100%显示红色 */
   background: conic-gradient(
     var(--progress-fill) min(calc(var(--progress, 0) * 1%), 100%),
     var(--exceed-color) calc(var(--progress, 0) * 1%),
@@ -814,10 +896,15 @@ body.admin-active .calendar-wrap {
   color: var(--progress-text-color);
 }
 
+.progress-circle.mini-progress {
+  --progress: var(--mini-progress, 0);
+}
+
 body.admin-active .progress-window {
   display: none;
 }
 
+/* 管理员视图 */
 #admin-view {
   background: var(--card-primary);
   border-radius: 24px;
@@ -843,63 +930,11 @@ body.admin-active .progress-window {
   }
 }
 
-@media (max-width: 480px) {
-  .btn-back {
-    top: 12px;
-    left: 12px;
-  }
-  
-  .btn-back button {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .btn-back button::before {
-    font-size: 16px;
-  }
-
-  #admin-view {
-    padding: 56px 12px 20px;
-  }
-}
-/* ========== 强制生效样式：放在CSS最末尾 ========== */
-/* 1. 页面整体边距缩小 */
+/* ========== 最终生效强制规则（保留!important，和线上效果完全一致） ========== */
 body {
-  padding: 8px 4px !important; /* 上下8px 左右4px，数字越小边距越窄 */
+  padding: 16px 8px !important;
 }
 
-/* 2. 容器宽度强制撑满屏幕可用空间 */
-#user-view,
-.white-window {
-  width: 100% !important;
-  max-width: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-/* 3. 三个卡片的上下间距 + 内部边距缩小 */
-.top-progress-window {
-  margin-bottom: 8px !important;
-}
-.total-wage-box {
-  margin-bottom: 8px !important;
-  padding: 20px 18px !important; /* 卡片内部留白缩小 */
-  min-height: 160px !important; /* 卡片最小高度缩小 */
-}
-.progress-window {
-  margin-top: 0 !important;
-  padding: 18px 22px !important; /* 卡片内部留白缩小 */
-}
-
-/* 4. 管理员入口强制固定在右下角 */
-#admin-entrance {
-  position: fixed !important;
-  right: 16px !important;
-  bottom: 16px !important;
-  z-index: 9999 !important;
-}
-/* ========== 最终优化：宽度适配 + 间距调整 ========== */
-/* 1. 容器基础宽度：移动端占满可用空间，自动居中 */
 #user-view,
 .white-window {
   width: 100% !important;
@@ -908,44 +943,32 @@ body {
   margin: 0 auto !important;
 }
 
-/* 桌面端（屏幕宽度≥768px）：限制卡片最大宽度，避免拉满屏幕太别扭 */
-@media (min-width: 768px) {
-  #user-view,
-  .white-window {
-    max-width: 480px !important; 
-    /* 数值可以自己调：数字越大卡片越宽，数字越小越窄 */
-  }
+.top-progress-window {
+  margin-bottom: 20px !important;
 }
 
-/* 2. 调整三个卡片的垂直间距，拉开距离更美观 */
-.top-progress-window {
-  margin-bottom: 20px !important; /* 顶部卡片和中间卡片的距离 */
-}
 .total-wage-box {
-  margin-bottom: 20px !important; /* 中间卡片和底部卡片的距离 */
-  padding: 28px 24px !important; /* 卡片内部留白稍微调大，不会太挤 */
+  margin-bottom: 20px !important;
+  padding: 28px 24px !important;
   min-height: 190px !important;
 }
+
 .progress-window {
-  margin-top: 0 !important;
   padding: 24px 28px !important;
 }
 
-/* 3. 页面整体边距：移动端紧凑，桌面端留白更多 */
-body {
-  padding: 16px 8px !important; /* 移动端：上下16px、左右8px */
+#admin-entrance {
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 9999 !important;
 }
 
 @media (min-width: 768px) {
   body {
-    padding: 60px 20px !important; /* 桌面端：上下留白更多，垂直居中更美观 */
+    padding: 60px 20px !important;
   }
-}
-
-/* 4. 管理员入口固定右下角 */
-#admin-entrance {
-  position: fixed !important;
-  right: 20px !important;
-  bottom: 20px !important;
-  z-index: 9999 !important;
+  #user-view,
+  .white-window {
+    max-width: 480px !important;
+  }
 }
