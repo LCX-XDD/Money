@@ -26,6 +26,8 @@
   --progress-fill: rgba(255, 255, 255, 0.9);
   --progress-bg: rgba(255, 255, 255, 0.2);
   --progress-text-color: white;
+      /* 新增：深色模式下的超出红色 */
+    --exceed-color: #ff453a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,6 +48,8 @@
     --progress-fill: rgba(255, 255, 255, 0.7);
     --progress-bg: rgba(255, 255, 255, 0.15);
     --progress-text-color: rgba(255, 255, 255, 0.9);
+        /* 新增：深色模式下的超出红色 */
+    --exceed-color: #ff453a;
   }
 }
 
@@ -779,8 +783,10 @@ body.admin-active .calendar-wrap {
   width: 100px;
   height: 100px;
   border-radius: 50%;
+  /* 修改：支持超出100%显示红色 */
   background: conic-gradient(
-    var(--progress-fill) calc(var(--progress, 0) * 1%),
+    var(--progress-fill) min(calc(var(--progress, 0) * 1%), 100%),
+    var(--exceed-color) calc(var(--progress, 0) * 1%),
     var(--progress-bg) calc(var(--progress, 0) * 1%)
   );
   display: flex;
