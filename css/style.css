@@ -10,7 +10,6 @@
   initial-value: 0;
 }
 :root {
-  /* 全局色彩变量 - 日间模式 */
   --bg-primary: #f5f5f7;
   --card-primary: #ffffff;
   --card-secondary: #f5f5f7;
@@ -22,19 +21,15 @@
   --scroll-track: #f5f5f7;
   --scroll-thumb: #c7c7cc;
   --scroll-thumb-hover: #8e8e93;
-  /* 总工资卡片半透明渐变 */
   --card-gradient: linear-gradient(135deg, rgba(0, 122, 255, 0.85), rgba(88, 86, 214, 0.85));
-  /* ✅ 新增：加载层完全不透明渐变（和卡片同色系） */
   --loading-gradient: linear-gradient(135deg, #007aff, #5856d6);
-  /* ✅ 新增：进度条颜色变量（日间模式） */
   --progress-fill: rgba(255, 255, 255, 0.9);
   --progress-bg: rgba(255, 255, 255, 0.2);
-  --progress-text-color: white; /* 日间模式文字颜色 */
+  --progress-text-color: white;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* 全局色彩变量 - 夜间模式 */
     --bg-primary: #1c1c1e;
     --card-primary: #2c2c2e;
     --card-secondary: #3a3a3c;
@@ -46,14 +41,11 @@
     --scroll-track: #3a3a3c;
     --scroll-thumb: #636366;
     --scroll-thumb-hover: #8e8e93;
-    /* 总工资卡片半透明渐变 */
     --card-gradient: linear-gradient(135deg, rgba(0, 110, 219, 0.75), rgba(75, 73, 185, 0.75));
-    /* ✅ 新增：夜间模式加载层完全不透明渐变 */
     --loading-gradient: linear-gradient(135deg, #005bb5, #4240a8);
-    /* ✅ 新增：进度条颜色变量（深色模式，降低饱和度） */
     --progress-fill: rgba(255, 255, 255, 0.7);
     --progress-bg: rgba(255, 255, 255, 0.15);
-    --progress-text-color: rgba(255, 255, 255, 0.9); /* 夜间模式文字颜色 */
+    --progress-text-color: rgba(255, 255, 255, 0.9);
   }
 }
 
@@ -66,7 +58,6 @@
   touch-action: manipulation;
 }
 
-/* 全局禁止缩放 + 修复桌面端高度问题 */
 html {
   height: 100%;
 }
@@ -81,7 +72,7 @@ html, body {
   user-select: none;
 }
 
-/* 普通用户页面 禁止滚动 */
+/* 2. 窗格边距 & 宽度修正 */
 body {
   background-color: var(--bg-primary);
   min-height: 100vh;
@@ -89,7 +80,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px 10px;
+  /* 上下边距12px，左右边距6px，数字越小边距越窄 */
+  padding: 12px 6px;
   transition: background-color 0.3s ease;
   overflow: hidden;
 }
@@ -104,16 +96,14 @@ body.admin-active {
 }
 
 .white-window {
-  /* 隐藏白色背景、阴影和内边距 */
   background: transparent;
   box-shadow: none;
   padding: 0;
   width: 100%;
-  max-width: 420px;
+  max-width: 100%; /* 强制撑满可用宽度，不再限制最大宽度 */
   transition: all 0.3s ease;
 }
 
-/* 管理员页面：彻底隐藏用户端白色窗口（含工资卡片） */
 body.admin-active .white-window {
   display: none !important;
 }
@@ -139,29 +129,26 @@ body.admin-active .white-window {
   transition: color 0.3s ease;
 }
 
-/* 总工资卡片：固定高度+无闪烁加载 */
+/* 中间「悬赏金」卡片：底部间距 */
 .total-wage-box {
   background: var(--card-gradient);
   border-radius: 20px;
-  padding: 32px 24px;
+  padding: 24px 20px; /* 卡片内部内边距也同步改小，更紧凑 */
   color: white;
-  margin-bottom: 24px;
+  margin-bottom: 10px; /* 原默认24px，改小 */
   position: relative;
   text-align: left;
-  min-height: 200px;
-  /* ✅ 新增：背景模糊，增强半透明玻璃质感 */
+  min-height: 180px; /* 最小高度也同步缩小 */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* 无闪烁加载覆盖层 */
 .total-wage-box .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* ✅ 改为使用加载层专用变量，自动跟随主题 */
   background: var(--loading-gradient);
   border-radius: 20px;
   display: flex;
@@ -178,7 +165,6 @@ body.admin-active .white-window {
   visibility: visible;
 }
 
-/* 刷新按钮在加载层之上 */
 .refresh-btn {
   position: absolute;
   top: 16px;
@@ -401,7 +387,6 @@ body.admin-active .white-window {
   margin-top: 8px;
 }
 
-/* 返回按钮：白色卡片内部左上角，毛玻璃透明风格 */
 .btn-back {
   position: absolute;
   top: 16px;
@@ -433,7 +418,6 @@ body.admin-active .white-window {
   align-items: center;
 }
 
-/* 返回箭头图标 */
 .btn-back button::before {
   content: '←';
   font-size: 18px;
@@ -442,7 +426,6 @@ body.admin-active .white-window {
   line-height: 1;
 }
 
-/* 用户页面自动隐藏 */
 body:not(.admin-active) .btn-back {
   display: none;
 }
@@ -481,7 +464,6 @@ body:not(.admin-active) .btn-back {
   display: none !important;
 }
 
-/* 弹窗样式 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -669,7 +651,6 @@ body:not(.admin-active) .btn-back {
   color: white;
 }
 
-/* Toast 保持在页面顶端 */
 .toast {
   position: fixed;
   top: 20px;
@@ -709,10 +690,11 @@ body:not(.admin-active) .btn-back {
   animation: spin 0.8s linear infinite;
 }
 
-.admin-entrance {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+/* 1. 管理员入口按钮位置修正 */
+#admin-entrance {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -727,7 +709,6 @@ body:not(.admin-active) .btn-back {
   transition: all 0.3s ease;
 }
 
-/* 弹窗滚动条美化 */
 .modal-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -747,22 +728,6 @@ body:not(.admin-active) .btn-back {
   background: var(--scroll-thumb-hover);
 }
 
-/* 管理员页面 允许滚动 */
-body.admin-active {
-  flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-  padding-bottom: 40px;
-  overflow-y: auto !important; /* 覆盖全局，允许垂直滚动 */
-  overflow-x: hidden;
-}
-
-/* 确保窗口底部有足够边距 */
-.white-window {
-  margin-bottom: 20px;
-}
-
-/* 修复iOS日期输入框自动拉伸变高的问题 */
 input[type="date"].form-input {
   -webkit-appearance: none;
   appearance: none;
@@ -770,24 +735,21 @@ input[type="date"].form-input {
   line-height: 1;
 }
 
-/* 用户页面隐藏标题和日历 */
 .title, .calendar-wrap {
   display: none;
 }
 
-/* 管理员页面显示标题和日历 */
 body.admin-active .title,
 body.admin-active .calendar-wrap {
   display: block;
 }
 
-
-/* 进度条窗格：文字+进度条并排 */
+/* 底部「悬赏金进度」卡片：顶部间距 */
 .progress-window {
   background: var(--card-gradient);
   border-radius: 20px;
-  padding: 24px 32px;
-  margin-top: 24px;
+  padding: 20px 24px; /* 卡片内部内边距改小 */
+  margin-top: 0; /* 原默认24px，改为0，避免重复间距 */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -795,19 +757,17 @@ body.admin-active .calendar-wrap {
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* 顶部进度圆环：继承原生进度条样式，修改变量为 --mini-progress */
 .progress-circle.mini-progress {
   --progress: var(--mini-progress, 0);
 }
 
-/* 顶部进度卡片：调换左右布局（圆环在左，文字在右），其余样式完全不变 */
+/* 顶部「抓猪进度」卡片：底部间距 */
 .top-progress-window {
   flex-direction: row-reverse;
-  margin-bottom: 16px; /* 新增：和下方卡片的间距 */
+  margin-bottom: 10px; /* 原默认16px，改小后卡片间隔更窄 */
 }
 
 
-/* 抓捕进度文字 */
 .progress-label {
   font-size: 24px;
   font-weight: 600;
@@ -815,7 +775,6 @@ body.admin-active .calendar-wrap {
   margin: 0;
 }
 
-/* ✅ 环形圆形进度条主体 */
 .progress-circle {
   width: 100px;
   height: 100px;
@@ -830,11 +789,10 @@ body.admin-active .calendar-wrap {
   position: relative;
 }
 
-/* ✅ 环形内部背景：和窗格同色，盖住中间形成环形 */
 .progress-circle::before {
   content: '';
   position: absolute;
-  width: 76px; /* 环形宽度12px：100-2*12 */
+  width: 76px;
   height: 76px;
   border-radius: 50%;
   background: var(--card-gradient);
@@ -842,7 +800,6 @@ body.admin-active .calendar-wrap {
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* 进度百分比文字 */
 .progress-text {
   position: relative;
   z-index: 1;
@@ -851,18 +808,17 @@ body.admin-active .calendar-wrap {
   color: var(--progress-text-color);
 }
 
-/* 管理员页面隐藏进度条窗格 */
 body.admin-active .progress-window {
   display: none;
 }
+
 #admin-view {
   background: var(--card-primary);
   border-radius: 24px;
-  /* 顶部加大内边距，给返回按钮留出空间，避免遮挡日历 */
   padding: 60px 16px 24px;
   box-shadow: var(--shadow-primary);
   width: 100%;
-  max-width: 420px;
+  max-width: 100%;
   transition: all 0.3s ease;
   position: relative;
 }
@@ -880,7 +836,7 @@ body.admin-active .progress-window {
     padding: 68px 32px 36px;
   }
 }
-/* 移动端适配 */
+
 @media (max-width: 480px) {
   .btn-back {
     top: 12px;
@@ -899,4 +855,91 @@ body.admin-active .progress-window {
   #admin-view {
     padding: 56px 12px 20px;
   }
+}
+/* ========== 强制生效样式：放在CSS最末尾 ========== */
+/* 1. 页面整体边距缩小 */
+body {
+  padding: 8px 4px !important; /* 上下8px 左右4px，数字越小边距越窄 */
+}
+
+/* 2. 容器宽度强制撑满屏幕可用空间 */
+#user-view,
+.white-window {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 3. 三个卡片的上下间距 + 内部边距缩小 */
+.top-progress-window {
+  margin-bottom: 8px !important;
+}
+.total-wage-box {
+  margin-bottom: 8px !important;
+  padding: 20px 18px !important; /* 卡片内部留白缩小 */
+  min-height: 160px !important; /* 卡片最小高度缩小 */
+}
+.progress-window {
+  margin-top: 0 !important;
+  padding: 18px 22px !important; /* 卡片内部留白缩小 */
+}
+
+/* 4. 管理员入口强制固定在右下角 */
+#admin-entrance {
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 9999 !important;
+}
+/* ========== 最终优化：宽度适配 + 间距调整 ========== */
+/* 1. 容器基础宽度：移动端占满可用空间，自动居中 */
+#user-view,
+.white-window {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+}
+
+/* 桌面端（屏幕宽度≥768px）：限制卡片最大宽度，避免拉满屏幕太别扭 */
+@media (min-width: 768px) {
+  #user-view,
+  .white-window {
+    max-width: 480px !important; 
+    /* 数值可以自己调：数字越大卡片越宽，数字越小越窄 */
+  }
+}
+
+/* 2. 调整三个卡片的垂直间距，拉开距离更美观 */
+.top-progress-window {
+  margin-bottom: 20px !important; /* 顶部卡片和中间卡片的距离 */
+}
+.total-wage-box {
+  margin-bottom: 20px !important; /* 中间卡片和底部卡片的距离 */
+  padding: 28px 24px !important; /* 卡片内部留白稍微调大，不会太挤 */
+  min-height: 190px !important;
+}
+.progress-window {
+  margin-top: 0 !important;
+  padding: 24px 28px !important;
+}
+
+/* 3. 页面整体边距：移动端紧凑，桌面端留白更多 */
+body {
+  padding: 16px 8px !important; /* 移动端：上下16px、左右8px */
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 60px 20px !important; /* 桌面端：上下留白更多，垂直居中更美观 */
+  }
+}
+
+/* 4. 管理员入口固定右下角 */
+#admin-entrance {
+  position: fixed !important;
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 9999 !important;
 }
