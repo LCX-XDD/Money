@@ -876,7 +876,7 @@ body.admin-active .calendar-wrap {
   display: block;
 }
 
-/* 进度条卡片 */
+/* 进度条卡片容器 */
 .progress-window {
   background: var(--card-gradient);
   border-radius: 20px;
@@ -888,12 +888,10 @@ body.admin-active .calendar-wrap {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-
 .top-progress-window {
   flex-direction: row-reverse;
   margin-bottom: 10px;
 }
-
 .progress-label {
   font-size: 24px;
   font-weight: 600;
@@ -901,23 +899,18 @@ body.admin-active .calendar-wrap {
   margin: 0;
 }
 
+/* 环形进度条 基础样式 */
 .progress-circle {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: conic-gradient(
-    var(--progress-fill) min(calc(var(--progress, 0) * 1%), 100%),
-    var(--exceed-color) calc(var(--progress, 0) * 1%),
-    var(--progress-bg) calc(var(--progress, 0) * 1%)
-  );
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  /* 新增：进度条原生平滑过渡，0.5秒线性动画 */
-  transition: --progress 0.5s linear;
+  /* 动画过渡 */
+  transition: --progress 0.5s linear, --mini-progress 0.5s linear;
 }
-
 
 .progress-circle::before {
   content: '';
@@ -925,25 +918,65 @@ body.admin-active .calendar-wrap {
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: var(--card-gradient);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* 1. 用和卡片背景完全一样的不透明渐变 */
+  background: linear-gradient(135deg, #007aff, #5856d6);
+  /* 2. 彻底去掉所有透明/模糊效果 */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+  z-index: 1;
 }
 
+/* 深色模式单独适配 */
+@media (prefers-color-scheme: dark) {
+  .progress-circle::before {
+    background: linear-gradient(135deg, #0066cc, #4240a8);
+  }
+}
+
+/* 进度文字 */
 .progress-text {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   font-size: 28px;
   font-weight: 700;
   color: var(--progress-text-color);
 }
 
-.progress-circle.mini-progress {
-  --progress: var(--mini-progress, 0);
-  /* 新增：迷你进度条原生过渡 */
-  transition: --mini-progress 0.5s linear;
+/* ====================== 下方主进度条（悬赏进度）====================== */
+/* 状态1：进度 ≤ 100% 正常样式 */
+.progress-circle[data-progress="normal"] {
+  background: conic-gradient(
+    var(--progress-fill) calc(var(--progress, 0) * 1%),
+    var(--progress-bg) calc(var(--progress, 0) * 1%)
+  );
+  box-shadow: none;
 }
 
+/* 状态2：进度 ＞ 100% 整体变红 + 红色阴影 */
+.progress-circle[data-progress="over"] {
+  background: conic-gradient(
+    var(--exceed-color) calc(var(--progress, 0) * 1%),
+    rgba(255, 59, 48, 0.2) calc(var(--progress, 0) * 1%)
+  );
+  /* 红色内阴影，增强覆盖质感 */
+  box-shadow: inset 0 0 14px 4px rgba(255, 59, 48, 0.5);
+}
+
+/* ====================== 顶部迷你进度条（周期进度）====================== */
+/* 周期进度固定使用 mini 变量，永远不触发红色 */
+.progress-circle.mini-progress {
+  --progress: var(--mini-progress, 0);
+}
+.progress-circle.mini-progress[data-progress="normal"] {
+  background: conic-gradient(
+    var(--progress-fill) calc(var(--mini-progress, 0) * 1%),
+    var(--progress-bg) calc(var(--mini-progress, 0) * 1%)
+  );
+  box-shadow: none !important;
+}
+
+/* 管理员页面隐藏进度区域 */
 body.admin-active .progress-window {
   display: none;
 }
@@ -1014,5 +1047,42 @@ body {
   #user-view,
   .white-window {
     max-width: 480px !important;
+  }
+}
+
+#cycle-total-info {
+  color: var(--text-primary) !important;
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+#cycle-total-info hr {
+  all: unset;
+  display: block;
+  height: 1px;
+  width: 100%;
+  margin: 10px 0;
+  /* 浅色模式：使用主题边框色，正常灰色 */
+  background-color: var(--border-color) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #cycle-total-info {
+    color: #ffffff !important;
+  }
+  #cycle-total-info hr {
+    /* 深色模式：浅白色分割线 */
+    background-color: rgba(255, 255, 255, 0.25) !important;
+  }
+}
+
+/* 深色模式 顶部返回按钮适配 */
+@media (prefers-color-scheme: dark) {
+  .btn-back button {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  .btn-back button::before {
+    color: #ffffff !important;
   }
 }
