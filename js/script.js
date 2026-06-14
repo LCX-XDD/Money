@@ -3,9 +3,11 @@ let savedScrollTop = 0;
 let clickBlocker = null;
 let currentProgress = 0;
 let currentMiniProgress = 0;
-let progressTimer = null;
-let miniProgressTimer = null;
+// 进度条定时器容器（对象引用，确保动画函数能正确修改状态）
+const progressTimerObj = { value: null };
+const miniProgressTimerObj = { value: null };
 let isLoading = false;
+let isRefreshing = false; // 刷新全流程锁，动画未完成前禁止重复点击
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -73,15 +75,43 @@ function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min 
 }
 
 function animateProgress(targetPercent) {
-  const circle = document.getElementById('bottom-progress');
-  const text = document.getElementById('progress-text');
-  runProgressAnim(circle, text, '--progress', targetPercent, { value: progressTimer }, 0, Infinity);
+  return new Promise(resolve => {
+    const circle = document.getElementById('bottom-progress');
+    const text = document.getElementById('progress-text');
+    if (!circle || !text) {
+      resolve();
+      return;
+    }
+    // 传入全局定时器对象，保证引用一致
+    runProgressAnim(circle, text, '--progress', targetPercent, progressTimerObj, 0, Infinity);
+    
+    // 轮询检测动画是否真正结束
+    const checkEnd = setInterval(() => {
+      if (progressTimerObj.value === null) {
+        clearInterval(checkEnd);
+        resolve();
+      }
+    }, 20);
+  });
 }
 
 function animateMiniProgress(targetPercent) {
-  const circle = document.getElementById('top-progress');
-  const text = document.getElementById('cycle-progress-text');
-  runProgressAnim(circle, text, '--mini-progress', targetPercent, { value: miniProgressTimer }, 0, 100);
+  return new Promise(resolve => {
+    const circle = document.getElementById('top-progress');
+    const text = document.getElementById('cycle-progress-text');
+    if (!circle || !text) {
+      resolve();
+      return;
+    }
+    runProgressAnim(circle, text, '--mini-progress', targetPercent, miniProgressTimerObj, 0, 100);
+    
+    const checkEnd = setInterval(() => {
+      if (miniProgressTimerObj.value === null) {
+        clearInterval(checkEnd);
+        resolve();
+      }
+    }, 20);
+  });
 }
 
 function calculateCycleProgress() {
@@ -463,7 +493,7 @@ function renderUserCalendar() { renderCalendar('calendar-body', 'calendar-title'
 function renderAdminCalendar() { renderCalendar('admin-calendar-body', 'admin-calendar-title', true); }
 
 // ========== 统计与进度更新 ==========
-function renderTotalAndStat() {
+function renderTotalAndStat(updateMainCard = true) {
   const totalWageNum = document.getElementById('total-wage-num');
   if (!totalWageNum) return;
 
@@ -518,7 +548,11 @@ function renderTotalAndStat() {
     if (endHour === 23) day23++;
   });
 
-  totalWageNum.innerText = totalWage.toFixed(2);
+  // 只更新数字，不操作进度条
+  // 只更新数字，不操作进度条
+  if (updateMainCard) {
+    totalWageNum.innerText = totalWage.toFixed(2);
+  }
   if (statEls['stat-work-hours']) statEls['stat-work-hours'].innerText = totalHours.toFixed(1) + ' 小时';
   if (statEls['stat-work-days']) statEls['stat-work-days'].innerText = workDays + ' 天';
   if (statEls['stat-21h-days']) statEls['stat-21h-days'].innerText = day21 + ' 天';
@@ -526,25 +560,6 @@ function renderTotalAndStat() {
   if (statEls['stat-23h-days']) statEls['stat-23h-days'].innerText = day23 + ' 天';
   if (statEls['stat-base-money']) statEls['stat-base-money'].innerText = '¥' + totalBase.toFixed(2);
   if (statEls['stat-allowance']) statEls['stat-allowance'].innerText = '¥' + totalAllow.toFixed(2);
-
-  // 更新进度条
-  const progressText = document.getElementById('progress-text');
-  const progressCircle = document.getElementById('bottom-progress');
-  if (progressText && progressCircle) {
-    const percent = calcWagePercent(totalWageNum.textContent);
-    currentProgress = percent;
-    progressCircle.style.setProperty('--progress', 0);
-    progressText.textContent = '0%';
-    animateProgress(percent);
-
-    const miniCircle = document.getElementById('top-progress');
-    const miniText = document.getElementById('cycle-progress-text');
-    if (miniCircle && miniText) {
-      miniCircle.style.setProperty('--mini-progress', 0);
-      miniText.textContent = '0%';
-      animateMiniProgress(calculateCycleProgress());
-    }
-  }
 
   // 历史周期列表
   if (cycleGroupList) {
@@ -966,36 +981,69 @@ document.addEventListener('DOMContentLoaded', function () {
     e.preventDefault();
     this.blur();
 
-    if (this.classList.contains('spinning') || isLoading) return;
+    // 全流程锁：刷新中（含动画）禁止重复点击
+    if (isRefreshing || isLoading) return;
+    isRefreshing = true;
+
     const wageBox = document.querySelector('.total-wage-box');
+    const refreshBtn = this;
+    const wageNumEl = document.getElementById('total-wage-num');
 
     try {
+      // 1. 进入加载状态：工资卡片显示加载遮罩，全程盖住数字
       wageBox?.classList.add('loading');
-      this.classList.add('spinning');
+      refreshBtn.classList.add('spinning');
 
-      const rollback = new Promise(resolve => {
-        animateProgress(0);
-        animateMiniProgress(0);
-        setTimeout(resolve, 1000);
-      });
-      await rollback;
+      // 2. 等待两个进度条全部归0完成（工资数字保持原值，被遮罩盖住不可见）
+      await Promise.all([
+        animateProgress(0),
+        animateMiniProgress(0)
+      ]);
 
+      // 3. 加载最新数据
       const data = await loadData(0, false, false, false);
-      if (data) {
-        renderData(data);
-        renderUserCalendar();
-        renderAdminCalendar();
-        renderTotalAndStat();
-        showToast('数据刷新成功', 'success');
-      } else {
+      if (!data) {
         showToast('数据加载失败，请重试', 'error');
+        return;
       }
+
+      // 4. 渲染日历、列表、详情统计（不更新主卡片工资数字）
+      renderData(data);
+      renderUserCalendar();
+      renderAdminCalendar();
+      renderTotalAndStat(false);
+
+      // 5. 计算目标进度和最终工资
+      const totalWage = allBillList.reduce((sum, item) => {
+        const { cycleStart, cycleEnd } = getCycleRange();
+        const d = item.get('date') || '';
+        if (d < formatDate(cycleStart) || d > formatDate(cycleEnd)) return sum;
+        if (item.get('shift') === '休息') return sum;
+        return sum + safeNum(item.get('money')) + safeNum(item.get('allowance'));
+      }, 0);
+      const targetProgress = calcWagePercent(totalWage);
+      const targetMiniProgress = calculateCycleProgress();
+
+      // 6. 等待两个进度条从0增长到目标值
+      await Promise.all([
+        animateProgress(targetProgress),
+        animateMiniProgress(targetMiniProgress)
+      ]);
+
+      // 7. 动画全部完成后：同步更新工资数字 + 移除加载遮罩 + 弹出成功提示
+      wageNumEl.innerText = totalWage.toFixed(2);
+      wageBox?.classList.remove('loading');
+      showToast('数据刷新成功', 'success');
+
     } catch (err) {
       showToast('刷新失败，请重试', 'error');
       console.error('刷新异常：', err);
-    } finally {
+      // 异常时也要移除遮罩
       wageBox?.classList.remove('loading');
-      this.classList.remove('spinning');
+    } finally {
+      // 8. 释放锁和按钮状态
+      refreshBtn.classList.remove('spinning');
+      isRefreshing = false;
     }
   });
 
