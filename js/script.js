@@ -489,6 +489,13 @@ function clearForm() {
     if (el) el.value = '';
   });
   selectedDate = '';
+
+  // 关键补充：重置班次下拉并触发change事件，恢复到初始隐藏状态
+  const shiftSelect = document.getElementById('record-shift');
+  if (shiftSelect) {
+    shiftSelect.value = '';
+    shiftSelect.dispatchEvent(new Event('change'));
+  }
 }
 
 // ========== 日历渲染（合并重复逻辑） ==========
@@ -767,57 +774,73 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         editBtn.blur();
 
+        // 先关闭弹窗、恢复页面滚动
         document.getElementById('cycle-detail-overlay')?.classList.remove('show');
         enableBodyScroll();
 
-        // 1. 先取所有数据
-        const data = editBtn.dataset;
-        const shiftSelect = document.getElementById('record-shift');
-        const shiftStart = document.getElementById('shift-start');
-        const shiftEnd = document.getElementById('shift-end');
-        const shiftStart2 = document.getElementById('shift-start2');
-        const shiftEnd2 = document.getElementById('shift-end2');
-        const mealStart = document.getElementById('meal-start');
+        // 用 try-catch 包裹回填逻辑，即使回填出错，也不影响提示和滚动
+        try {
+          const data = editBtn.dataset;
+          const shiftSelect = document.getElementById('record-shift');
+          const shiftStart = document.getElementById('shift-start');
+          const shiftEnd = document.getElementById('shift-end');
+          const shiftStart2 = document.getElementById('shift-start2');
+          const shiftEnd2 = document.getElementById('shift-end2');
+          const mealStart = document.getElementById('meal-start');
 
-        // 2. 按依赖顺序分步赋值（核心修复：先触发上级change生成选项，再填下级值）
-        // 第一步：填日期和班次
-        document.getElementById('record-date').value = data.date;
-        if (shiftSelect) {
-          shiftSelect.value = data.shift;
-          shiftSelect.dispatchEvent(new Event('change'));
+          // 按依赖顺序分步赋值，全部增加判空保护
+          const dateInput = document.getElementById('record-date');
+          if (dateInput) dateInput.value = data.date;
+          
+          if (shiftSelect) {
+            shiftSelect.value = data.shift;
+            shiftSelect.dispatchEvent(new Event('change'));
+          }
+
+          if (shiftStart) {
+            shiftStart.value = data.shiftStart;
+            shiftStart.dispatchEvent(new Event('change'));
+          }
+
+          if (shiftEnd) shiftEnd.value = data.shiftEnd;
+          if (mealStart) mealStart.value = data.mealStart;
+
+          if (data.shift === '拼班' && shiftStart2) {
+            shiftStart2.value = data.shiftStart2;
+            shiftStart2.dispatchEvent(new Event('change'));
+            if (shiftEnd2) shiftEnd2.value = data.shiftEnd2;
+          }
+
+          const allowanceInput = document.getElementById('record-allowance');
+          const moneyInput = document.getElementById('record-money');
+          const remarkInput = document.getElementById('record-remark');
+          const editIdInput = document.getElementById('edit-id');
+          if (allowanceInput) allowanceInput.value = data.allowance;
+          if (moneyInput) moneyInput.value = data.money;
+          if (remarkInput) remarkInput.value = data.remark;
+          if (editIdInput) editIdInput.value = data.id;
+
+          window.calcWorkHours?.();
+          selectedDate = data.date;
+          renderUserCalendar();
+          renderAdminCalendar();
+        } catch (err) {
+          console.error('编辑回填异常：', err);
         }
 
-        // 第二步：填第一时段上班时间，触发change生成下班选项
-        if (shiftStart) {
-          shiftStart.value = data.shiftStart;
-          shiftStart.dispatchEvent(new Event('change'));
-        }
-
-        // 第三步：填下班时间和饭点
-        if (shiftEnd) shiftEnd.value = data.shiftEnd;
-        if (mealStart) mealStart.value = data.mealStart;
-
-        // 第四步：如果是拼班，处理第二时段
-        if (data.shift === '拼班' && shiftStart2) {
-          shiftStart2.value = data.shiftStart2;
-          shiftStart2.dispatchEvent(new Event('change'));
-          if (shiftEnd2) shiftEnd2.value = data.shiftEnd2;
-        }
-
-        // 第五步：填剩余字段
-        document.getElementById('record-allowance').value = data.allowance;
-        document.getElementById('record-money').value = data.money;
-        document.getElementById('record-remark').value = data.remark;
-        document.getElementById('edit-id').value = data.id;
-
-        // 最后重新计算工时
-        window.calcWorkHours?.();
-        selectedDate = data.date;
-        renderUserCalendar();
-        renderAdminCalendar();
-
+        // 提示和滚动放在 try 外面，保证100%执行
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        if (cancelBtn) cancelBtn.style.display = 'block'; // 显示取消按钮
         showToast('已进入编辑模式，修改完成后点击保存即可', 'success');
-        shiftSelect?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // 延迟350ms再滚动，等弹窗关闭、页面滚动状态完全恢复后再执行
+        setTimeout(() => {
+          document.getElementById('record-shift')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 350);
+        
         return;
       }
 
@@ -885,6 +908,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const dateInput = document.getElementById('record-date');
       if (dateInput) dateInput.value = formatDate(new Date());
       setTimeout(() => loadData(), 300);
+      showToast('🎉欢迎回来!管理员!🎉', 'success'); // 新增：管理员登录欢迎提示
     } else {
       showToast('密码错误', 'error');
     }
@@ -905,6 +929,7 @@ document.addEventListener('DOMContentLoaded', function () {
     clearForm();
     renderTotalAndStat();
     renderUserCalendar();
+    initTopMiniCards(); // 补充：重新触发用户页进度条动画
     showToast('已返回用户页面', 'success');
   });
 
@@ -946,12 +971,30 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast('保存成功', 'success');
       }
       clearForm();
+      const cancelBtn = document.getElementById('cancel-edit-btn');
+      if (cancelBtn) cancelBtn.style.display = 'none';
       loadData();
     } catch (err) {
       showToast('保存失败', 'error');
     }
   });
+  // 取消编辑按钮
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+cancelEditBtn?.addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
+  clearForm(); // 清空表单并重置班次状态
+  this.style.display = 'none'; // 隐藏取消按钮
+  showToast('已取消编辑', 'error'); // 这里把 normal 改成 error
+
+  // 恢复日期为当日
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) {
+    dateInput.value = formatDate(new Date());
+  }
+});
   // 日历翻页
   document.getElementById('prev-month-btn')?.addEventListener('click', () => {
     currentMonth--;
