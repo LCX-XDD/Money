@@ -901,7 +901,10 @@ body.admin-active .calendar-wrap {
   justify-content: center;
   align-items: center;
   position: relative;
+  /* 新增：进度条原生平滑过渡，0.5秒线性动画 */
+  transition: --progress 0.5s linear;
 }
+
 
 .progress-circle::before {
   content: '';
@@ -924,6 +927,8 @@ body.admin-active .calendar-wrap {
 
 .progress-circle.mini-progress {
   --progress: var(--mini-progress, 0);
+  /* 新增：迷你进度条原生过渡 */
+  transition: --mini-progress 0.5s linear;
 }
 
 body.admin-active .progress-window {
