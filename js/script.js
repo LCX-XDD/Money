@@ -12,6 +12,7 @@ let currentMonth = new Date().getMonth();
 let recordDates = new Set();
 let selectedDate = '';
 let allBillList = [];
+let bodyScrollLockCount = 0; // 滚动锁计数，嵌套弹窗累加，归0才恢复滚动
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
@@ -193,6 +194,10 @@ function initTopMiniCards() {
 
 // ========== 滚动控制 ==========
 function disableBodyScroll() {
+  bodyScrollLockCount++;
+  // 已经处于锁定状态，直接返回，不重复修改位置和样式
+  if (bodyScrollLockCount > 1) return;
+
   savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
   document.body.style.position = 'fixed';
   document.body.style.top = `-${savedScrollTop}px`;
@@ -209,6 +214,10 @@ function disableBodyScroll() {
 }
 
 function enableBodyScroll() {
+  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+  // 还有弹窗未关闭，不恢复滚动
+  if (bodyScrollLockCount > 0) return;
+
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.width = '';
