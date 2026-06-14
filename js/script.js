@@ -1,8 +1,6 @@
 // ========== 全局变量 ==========
 let savedScrollTop = 0;
 let clickBlocker = null;
-let currentProgress = 0;
-let currentMiniProgress = 0;
 // 进度条定时器容器（对象引用，确保动画函数能正确修改状态）
 const progressTimerObj = { value: null };
 const miniProgressTimerObj = { value: null };
@@ -24,6 +22,17 @@ const BASE_SALARY = 2900;
 function safeNum(val, fallback = 0) {
   const num = Number(val);
   return isNaN(num) ? fallback : num;
+}
+
+// 单日工资保留3位小数（四舍五入，用于计算与存储，保证累加精度）
+function round3(num) {
+  return Math.round((safeNum(num) + Number.EPSILON) * 1000) / 1000;
+}
+
+// 总工资截断到2位小数，不四舍五入（直接舍去第三位及以后，最终显示用）
+function trunc2(num) {
+  const n = safeNum(num);
+  return Math.floor(n * 100) / 100;
 }
 
 function formatDate(date) {
@@ -49,49 +58,87 @@ function calcWagePercent(totalWage) {
   return Math.max(0, Math.round(safeNum(totalWage) / BASE_SALARY * 100));
 }
 
-// ========== 进度条动画（通用函数，消除重复） ==========
-function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min = 0, max = Infinity) {
-  if (!circleEl || !textEl) return;
+// ========== 进度条动画（CSS原生过渡 + JS同步数字 + 多层兜底） ==========
+function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min = 0, max = Infinity, onFinish = null) {
+  if (!circleEl || !textEl) {
+    onFinish?.();
+    return;
+  }
 
+  // 取消上一个未完成的数字动画，避免叠加
   if (timerRef.value) {
-    clearInterval(timerRef.value);
+    cancelAnimationFrame(timerRef.value);
     timerRef.value = null;
   }
 
+  // 钳制目标值范围
   targetPercent = Math.max(min, Math.min(max, safeNum(targetPercent)));
-  let current = Math.max(min, Math.min(max, safeNum(parseInt(circleEl.style.getPropertyValue(cssVar)))));
-  const step = targetPercent > current ? 1 : -1;
+  
+  // 读取起始值，读取失败默认取0
+  const rawVal = circleEl.style.getPropertyValue(cssVar);
+  const startVal = Math.max(min, Math.min(max, safeNum(parseInt(rawVal) || 0)));
+  
+  // 起始值等于目标值，直接结束
+  if (startVal === targetPercent) {
+    textEl.textContent = `${targetPercent}%`;
+    circleEl.style.setProperty(cssVar, targetPercent);
+    onFinish?.();
+    return;
+  }
 
-  timerRef.value = setInterval(() => {
-    current += step;
-    current = Math.max(min, Math.min(max, current));
-    circleEl.style.setProperty(cssVar, current);
+  const duration = 500; // 和CSS过渡时长完全一致
+  const startTime = performance.now();
+
+  // 触发CSS原生圆环过渡，浏览器自动渲染，不占JS线程
+  circleEl.style.setProperty(cssVar, targetPercent);
+
+  // JS只负责同步更新百分比数字
+  function animateFrame(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    const current = Math.round(startVal + (targetPercent - startVal) * progress);
     textEl.textContent = `${current}%`;
-    if (current === targetPercent) {
-      clearInterval(timerRef.value);
+
+    if (progress < 1) {
+      timerRef.value = requestAnimationFrame(animateFrame);
+    } else {
+      // 动画正常结束
+      textEl.textContent = `${targetPercent}%`;
+      timerRef.value = null;
+      onFinish?.();
+    }
+  }
+
+  timerRef.value = requestAnimationFrame(animateFrame);
+
+  // 第一层兜底：550ms强制结束，比动画时长多50ms冗余
+  setTimeout(() => {
+    if (timerRef.value) {
+      cancelAnimationFrame(timerRef.value);
       timerRef.value = null;
     }
-  }, 10);
+    textEl.textContent = `${targetPercent}%`;
+    onFinish?.();
+  }, duration + 50);
 }
 
 function animateProgress(targetPercent) {
   return new Promise(resolve => {
     const circle = document.getElementById('bottom-progress');
     const text = document.getElementById('progress-text');
-    if (!circle || !text) {
-      resolve();
-      return;
-    }
-    // 传入全局定时器对象，保证引用一致
-    runProgressAnim(circle, text, '--progress', targetPercent, progressTimerObj, 0, Infinity);
     
-    // 轮询检测动画是否真正结束
-    const checkEnd = setInterval(() => {
-      if (progressTimerObj.value === null) {
-        clearInterval(checkEnd);
-        resolve();
-      }
-    }, 20);
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      resolve();
+    };
+
+    runProgressAnim(circle, text, '--progress', targetPercent, progressTimerObj, 0, Infinity, finish);
+
+    // 第二层终极兜底：1秒后强制完成，万无一失
+    setTimeout(finish, 1000);
   });
 }
 
@@ -99,18 +146,18 @@ function animateMiniProgress(targetPercent) {
   return new Promise(resolve => {
     const circle = document.getElementById('top-progress');
     const text = document.getElementById('cycle-progress-text');
-    if (!circle || !text) {
-      resolve();
-      return;
-    }
-    runProgressAnim(circle, text, '--mini-progress', targetPercent, miniProgressTimerObj, 0, 100);
     
-    const checkEnd = setInterval(() => {
-      if (miniProgressTimerObj.value === null) {
-        clearInterval(checkEnd);
-        resolve();
-      }
-    }, 20);
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      resolve();
+    };
+
+    runProgressAnim(circle, text, '--mini-progress', targetPercent, miniProgressTimerObj, 0, 100, finish);
+
+    // 第二层终极兜底：1秒强制完成
+    setTimeout(finish, 1000);
   });
 }
 
@@ -183,11 +230,6 @@ if (!AV.applicationId) {
 }
 const Bill = AV.Object.extend('Bill');
 
-// ========== 薪资计算 ==========
-function getBaseWageByDate(dateStr) {
-  return new Date(dateStr) >= new Date('2026-06-01') ? BASE_SALARY / 208 : 2700 / 208;
-}
-
 // ========== Toast 提示 ==========
 function showToast(text, type = "normal", duration = 2200) {
   const toast = document.getElementById('toast');
@@ -258,7 +300,7 @@ function initTimeSelect() {
     }
     workHoursTip.textContent = `有效工时：${total} 小时`;
     const hourly = getBaseWageByDate(dateInput.value || formatDate(new Date()));
-    moneyInput.value = (Math.round(total * hourly * 1000) / 1000).toFixed(2);
+    moneyInput.value = round3(total * hourly).toFixed(3);
   }
 
   shiftSelect.addEventListener('change', () => {
@@ -521,6 +563,7 @@ function renderTotalAndStat(updateMainCard = true) {
   currentList.forEach(item => {
     const shift = item.get('shift') || '';
     if (shift === '休息') return;
+
     const money = safeNum(item.get('money'));
     const allow = safeNum(item.get('allowance'));
     const sEnd = item.get('shiftEnd') || '';
@@ -529,7 +572,9 @@ function renderTotalAndStat(updateMainCard = true) {
     workDays++;
     totalBase += money;
     totalAllow += allow;
+    totalWage += money + allow; // 直接累加数据库存储值，和表格明细完全一致
 
+    // 工时统计保持不变
     let h = 0;
     const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
     const e = safeNum((sEnd || '00:00').split(':')[0]);
@@ -541,11 +586,7 @@ function renderTotalAndStat(updateMainCard = true) {
       if (e2 > s2) h += e2 - s2;
     }
     if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
-
     totalHours += h;
-    const hourly = getBaseWageByDate(item.get('date'));
-    const wage = Math.round(h * hourly * 1000) / 1000;
-    totalWage += Math.round((wage + allow) * 1000) / 1000;
 
     const endHour = safeNum(sEnd.split(':')[0]);
     if (endHour === 21) day21++;
@@ -554,9 +595,9 @@ function renderTotalAndStat(updateMainCard = true) {
   });
 
   // 只更新数字，不操作进度条
-  // 只更新数字，不操作进度条
+  // 总工资四舍五入保留2位小数后显示
   if (updateMainCard) {
-    totalWageNum.innerText = totalWage.toFixed(2);
+    totalWageNum.innerText = trunc2(totalWage).toFixed(2);
   }
   if (statEls['stat-work-hours']) statEls['stat-work-hours'].innerText = totalHours.toFixed(1) + ' 小时';
   if (statEls['stat-work-days']) statEls['stat-work-days'].innerText = workDays + ' 天';
@@ -593,49 +634,35 @@ function buildDetailList(listEl, records, showActions = false) {
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
   calcBtn.className = 'cycle-calc-btn';
-  calcBtn.onclick = function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.blur();
+    calcBtn.onclick = function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      this.blur();
 
-    let totalHours = 0, totalBase = 0, totalAllow = 0, totalWage = 0, workDays = 0;
-    records.forEach(item => {
-      const shift = item.get('shift') || '';
-      if (shift === '休息') return;
-      workDays++;
-      const allow = safeNum(item.get('allowance'));
-      totalAllow += allow;
+      let totalHours = 0, totalBase = 0, totalAllow = 0, totalWage = 0, workDays = 0;
+      records.forEach(item => {
+        const shift = item.get('shift') || '';
+        if (shift === '休息') return;
+        workDays++;
+        const money = safeNum(item.get('money'));
+        const allow = safeNum(item.get('allowance'));
+        totalBase += money;
+        totalAllow += allow;
+        totalWage += money + allow;
+      });
 
-      let h = 0;
-      const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
-      const e = safeNum((item.get('shiftEnd') || '00:00').split(':')[0]);
-      if (e > s) h += e - s;
-
-      if (shift === '拼班') {
-        const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
-        const e2 = safeNum((item.get('shiftEnd2') || '00:00').split(':')[0]);
-        if (e2 > s2) h += e2 - s2;
-      }
-      if (shift !== '拼班' && item.get('mealStart')) h = Math.max(0, h - 1);
-      totalHours += h;
-
-      const daily = Math.round(h * getBaseWageByDate(item.get('date')) * 1000) / 1000;
-      totalBase += daily;
-      totalWage += Math.round((daily + allow) * 1000) / 1000;
-    });
-
-    document.getElementById('cycle-total-title').innerText = `${listEl.dataset.cycle} 工资统计`;
-    document.getElementById('cycle-total-info').innerHTML = `
-      出勤天数：${workDays} 天<br>
-      总工时：${totalHours.toFixed(2)} 小时<br>
-      总基本工资：¥${totalBase.toFixed(2)}<br>
-      总加班补贴：¥${totalAllow.toFixed(2)}<br>
-      <hr style="margin:8px 0;border:1px solid rgba(0,0,0,0.1);">
-      <strong>本期总工资：¥${totalWage.toFixed(2)}</strong>
-    `;
-    document.getElementById('cycle-total-overlay').classList.add('show');
-    disableBodyScroll();
-  };
+      document.getElementById('cycle-total-title').innerText = `${listEl.dataset.cycle} 工资统计`;
+      document.getElementById('cycle-total-info').innerHTML = `
+        出勤天数：${workDays} 天<br>
+        总工时：${totalHours.toFixed(2)} 小时<br>
+        总基本工资：¥${totalBase.toFixed(2)}<br>
+        总加班补贴：¥${totalAllow.toFixed(2)}<br>
+        <hr style="margin:8px 0;border:1px solid rgba(0,0,0,0.1);">
+        <strong>本期总工资：¥${trunc2(totalWage).toFixed(2)}</strong>
+      `;
+      document.getElementById('cycle-total-overlay').classList.add('show');
+      disableBodyScroll();
+    };
   listEl.appendChild(calcBtn);
 
   records.forEach(item => {
@@ -648,9 +675,12 @@ function buildDetailList(listEl, records, showActions = false) {
     const s2 = item.get('shiftStart2') || '';
     const e2 = item.get('shiftEnd2') || '';
     const meal = item.get('mealStart') || '';
-    const money = safeNum(item.get('money'));
+    const money = safeNum(item.get('money')); // 补全：读取数据库存储的基本工资
     const allow = safeNum(item.get('allowance'));
     const remark = item.get('title') || '无';
+
+    // 直接用数据库存储的基本工资+补贴，和表格明细完全一致
+    const dailyTotal = trunc2(money + allow);
 
     let timeInfo = shift === '拼班'
       ? `${s1 && e1 ? s1+'-'+e1 : '未设置'} / ${s2 && e2 ? s2+'-'+e2 : '未设置'}`
@@ -668,7 +698,7 @@ function buildDetailList(listEl, records, showActions = false) {
       <span class="date-text">${timeStr}</span>
       <div class="info-line">班次：${shift} | 时间：${timeInfo}</div>
       ${mealLine}
-      <div class="info-line">当日工资：<span class="money">¥${(money + allow).toFixed(2)}</span> | 备注：${remark}</div>
+      <div class="info-line">当日工资：<span class="money">¥${dailyTotal.toFixed(2)}</span> | 备注：${remark}</div>
       ${showActions ? `
         <div class="item-op" style="margin-top:12px;gap:12px;">
           <button class="btn-sm btn-edit" 
@@ -888,7 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
       shiftStart2: document.getElementById('shift-start2')?.value,
       shiftEnd2: document.getElementById('shift-end2')?.value,
       mealStart: document.getElementById('meal-start')?.value,
-      money: safeNum(document.getElementById('record-money')?.value),
+      money: round3(safeNum(document.getElementById('record-money')?.value)),
       allowance: safeNum(document.getElementById('record-allowance')?.value),
       title: document.getElementById('record-remark')?.value.trim()
     };
@@ -984,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('refresh-data-btn')?.addEventListener('click', async function (e) {
     e.stopPropagation();
     e.preventDefault();
-    this.blur();v
+    this.blur();
 
     // 全流程锁：刷新中（含动画）禁止重复点击
     if (isRefreshing || isLoading) return;
@@ -995,11 +1025,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const wageNumEl = document.getElementById('total-wage-num');
 
     try {
-      // 1. 进入加载状态：工资卡片显示加载遮罩，全程盖住数字
+      // 1. 进入加载状态：工资卡片显示加载遮罩
       wageBox?.classList.add('loading');
       refreshBtn.classList.add('spinning');
 
-      // 2. 等待两个进度条全部归0完成（工资数字保持原值，被遮罩盖住不可见）
+      // 2. 等待两个进度条全部归0完成
       await Promise.all([
         animateProgress(0),
         animateMiniProgress(0)
@@ -1018,15 +1048,21 @@ document.addEventListener('DOMContentLoaded', function () {
       renderAdminCalendar();
       renderTotalAndStat(false);
 
-      // 5. 计算目标进度和最终工资
-      const totalWage = allBillList.reduce((sum, item) => {
-        const { cycleStart, cycleEnd } = getCycleRange();
+      // 5. 计算目标进度和最终工资（和主页面统计逻辑完全统一）
+      // 5. 计算目标进度和最终工资（和表格明细逻辑完全一致）
+      const { cycleStart, cycleEnd } = getCycleRange();
+      const startStr = formatDate(cycleStart);
+      const endStr = formatDate(cycleEnd);
+      let totalWage = 0;
+
+      allBillList.forEach(item => {
         const d = item.get('date') || '';
-        if (d < formatDate(cycleStart) || d > formatDate(cycleEnd)) return sum;
-        if (item.get('shift') === '休息') return sum;
-        return sum + safeNum(item.get('money')) + safeNum(item.get('allowance'));
-      }, 0);
-      const targetProgress = calcWagePercent(totalWage);
+        if (d < startStr || d > endStr) return;
+        if (item.get('shift') === '休息') return;
+        totalWage += safeNum(item.get('money')) + safeNum(item.get('allowance'));
+      });
+
+      const targetProgress = calcWagePercent(trunc2(totalWage));
       const targetMiniProgress = calculateCycleProgress();
 
       // 6. 等待两个进度条从0增长到目标值
@@ -1036,17 +1072,15 @@ document.addEventListener('DOMContentLoaded', function () {
       ]);
 
       // 7. 动画全部完成后：同步更新工资数字 + 移除加载遮罩 + 弹出成功提示
-      wageNumEl.innerText = totalWage.toFixed(2);
-      wageBox?.classList.remove('loading');
+      wageNumEl.innerText = trunc2(totalWage).toFixed(2);
       showToast('数据刷新成功', 'success');
 
     } catch (err) {
       showToast('刷新失败，请重试', 'error');
       console.error('刷新异常：', err);
-      // 异常时也要移除遮罩
-      wageBox?.classList.remove('loading');
     } finally {
-      // 8. 释放锁和按钮状态
+      // 统一清理所有状态，确保锁一定释放
+      wageBox?.classList.remove('loading');
       refreshBtn.classList.remove('spinning');
       isRefreshing = false;
     }
