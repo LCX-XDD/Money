@@ -491,6 +491,19 @@ input[type="date"].form-input {
   margin-top: 8px;
 }
 
+.btn-danger {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #ff3b30;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
 /* 返回按钮 */
 .btn-back {
   position: absolute;
