@@ -127,14 +127,19 @@ function initTopMiniCards() {
   const topCircle = document.getElementById('top-progress');
   const topText = document.getElementById('cycle-progress-text');
 
+  // 初始重置为0
   if (bottomCircle) bottomCircle.style.setProperty('--progress', 0);
   if (bottomText) bottomText.textContent = '0%';
   if (topCircle) topCircle.style.setProperty('--mini-progress', 0);
   if (topText) topText.textContent = '0%';
 
   setTimeout(() => {
+    // 顶部周期进度（和工资数据无关，直接计算）
     animateMiniProgress(calculateCycleProgress());
-    const totalWage = parseFloat(document.getElementById('total-wage-num')?.textContent || 0);
+    
+    // 工资进度：确保能拿到数值再计算
+    const wageText = document.getElementById('total-wage-num')?.textContent || '0';
+    const totalWage = parseFloat(wageText) || 0;
     animateProgress(calcWagePercent(totalWage));
   }, 200);
 }
@@ -979,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('refresh-data-btn')?.addEventListener('click', async function (e) {
     e.stopPropagation();
     e.preventDefault();
-    this.blur();
+    this.blur();v
 
     // 全流程锁：刷新中（含动画）禁止重复点击
     if (isRefreshing || isLoading) return;
@@ -1065,8 +1070,11 @@ document.addEventListener('DOMContentLoaded', function () {
     userView?.classList.remove('hidden');
     adminView?.classList.add('hidden');
     adminEntrance?.classList.remove('hidden');
-    loadData().then(() => renderUserCalendar());
-    initTopMiniCards();
+    // 先加载数据，等数据返回后再渲染日历、播放进度条动画
+    loadData().then(() => {
+      renderUserCalendar();
+      initTopMiniCards();
+    });
   }
 
   initTimeSelect();
