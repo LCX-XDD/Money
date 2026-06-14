@@ -13,6 +13,7 @@ let recordDates = new Set();
 let selectedDate = '';
 let allBillList = [];
 let bodyScrollLockCount = 0; // 滚动锁计数，嵌套弹窗累加，归0才恢复滚动
+let isEditMode = false; // 标记是否处于编辑模式
 
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
@@ -20,6 +21,13 @@ const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
 const BASE_SALARY = 2900;
 
 // ========== 通用工具函数 ==========
+
+// 时薪计算：BASE_SALARY 月薪 2900，按每月标准工时折算
+function getBaseWageByDate(dateStr) {
+  const monthTotalHours = 208; // 月度标准计薪工时，可按需修改
+  return BASE_SALARY / monthTotalHours;
+}
+
 function safeNum(val, fallback = 0) {
   const num = Number(val);
   return isNaN(num) ? fallback : num;
@@ -59,53 +67,52 @@ function calcWagePercent(totalWage) {
   return Math.max(0, Math.round(safeNum(totalWage) / BASE_SALARY * 100));
 }
 
-// ========== 进度条动画（CSS原生过渡 + JS同步数字 + 多层兜底） ==========
 function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min = 0, max = Infinity, onFinish = null) {
   if (!circleEl || !textEl) {
     onFinish?.();
     return;
   }
 
-  // 取消上一个未完成的数字动画，避免叠加
+  // 取消上一个未完成的动画
   if (timerRef.value) {
     cancelAnimationFrame(timerRef.value);
     timerRef.value = null;
   }
 
-  // 钳制目标值范围
+  // 限制数值范围
   targetPercent = Math.max(min, Math.min(max, safeNum(targetPercent)));
-  
-  // 读取起始值，读取失败默认取0
   const rawVal = circleEl.style.getPropertyValue(cssVar);
   const startVal = Math.max(min, Math.min(max, safeNum(parseInt(rawVal) || 0)));
-  
-  // 起始值等于目标值，直接结束
-  if (startVal === targetPercent) {
-    textEl.textContent = `${targetPercent}%`;
-    circleEl.style.setProperty(cssVar, targetPercent);
-    onFinish?.();
-    return;
-  }
 
-  const duration = 500; // 和CSS过渡时长完全一致
-  const startTime = performance.now();
-
-  // 触发CSS原生圆环过渡，浏览器自动渲染，不占JS线程
+  // 初始赋值进度变量
   circleEl.style.setProperty(cssVar, targetPercent);
 
-  // JS只负责同步更新百分比数字
+  const duration = 500;
+  const startTime = performance.now();
+
+  // 逐帧更新数字 + 实时判断样式（关键：跨过100才变色）
   function animateFrame(now) {
     const elapsed = now - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    
+    // 当前实时百分比
     const current = Math.round(startVal + (targetPercent - startVal) * progress);
     textEl.textContent = `${current}%`;
+
+    // 仅主进度条做红蓝判断，顶部迷你进度固定 normal
+    if (cssVar === '--progress') {
+      // 实时判断：当前数值 >100 红色，否则白色
+      circleEl.dataset.progress = current > 100 ? 'over' : 'normal';
+    } else {
+      circleEl.dataset.progress = 'normal';
+    }
 
     if (progress < 1) {
       timerRef.value = requestAnimationFrame(animateFrame);
     } else {
-      // 动画正常结束
-      textEl.textContent = `${targetPercent}%`;
+      // 动画结束，最终状态兜底
+      if (cssVar === '--progress') {
+        circleEl.dataset.progress = targetPercent > 100 ? 'over' : 'normal';
+      }
       timerRef.value = null;
       onFinish?.();
     }
@@ -113,16 +120,20 @@ function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min 
 
   timerRef.value = requestAnimationFrame(animateFrame);
 
-  // 第一层兜底：550ms强制结束，比动画时长多50ms冗余
+  // 超时兜底
   setTimeout(() => {
     if (timerRef.value) {
       cancelAnimationFrame(timerRef.value);
       timerRef.value = null;
     }
     textEl.textContent = `${targetPercent}%`;
+    if (cssVar === '--progress') {
+      circleEl.dataset.progress = targetPercent > 100 ? 'over' : 'normal';
+    }
     onFinish?.();
   }, duration + 50);
 }
+
 
 function animateProgress(targetPercent) {
   return new Promise(resolve => {
@@ -175,17 +186,24 @@ function initTopMiniCards() {
   const topCircle = document.getElementById('top-progress');
   const topText = document.getElementById('cycle-progress-text');
 
-  // 初始重置为0
-  if (bottomCircle) bottomCircle.style.setProperty('--progress', 0);
+  // 初始重置为 0，强制正常白色状态
+  if (bottomCircle) {
+    bottomCircle.style.setProperty('--progress', 0);
+    bottomCircle.dataset.progress = 'normal';
+  }
   if (bottomText) bottomText.textContent = '0%';
-  if (topCircle) topCircle.style.setProperty('--mini-progress', 0);
+
+  if (topCircle) {
+    topCircle.style.setProperty('--mini-progress', 0);
+    topCircle.dataset.progress = 'normal';
+  }
   if (topText) topText.textContent = '0%';
 
   setTimeout(() => {
-    // 顶部周期进度（和工资数据无关，直接计算）
+    // 顶部周期进度
     animateMiniProgress(calculateCycleProgress());
     
-    // 工资进度：确保能拿到数值再计算
+    // 工资进度
     const wageText = document.getElementById('total-wage-num')?.textContent || '0';
     const totalWage = parseFloat(wageText) || 0;
     animateProgress(calcWagePercent(totalWage));
@@ -309,7 +327,10 @@ function initTimeSelect() {
     }
     workHoursTip.textContent = `有效工时：${total} 小时`;
     const hourly = getBaseWageByDate(dateInput.value || formatDate(new Date()));
-    moneyInput.value = round3(total * hourly).toFixed(3);
+    // 后台计算保留3位精度，输入框展示四舍五入2位
+    const calcVal = round3(total * hourly);
+    moneyInput.dataset.raw = calcVal; // 隐藏原始高精度值，用于提交
+    moneyInput.value = calcVal.toFixed(2);
   }
 
   shiftSelect.addEventListener('change', () => {
@@ -417,12 +438,20 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
     allBillList = res;
     recordDates = new Set(res.map(i => i.get('date') || ''));
 
-    if (autoRender) {
-      renderData(res);
-      renderUserCalendar();
-      renderAdminCalendar();
-      renderTotalAndStat();
-    }
+if (autoRender) {
+  renderData(res);
+  const now = new Date();
+  // 只在【没有选中日期】时，才重置为当前年月+今日，不干扰手动切月
+  if (!selectedDate) {
+    selectedDate = formatDate(now);
+    // 注释掉下面两行：不再强制覆盖 currentYear / currentMonth
+    // currentYear = now.getFullYear();
+    // currentMonth = now.getMonth();
+  }
+  renderUserCalendar();
+  renderAdminCalendar();
+  renderTotalAndStat();
+}
     return res;
   } catch (e) {
     if (retryCount < 3) {
@@ -484,13 +513,18 @@ function renderData(list) {
 
 // ========== 表单清空 ==========
 function clearForm() {
-  ['record-date', 'record-shift', 'shift-start', 'shift-end', 'shift-start2', 'shift-end2', 'meal-start', 'record-allowance', 'record-money', 'record-remark', 'edit-id'].forEach(id => {
+  ['record-shift', 'shift-start', 'shift-end', 'shift-start2', 'shift-end2', 'meal-start', 'record-allowance', 'record-money', 'record-remark', 'edit-id'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  selectedDate = '';
 
-  // 关键补充：重置班次下拉并触发change事件，恢复到初始隐藏状态
+  // 日期框保留当前选中日期（如果有），没有则用今天
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) {
+    dateInput.value = selectedDate || formatDate(new Date());
+  }
+
+  // 重置班次下拉并触发change事件，恢复到初始隐藏状态
   const shiftSelect = document.getElementById('record-shift');
   if (shiftSelect) {
     shiftSelect.value = '';
@@ -530,6 +564,7 @@ function renderCalendar(bodyId, titleId, isAdmin = false) {
     const el = document.createElement('div');
     el.className = 'calendar-day';
     const record = allBillList.find(item => item.get('date') === dateStr);
+    
     if (record) {
       const shift = record.get('shift') || '';
       el.classList.add(shift === '休息' ? 'rest' : 'has-record');
@@ -538,13 +573,20 @@ function renderCalendar(bodyId, titleId, isAdmin = false) {
       el.textContent = date.getDate();
     }
 
-    if (selectedDate === dateStr) el.classList.add('selected');
+// 精准匹配选中日期，多次渲染也保留样式
+if (dateStr === selectedDate) {
+  el.classList.add('selected');
+} else {
+  el.classList.remove('selected');
+}
+
     el.addEventListener('click', () => {
       selectedDate = dateStr;
       if (isAdmin) {
         const dateInput = document.getElementById('record-date');
         if (dateInput) dateInput.value = dateStr;
       }
+      // 点击日历只刷新样式，不切换月份
       renderUserCalendar();
       renderAdminCalendar();
     });
@@ -765,105 +807,118 @@ function openAdminCycleDetailPopup(cycleKey, records) {
 // ========== 页面初始化 ==========
 document.addEventListener('DOMContentLoaded', function () {
   // 编辑/删除事件委托
-  const recordList = document.getElementById('cycle-detail-record-list');
-  if (recordList) {
-    recordList.addEventListener('click', function(e) {
-      const editBtn = e.target.closest('.btn-edit');
-      if (editBtn) {
-        e.stopPropagation();
-        e.preventDefault();
-        editBtn.blur();
+const recordList = document.getElementById('cycle-detail-record-list');
+if (recordList) {
+  recordList.addEventListener('click', function(e) {
+    const editBtn = e.target.closest('.btn-edit');
+    if (editBtn) {
+      e.stopPropagation();
+      e.preventDefault();
+      editBtn.blur();
 
-        // 先关闭弹窗、恢复页面滚动
-        document.getElementById('cycle-detail-overlay')?.classList.remove('show');
-        enableBodyScroll();
+      // 关闭弹窗
+      document.getElementById('cycle-detail-overlay')?.classList.remove('show');
+      enableBodyScroll();
 
-        // 用 try-catch 包裹回填逻辑，即使回填出错，也不影响提示和滚动
-        try {
-          const data = editBtn.dataset;
-          const shiftSelect = document.getElementById('record-shift');
-          const shiftStart = document.getElementById('shift-start');
-          const shiftEnd = document.getElementById('shift-end');
-          const shiftStart2 = document.getElementById('shift-start2');
-          const shiftEnd2 = document.getElementById('shift-end2');
-          const mealStart = document.getElementById('meal-start');
+      try {
+        const data = editBtn.dataset;
+        const targetDateStr = data.date;
+        const targetDate = new Date(targetDateStr);
 
-          // 按依赖顺序分步赋值，全部增加判空保护
-          const dateInput = document.getElementById('record-date');
-          if (dateInput) dateInput.value = data.date;
-          
-          if (shiftSelect) {
-            shiftSelect.value = data.shift;
-            shiftSelect.dispatchEvent(new Event('change'));
-          }
+        // 1. 优先切换日历全局年月（必须最先执行）
+        currentYear = targetDate.getFullYear();
+        currentMonth = targetDate.getMonth();
+        // 2. 赋值全局选中日期
+        selectedDate = targetDateStr;
 
-          if (shiftStart) {
-            shiftStart.value = data.shiftStart;
-            shiftStart.dispatchEvent(new Event('change'));
-          }
+        // 3. 立刻渲染日历 → 实现【自动跳月 + 自动选中】
+        renderUserCalendar();
+        renderAdminCalendar();
 
-          if (shiftEnd) shiftEnd.value = data.shiftEnd;
-          if (mealStart) mealStart.value = data.mealStart;
+        // 表单回填逻辑
+        const shiftSelect = document.getElementById('record-shift');
+        const shiftStart = document.getElementById('shift-start');
+        const shiftEnd = document.getElementById('shift-end');
+        const shiftStart2 = document.getElementById('shift-start2');
+        const shiftEnd2 = document.getElementById('shift-end2');
+        const mealStart = document.getElementById('meal-start');
 
-          if (data.shift === '拼班' && shiftStart2) {
-            shiftStart2.value = data.shiftStart2;
-            shiftStart2.dispatchEvent(new Event('change'));
-            if (shiftEnd2) shiftEnd2.value = data.shiftEnd2;
-          }
-
-          const allowanceInput = document.getElementById('record-allowance');
-          const moneyInput = document.getElementById('record-money');
-          const remarkInput = document.getElementById('record-remark');
-          const editIdInput = document.getElementById('edit-id');
-          if (allowanceInput) allowanceInput.value = data.allowance;
-          if (moneyInput) moneyInput.value = data.money;
-          if (remarkInput) remarkInput.value = data.remark;
-          if (editIdInput) editIdInput.value = data.id;
-
-          window.calcWorkHours?.();
-          selectedDate = data.date;
-          renderUserCalendar();
-          renderAdminCalendar();
-        } catch (err) {
-          console.error('编辑回填异常：', err);
+        const dateInput = document.getElementById('record-date');
+        if (dateInput) dateInput.value = targetDateStr;
+        
+        if (shiftSelect) {
+          shiftSelect.value = data.shift;
+          shiftSelect.dispatchEvent(new Event('change'));
         }
 
-        // 提示和滚动放在 try 外面，保证100%执行
-        const cancelBtn = document.getElementById('cancel-edit-btn');
-        if (cancelBtn) cancelBtn.style.display = 'block'; // 显示取消按钮
-        showToast('已进入编辑模式，修改完成后点击保存即可', 'success');
-        
-        // 延迟350ms再滚动，等弹窗关闭、页面滚动状态完全恢复后再执行
-        setTimeout(() => {
-          document.getElementById('record-shift')?.scrollIntoView({
+        if (shiftStart) {
+          shiftStart.value = data.shiftStart;
+          shiftStart.dispatchEvent(new Event('change'));
+        }
+
+        if (shiftEnd) shiftEnd.value = data.shiftEnd;
+        if (mealStart) mealStart.value = data.mealStart;
+
+        if (data.shift === '拼班' && shiftStart2) {
+          shiftStart2.value = data.shiftStart2;
+          shiftStart2.dispatchEvent(new Event('change'));
+          if (shiftEnd2) shiftEnd2.value = data.shiftEnd2;
+        }
+
+        const allowanceInput = document.getElementById('record-allowance');
+        const moneyInput = document.getElementById('record-money');
+        const remarkInput = document.getElementById('record-remark');
+        const editIdInput = document.getElementById('edit-id');
+        if (allowanceInput) allowanceInput.value = data.allowance;
+        if (moneyInput) moneyInput.value = data.money;
+        if (remarkInput) remarkInput.value = data.remark;
+        if (editIdInput) editIdInput.value = data.id;
+
+        window.calcWorkHours?.();
+
+      } catch (err) {
+        console.error('编辑回填异常：', err);
+      }
+
+      const cancelBtn = document.getElementById('cancel-edit-btn');
+      if (cancelBtn) {
+        cancelBtn.style.display = 'block';
+        isEditMode = true;
+      }
+      showToast('已进入编辑模式，修改完成后点击保存即可', 'success');
+      
+      setTimeout(() => {
+        const targetEl = document.getElementById('record-money');
+        if (targetEl) {
+          targetEl.scrollIntoView({
             behavior: 'smooth',
             block: 'center'
           });
-        }, 350);
-        
-        return;
-      }
+        }
+      }, 350);
+      
+      return;
+    }
 
-      // 删除按钮逻辑保持不变
-      const delBtn = e.target.closest('.btn-del');
-      if (delBtn) {
-        e.stopPropagation();
-        e.preventDefault();
-        delBtn.blur();
-        if (!confirm('确定删除该条记录？')) return;
+    // 删除逻辑保持不变
+    const delBtn = e.target.closest('.btn-del');
+    if (delBtn) {
+      e.stopPropagation();
+      e.preventDefault();
+      delBtn.blur();
+      if (!confirm('确定删除该条记录？')) return;
 
-        AV.Object.createWithoutData('Bill', delBtn.dataset.id).destroy()
-          .then(() => {
-            loadData();
-            showToast('删除成功', 'success');
-            document.getElementById('cycle-detail-overlay')?.classList.remove('show');
-            enableBodyScroll();
-          })
-          .catch(() => showToast('删除失败', 'error'));
-      }
-    });
-  }
-
+      AV.Object.createWithoutData('Bill', delBtn.dataset.id).destroy()
+        .then(() => {
+          loadData();
+          showToast('删除成功', 'success');
+          document.getElementById('cycle-detail-overlay')?.classList.remove('show');
+          enableBodyScroll();
+        })
+        .catch(() => showToast('删除失败', 'error'));
+    }
+  });
+}
   // 登录相关
   const adminEntrance = document.getElementById('admin-entrance');
   const loginOverlay = document.getElementById('login-overlay');
@@ -897,19 +952,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function doLogin() {
     const pwd = adminPwdInput?.value.trim();
-    if (pwd === 'admin123') {
-      localStorage.setItem('isAdminLoggedIn', 'true');
-      loginOverlay?.classList.remove('show');
-      enableBodyScroll();
-      document.body.classList.add('admin-active');
-      userView?.classList.add('hidden');
-      adminView?.classList.remove('hidden');
-      adminEntrance?.classList.add('hidden');
-      const dateInput = document.getElementById('record-date');
-      if (dateInput) dateInput.value = formatDate(new Date());
-      setTimeout(() => loadData(), 300);
-      showToast('🎉欢迎回来!管理员!🎉', 'success'); // 新增：管理员登录欢迎提示
-    } else {
+if (pwd === 'admin123') {
+  localStorage.setItem('isAdminLoggedIn', 'true');
+  loginOverlay?.classList.remove('show');
+  enableBodyScroll();
+  document.body.classList.add('admin-active');
+  userView?.classList.add('hidden');
+  adminView?.classList.remove('hidden');
+  adminEntrance?.classList.add('hidden');
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) dateInput.value = formatDate(new Date());
+
+  // ✅ 新增：进入管理员页面时，强制重置取消按钮和编辑状态
+  const cancelBtn = document.getElementById('cancel-edit-btn');
+  if (cancelBtn) {
+    cancelBtn.style.display = 'none'; // 隐藏取消按钮
+  }
+  clearForm(); // 清空表单和编辑状态
+
+  setTimeout(() => loadData(), 300);
+  showToast('🎉欢迎回来!管理员!🎉', 'success');
+} else {
       showToast('密码错误', 'error');
     }
   }
@@ -917,21 +980,27 @@ document.addEventListener('DOMContentLoaded', function () {
   loginConfirm?.addEventListener('click', doLogin);
   adminPwdInput?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-  backUserBtn?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.blur();
-    localStorage.removeItem('isAdminLoggedIn');
-    document.body.classList.remove('admin-active');
-    adminView?.classList.add('hidden');
-    userView?.classList.remove('hidden');
-    adminEntrance?.classList.remove('hidden');
-    clearForm();
-    renderTotalAndStat();
-    renderUserCalendar();
-    initTopMiniCards(); // 补充：重新触发用户页进度条动画
-    showToast('已返回用户页面', 'success');
-  });
+backUserBtn?.addEventListener('click', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
+  localStorage.removeItem('isAdminLoggedIn');
+  document.body.classList.remove('admin-active');
+  adminView?.classList.add('hidden');
+  userView?.classList.remove('hidden');
+  adminEntrance?.classList.remove('hidden');
+  clearForm();
+  renderTotalAndStat();
+  renderUserCalendar();
+  initTopMiniCards();
+  showToast('已返回用户页面', 'success');
+
+  // ✅ 新增：离开管理员页面时，强制重置取消按钮状态（可选，双重保险）
+  const cancelBtn = document.getElementById('cancel-edit-btn');
+  if (cancelBtn) {
+    cancelBtn.style.display = 'none';
+  }
+});
 
   saveBtn?.addEventListener('click', async function (e) {
     e.stopPropagation();
@@ -945,18 +1014,21 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    const data = {
-      date, shift,
-      shiftStart: document.getElementById('shift-start')?.value,
-      shiftEnd: document.getElementById('shift-end')?.value,
-      shiftStart2: document.getElementById('shift-start2')?.value,
-      shiftEnd2: document.getElementById('shift-end2')?.value,
-      mealStart: document.getElementById('meal-start')?.value,
-      money: round3(safeNum(document.getElementById('record-money')?.value)),
-      allowance: safeNum(document.getElementById('record-allowance')?.value),
-      title: document.getElementById('record-remark')?.value.trim()
-    };
-    const editId = document.getElementById('edit-id')?.value.trim();
+const data = {
+  date, shift,
+  shiftStart: document.getElementById('shift-start')?.value,
+  shiftEnd: document.getElementById('shift-end')?.value,
+  shiftStart2: document.getElementById('shift-start2')?.value,
+  shiftEnd2: document.getElementById('shift-end2')?.value,
+  mealStart: document.getElementById('meal-start')?.value,
+  money: round3(safeNum(
+    document.getElementById('record-money')?.dataset.raw ||
+    document.getElementById('record-money')?.value || 0
+  )),
+  allowance: safeNum(document.getElementById('record-allowance')?.value),
+  title: document.getElementById('record-remark')?.value.trim()
+};
+const editId = document.getElementById('edit-id')?.value.trim();
 
     try {
       if (editId) {
@@ -973,45 +1045,42 @@ document.addEventListener('DOMContentLoaded', function () {
       clearForm();
       const cancelBtn = document.getElementById('cancel-edit-btn');
       if (cancelBtn) cancelBtn.style.display = 'none';
+      isEditMode = false;
       loadData();
     } catch (err) {
       showToast('保存失败', 'error');
     }
   });
-  // 取消编辑按钮
+// 取消编辑按钮
 const cancelEditBtn = document.getElementById('cancel-edit-btn');
 cancelEditBtn?.addEventListener('click', function (e) {
   e.stopPropagation();
   e.preventDefault();
   this.blur();
 
-  clearForm(); // 清空表单并重置班次状态
-  this.style.display = 'none'; // 隐藏取消按钮
-  showToast('已取消编辑', 'error'); // 这里把 normal 改成 error
+  clearForm();
+  this.style.display = 'none';
+  showToast('已取消编辑', 'error');
+  // 新增
+isEditMode = false;
 
-  // 恢复日期为当日
+  // 重置为今日
+  const today = new Date();
+  const todayStr = formatDate(today);
   const dateInput = document.getElementById('record-date');
   if (dateInput) {
-    dateInput.value = formatDate(new Date());
+    dateInput.value = todayStr;
   }
+
+  // 切换到当前年月 + 选中今日
+  currentYear = today.getFullYear();
+  currentMonth = today.getMonth();
+  selectedDate = todayStr;
+
+  // 重绘日历
+  renderUserCalendar();
+  renderAdminCalendar();
 });
-  // 日历翻页
-  document.getElementById('prev-month-btn')?.addEventListener('click', () => {
-    currentMonth--;
-    renderUserCalendar();
-  });
-  document.getElementById('next-month-btn')?.addEventListener('click', () => {
-    currentMonth++;
-    renderUserCalendar();
-  });
-  document.getElementById('admin-prev-month-btn')?.addEventListener('click', () => {
-    currentMonth--;
-    renderAdminCalendar();
-  });
-  document.getElementById('admin-next-month-btn')?.addEventListener('click', () => {
-    currentMonth++;
-    renderAdminCalendar();
-  });
 
   // 详情弹窗
   const detailOverlay = document.getElementById('detail-overlay');
@@ -1139,29 +1208,79 @@ cancelEditBtn?.addEventListener('click', function (e) {
   });
 
   // 初始化登录状态
-  const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
-  const todayStr = formatDate(new Date());
-  selectedDate = todayStr;
+// 初始化登录状态
+const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
+const today = new Date();
+const todayStr = formatDate(today);
+// 全局初始化：强制选中今日 + 锁定当前年月
+selectedDate = todayStr;
+currentYear = today.getFullYear();
+currentMonth = today.getMonth();
 
-  if (isAdmin) {
-    document.body.classList.add('admin-active');
-    userView?.classList.add('hidden');
-    adminView?.classList.remove('hidden');
-    adminEntrance?.classList.add('hidden');
-    const dateInput = document.getElementById('record-date');
-    if (dateInput) dateInput.value = todayStr;
-    loadData();
-  } else {
-    document.body.classList.remove('admin-active');
-    userView?.classList.remove('hidden');
-    adminView?.classList.add('hidden');
-    adminEntrance?.classList.remove('hidden');
-    // 先加载数据，等数据返回后再渲染日历、播放进度条动画
-    loadData().then(() => {
-      renderUserCalendar();
-      initTopMiniCards();
-    });
+if (isAdmin) {
+  document.body.classList.add('admin-active');
+  userView?.classList.add('hidden');
+  adminView?.classList.remove('hidden');
+  adminEntrance?.classList.add('hidden');
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) dateInput.value = todayStr;
+  // 先渲染一次日历，再加载数据
+  renderUserCalendar();
+  renderAdminCalendar();
+  loadData();
+  showToast('🎉欢迎回来!管理员!🎉', 'success');
+} else {
+  document.body.classList.remove('admin-active');
+  userView?.classList.remove('hidden');
+  adminView?.classList.add('hidden');
+  adminEntrance?.classList.remove('hidden');
+  loadData().then(() => {
+    renderUserCalendar();
+    initTopMiniCards();
+  });
+}
+// ========== 日历 上一月 / 下一月 切换按钮 ==========
+// 修正为 HTML 实际 ID
+const prevMonthBtn = document.getElementById('admin-prev-month-btn');
+const nextMonthBtn = document.getElementById('admin-next-month-btn');
+
+function changeMonth(offset) {
+  currentMonth += offset;
+  // 跨年处理
+  while (currentMonth < 0) {
+    currentMonth += 12;
+    currentYear -= 1;
   }
+  while (currentMonth > 11) {
+    currentMonth -= 12;
+    currentYear += 1;
+  }
+  // 切换月份保留选中日期
+  // selectedDate = '';
+  renderUserCalendar();
+  renderAdminCalendar();
+  // 同步刷新统计和进度条
+  renderTotalAndStat();
+  initTopMiniCards();
+}
+
+// 绑定点击事件
+prevMonthBtn?.addEventListener('click', function(e) {
+  e.preventDefault();
+  this.blur();
+  changeMonth(-1);
+});
+
+nextMonthBtn?.addEventListener('click', function(e) {
+  e.preventDefault();
+  this.blur();
+  changeMonth(1);
+});
 
   initTimeSelect();
+    // ========== 新增：全局初始化兜底 ==========
+  const cancelBtn = document.getElementById('cancel-edit-btn');
+  if (cancelBtn) {
+    cancelBtn.style.display = 'none';
+  }
 });
