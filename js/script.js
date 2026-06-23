@@ -618,39 +618,57 @@ function renderTotalAndStat(updateMainCard = true) {
   let totalWage = 0, totalHours = 0, workDays = 0;
   let day21 = 0, day22 = 0, day23 = 0, totalBase = 0, totalAllow = 0;
 
-  currentList.forEach(item => {
-    const shift = item.get('shift') || '';
-    if (shift === '休息') return;
+ currentList.forEach(item => {
+  const shift = item.get('shift') || '';
+  // 休息直接跳过
+  if (shift === '休息') return;
 
-    const money = safeNum(item.get('money'));
-    const allow = safeNum(item.get('allowance'));
-    const sEnd = item.get('shiftEnd') || '';
-    const mStart = item.get('mealStart') || '';
+  const money = safeNum(item.get('money'));
+  const allow = safeNum(item.get('allowance'));
+  const sEnd = item.get('shiftEnd') || '';
+  const sEnd2 = item.get('shiftEnd2') || '';
+  const mStart = item.get('mealStart') || '';
 
-    workDays++;
-    totalBase += money;
-    totalAllow += allow;
-    totalWage += money + allow; // 直接累加数据库存储值，和表格明细完全一致
+  workDays++;
+  totalBase += money;
+  totalAllow += allow;
+  totalWage += money + allow;
 
-    // 工时统计保持不变
-    let h = 0;
-    const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
-    const e = safeNum((sEnd || '00:00').split(':')[0]);
-    if (e > s) h += e - s;
+  // 工时计算（原有逻辑不变）
+  let h = 0;
+  const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
+  const e = safeNum((sEnd || '00:00').split(':')[0]);
+  if (e > s) h += e - s;
 
-    if (shift === '拼班') {
-      const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
-      const e2 = safeNum((item.get('shiftEnd2') || '00:00').split(':')[0]);
-      if (e2 > s2) h += e2 - s2;
-    }
-    if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
-    totalHours += h;
+  if (shift === '拼班') {
+    const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
+    const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
+    if (e2 > s2) h += e2 - s2;
+  }
+  if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
+  totalHours += h;
 
-    const endHour = safeNum(sEnd.split(':')[0]);
-    if (endHour === 21) day21++;
-    if (endHour === 22) day22++;
-    if (endHour === 23) day23++;
+  // ========== 修复：同时判断主下班 + 拼班第二段下班 ==========
+  // 收集所有有效下班小时
+  const endHoursArr = [];
+  // 第一段下班
+  if (sEnd) {
+    const h1 = safeNum(sEnd.split(':')[0]);
+    endHoursArr.push(h1);
+  }
+  // 拼班额外读取第二段下班
+  if (shift === '拼班' && sEnd2) {
+    const h2 = safeNum(sEnd2.split(':')[0]);
+    endHoursArr.push(h2);
+  }
+
+  // 遍历所有下班小时，匹配21/22/23计数
+  endHoursArr.forEach(hour => {
+    if (hour === 21) day21++;
+    if (hour === 22) day22++;
+    if (hour === 23) day23++;
   });
+});
 
   // 只更新数字，不操作进度条
   // 总工资四舍五入保留2位小数后显示
