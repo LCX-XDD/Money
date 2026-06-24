@@ -147,7 +147,7 @@ function animateProgress(targetPercent) {
       resolve();
     };
 
-    runProgressAnim(circle, text, '--progress', targetPercent, progressTimerObj, 0, Infinity, finish);
+    runProgressAnim(circle, text, '--progress', targetPercent, progressTimerObj, 0, 100, finish);
 
     // 第二层终极兜底：1秒后强制完成，万无一失
     setTimeout(finish, 1000);
