@@ -98,21 +98,9 @@ function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min 
     const current = Math.round(startVal + (targetPercent - startVal) * progress);
     textEl.textContent = `${current}%`;
 
-    // 仅主进度条做红蓝判断，顶部迷你进度固定 normal
-    if (cssVar === '--progress') {
-      // 实时判断：当前数值 >100 红色，否则白色
-      circleEl.dataset.progress = current > 100 ? 'over' : 'normal';
-    } else {
-      circleEl.dataset.progress = 'normal';
-    }
-
     if (progress < 1) {
       timerRef.value = requestAnimationFrame(animateFrame);
     } else {
-      // 动画结束，最终状态兜底
-      if (cssVar === '--progress') {
-        circleEl.dataset.progress = targetPercent > 100 ? 'over' : 'normal';
-      }
       timerRef.value = null;
       onFinish?.();
     }
@@ -441,12 +429,12 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
 if (autoRender) {
   renderData(res);
   const now = new Date();
-  // 只在【没有选中日期】时，才重置为当前年月+今日，不干扰手动切月
+  // 无选中日期时，强制切换到当前计薪周期
   if (!selectedDate) {
     selectedDate = formatDate(now);
-    // 注释掉下面两行：不再强制覆盖 currentYear / currentMonth
-    // currentYear = now.getFullYear();
-    // currentMonth = now.getMonth();
+    const currentCycle = getCycleRange(now);
+    currentYear = currentCycle.cycleStart.getFullYear();
+    currentMonth = currentCycle.cycleStart.getMonth();
   }
   renderUserCalendar();
   renderAdminCalendar();
@@ -539,7 +527,7 @@ function renderCalendar(bodyId, titleId, isAdmin = false) {
   const currentCycleEl = document.getElementById('current-cycle');
   if (!calendarBody || !calendarTitle) return;
 
-  const { cycleStart, cycleEnd } = getCycleRange(new Date(currentYear, currentMonth, 1));
+  const { cycleStart, cycleEnd } = getCycleRange(new Date(currentYear, currentMonth, 26));
   const displayText = `${formatDate(cycleStart)}~${formatDate(cycleEnd)}`;
   calendarTitle.innerText = displayText;
   if (!isAdmin && currentCycleEl) currentCycleEl.innerText = displayText;
@@ -601,6 +589,13 @@ function renderAdminCalendar() { renderCalendar('admin-calendar-body', 'admin-ca
 function renderTotalAndStat(updateMainCard = true) {
   const totalWageNum = document.getElementById('total-wage-num');
   if (!totalWageNum) return;
+
+  // 新增：同步更新用户页周期文本
+  const currentCycleEl = document.getElementById('current-cycle');
+  if (currentCycleEl) {
+    const { cycleStart, cycleEnd } = getCycleRange();
+    currentCycleEl.innerText = `${formatDate(cycleStart)}~${formatDate(cycleEnd)}`;
+  }
 
   const statIds = ['stat-work-hours', 'stat-work-days', 'stat-21h-days', 'stat-22h-days', 'stat-23h-days', 'stat-base-money', 'stat-allowance'];
   const statEls = {};
@@ -844,8 +839,10 @@ if (recordList) {
         const targetDate = new Date(targetDateStr);
 
         // 1. 优先切换日历全局年月（必须最先执行）
-        currentYear = targetDate.getFullYear();
-        currentMonth = targetDate.getMonth();
+// 跳转到该记录所属的周期
+const editCycle = getCycleRange(targetDate);
+currentYear = editCycle.cycleStart.getFullYear();
+currentMonth = editCycle.cycleStart.getMonth();
         // 2. 赋值全局选中日期
         selectedDate = targetDateStr;
 
@@ -1091,8 +1088,9 @@ isEditMode = false;
   }
 
   // 切换到当前年月 + 选中今日
-  currentYear = today.getFullYear();
-  currentMonth = today.getMonth();
+  const resetCycle = getCycleRange(today);
+  currentYear = resetCycle.cycleStart.getFullYear();
+  currentMonth = resetCycle.cycleStart.getMonth();
   selectedDate = todayStr;
 
   // 重绘日历
@@ -1210,9 +1208,13 @@ isEditMode = false;
         animateMiniProgress(targetMiniProgress)
       ]);
 
-      // 7. 动画全部完成后：同步更新工资数字 + 移除加载遮罩 + 弹出成功提示
-      wageNumEl.innerText = trunc2(totalWage).toFixed(2);
-      showToast('数据刷新成功', 'success');
+// 7. 动画全部完成后：同步更新工资数字 + 移除加载遮罩 + 弹出成功提示
+wageNumEl.innerText = trunc2(totalWage).toFixed(2);
+// 新增：刷新后同步周期文本
+const { cycleStart: curStart, cycleEnd: curEnd } = getCycleRange();
+const cycleEl = document.getElementById('current-cycle');
+if (cycleEl) cycleEl.innerText = `${formatDate(curStart)}~${formatDate(curEnd)}`;
+showToast('数据刷新成功', 'success');
 
     } catch (err) {
       showToast('刷新失败，请重试', 'error');
@@ -1226,14 +1228,15 @@ isEditMode = false;
   });
 
   // 初始化登录状态
-// 初始化登录状态
 const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
 const today = new Date();
 const todayStr = formatDate(today);
-// 全局初始化：强制选中今日 + 锁定当前年月
+// 强制对齐【计薪周期】，无数据也会显示新周期日历
+const currentCycle = getCycleRange(today);
 selectedDate = todayStr;
-currentYear = today.getFullYear();
-currentMonth = today.getMonth();
+// 用周期起始日期的年月作为日历基准，而非单纯今天的年月
+currentYear = currentCycle.cycleStart.getFullYear();
+currentMonth = currentCycle.cycleStart.getMonth();
 
 if (isAdmin) {
   document.body.classList.add('admin-active');
@@ -1242,7 +1245,12 @@ if (isAdmin) {
   adminEntrance?.classList.add('hidden');
   const dateInput = document.getElementById('record-date');
   if (dateInput) dateInput.value = todayStr;
-  // 先渲染一次日历，再加载数据
+
+  // 新增：管理员登录强制刷新为当前计薪周期
+  const loginCycle = getCycleRange(new Date());
+  currentYear = loginCycle.cycleStart.getFullYear();
+  currentMonth = loginCycle.cycleStart.getMonth();
+
   renderUserCalendar();
   renderAdminCalendar();
   loadData();
@@ -1254,6 +1262,11 @@ if (isAdmin) {
   adminEntrance?.classList.remove('hidden');
   loadData().then(() => {
     renderUserCalendar();
+    // 主动更新用户页悬赏金卡片的周期文本（不依赖日历渲染）
+    const { cycleStart, cycleEnd } = getCycleRange();
+    const cycleText = `${formatDate(cycleStart)}~${formatDate(cycleEnd)}`;
+    const currentCycleEl = document.getElementById('current-cycle');
+    if (currentCycleEl) currentCycleEl.innerText = cycleText;
     initTopMiniCards();
   });
 }
@@ -1273,11 +1286,14 @@ function changeMonth(offset) {
     currentMonth -= 12;
     currentYear += 1;
   }
-  // 切换月份保留选中日期
-  // selectedDate = '';
+  // 切换月份后，自动对齐对应周期
+  const tempDate = new Date(currentYear, currentMonth, 26);
+  const targetCycle = getCycleRange(tempDate);
+  currentYear = targetCycle.cycleStart.getFullYear();
+  currentMonth = targetCycle.cycleStart.getMonth();
+
   renderUserCalendar();
   renderAdminCalendar();
-  // 同步刷新统计和进度条
   renderTotalAndStat();
   initTopMiniCards();
 }
