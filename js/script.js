@@ -705,35 +705,54 @@ function buildDetailList(listEl, records, showActions = false) {
   const calcBtn = document.createElement('button');
   calcBtn.innerText = '查看本期总工资';
   calcBtn.className = 'cycle-calc-btn';
-    calcBtn.onclick = function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.blur();
+calcBtn.onclick = function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  this.blur();
 
-      let totalHours = 0, totalBase = 0, totalAllow = 0, totalWage = 0, workDays = 0;
-      records.forEach(item => {
-        const shift = item.get('shift') || '';
-        if (shift === '休息') return;
-        workDays++;
-        const money = safeNum(item.get('money'));
-        const allow = safeNum(item.get('allowance'));
-        totalBase += money;
-        totalAllow += allow;
-        totalWage += money + allow;
-      });
+  let totalHours = 0, totalBase = 0, totalAllow = 0, totalWage = 0, workDays = 0;
+  records.forEach(item => {
+    const shift = item.get('shift') || '';
+    if (shift === '休息') return;
+    workDays++;
 
-      document.getElementById('cycle-total-title').innerText = `${listEl.dataset.cycle} 工资统计`;
-      document.getElementById('cycle-total-info').innerHTML = `
-        出勤天数：${workDays} 天<br>
-        总工时：${totalHours.toFixed(2)} 小时<br>
-        总基本工资：¥${totalBase.toFixed(2)}<br>
-        总加班补贴：¥${totalAllow.toFixed(2)}<br>
-        <hr style="margin:8px 0;border:1px solid rgba(0,0,0,0.1);">
-        <strong>本期总工资：¥${trunc2(totalWage).toFixed(2)}</strong>
-      `;
-      document.getElementById('cycle-total-overlay').classList.add('show');
-      disableBodyScroll();
-    };
+    const money = safeNum(item.get('money'));
+    const allow = safeNum(item.get('allowance'));
+    totalBase += money;
+    totalAllow += allow;
+    totalWage += money + allow;
+
+    // ========== 新增：工时计算逻辑（和主统计页保持一致）==========
+    const sEnd = item.get('shiftEnd') || '';
+    const sEnd2 = item.get('shiftEnd2') || '';
+    const mStart = item.get('mealStart') || '';
+
+    let h = 0;
+    const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
+    const e = safeNum((sEnd || '00:00').split(':')[0]);
+    if (e > s) h += e - s;
+
+    if (shift === '拼班') {
+      const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
+      const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
+      if (e2 > s2) h += e2 - s2;
+    }
+    if (shift !== '拼班' && mStart) h = Math.max(0, h - 1);
+    totalHours += h;
+  });
+
+  document.getElementById('cycle-total-title').innerText = `${listEl.dataset.cycle} 工资统计`;
+  document.getElementById('cycle-total-info').innerHTML = `
+    出勤天数：${workDays} 天<br>
+    总工时：${totalHours.toFixed(2)} 小时<br>
+    总基本工资：¥${totalBase.toFixed(2)}<br>
+    总加班补贴：¥${totalAllow.toFixed(2)}<br>
+    <hr style="margin:8px 0;border:1px solid rgba(0,0,0,0.1);">
+    <strong>本期总工资：¥${trunc2(totalWage).toFixed(2)}</strong>
+  `;
+  document.getElementById('cycle-total-overlay').classList.add('show');
+  disableBodyScroll();
+};
   listEl.appendChild(calcBtn);
 
   records.forEach(item => {
