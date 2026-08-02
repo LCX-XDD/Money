@@ -274,7 +274,7 @@ function initTimeSelect() {
 
   const allHours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
   const allOpts = allHours.map(h => `<option value="${h}">${h}</option>`).join('');
-  const workOpts = allHours.filter(h => parseInt(h) >= 9).map(h => `<option value="${h}">${h}</option>`).join('');
+  const workOpts = allHours.filter(h => parseInt(h) >= 8).map(h => `<option value="${h}">${h}</option>`).join('');
   const defaultOpt = '<option value="">请选择</option>';
 
   shiftStart.innerHTML = defaultOpt + workOpts;
