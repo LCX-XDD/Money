@@ -102,9 +102,21 @@
       <select id="shift-end2" class="time-select"></select>
     </div>
     <div id="meal-wrap" class="time-row hidden">
-      <label>饭点开始：</label>
-      <select id="meal-start" class="time-select"></select>
-    </div>
+  <label>饭点开始：</label>
+  <input list="meal-options" id="meal-start" class="time-select" type="time">
+  <datalist id="meal-options">
+    <option value="15:00"></option>
+    <option value="16:00"></option>
+    <option value="17:00"></option>
+    <option value="18:00"></option>
+    <option value="19:00"></option>
+    <option value="20:00"></option>
+    <option value="21:00"></option>
+    <option value="22:00"></option>
+    <option value="23:00"></option>
+  </datalist>
+</div>
+
 
     <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
     <input type="text" id="record-money" class="form-input" placeholder="当日基本工资（自动计算）" readonly>
