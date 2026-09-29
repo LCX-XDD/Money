@@ -634,116 +634,111 @@ function renderTotalAndStat(updateMainCard = true) {
   let totalWage = 0, totalHours = 0, workDays = 0;
   let day21 = 0, day22 = 0, day23 = 0, totalBase = 0, totalAllow = 0;
 
- currentList.forEach(item => {
-  const shift = item.get('shift') || '';
-  // 休息直接跳过
-  if (shift === '休息') return;
+// 提取到外层
+function timeToMin(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
 
+// 2. 只做循环计算，不操作DOM
+currentList.forEach(item => {
+  const shift = item.get('shift') || '';
+  if (shift === '休息') return;
   const money = safeNum(item.get('money'));
   const allow = safeNum(item.get('allowance'));
   const sEnd = item.get('shiftEnd') || '';
   const sEnd2 = item.get('shiftEnd2') || '';
   const mStart = item.get('mealStart') || '';
-
+  const mEnd = item.get('mealEnd') || '';
+  
   workDays++;
   totalBase += money;
   totalAllow += allow;
   totalWage += money + allow;
 
-  // 工时计算（原有逻辑不变）
+  // 工时计算
   let h = 0;
   const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
   const e = safeNum((sEnd || '00:00').split(':')[0]);
   if (e > s) h += e - s;
-
   if (shift === '拼班') {
     const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
     const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
     if (e2 > s2) h += e2 - s2;
   }
-// 新版饭点扣除逻辑（统计页面）
-const mealSelVal = item.get('mealSelectVal') || '';
-const mStart = item.get('mealStart') || '';
-const mEnd = item.get('mealEnd') || '';
-if (mStart) {
-  function timeToMin(timeStr) {
-    if (!timeStr) return null;
-    const [h, m] = timeStr.split(':').map(Number);
-    return h * 60 + m;
-  }
-  let mealStartStr = "";
-  let mealEndStr = "";
-  if (mealSelVal === 'custom') {
-    mealStartStr = mStart;
-    mealEndStr = mEnd;
-  } else {
-    mealStartStr = mStart;
-    mealEndStr = "";
-  }
-  let mealMinusHour = 0;
-  if (mealStartStr) {
-    const sMin = timeToMin(mealStartStr);
-    let eMin = timeToMin(mealEndStr);
-    if (eMin === null) {
-      eMin = sMin + 60;
-    }
-    if (eMin > sMin) {
-      mealMinusHour = (eMin - sMin) / 60;
-    }
-  }
-  h = Math.max(0, h - mealMinusHour);
-}
 
+  //饭扣逻辑
+  const mealSelVal = item.get('mealSelectVal') || '';
+  if (mStart) {
+    let mealStartStr = "";
+    let mealEndStr = "";
+    if (mealSelVal === 'custom') {
+      mealStartStr = mStart;
+      mealEndStr = mEnd;
+    } else {
+      mealStartStr = mStart;
+      mealEndStr = "";
+    }
+    let mealMinusHour = 0;
+    if (mealStartStr) {
+      const sMin = timeToMin(mealStartStr);
+      let eMin = timeToMin(mealEndStr);
+      if (eMin === null) {
+        eMin = sMin + 60;
+      }
+      if (eMin > sMin) {
+        mealMinusHour = (eMin - sMin) / 60;
+      }
+    }
+    h = Math.max(0, h - mealMinusHour);
+  }
   totalHours += h;
 
-  // ========== 修复：同时判断主下班 + 拼班第二段下班 ==========
-  // 收集所有有效下班小时
-//收集所有有效下班时间
-const endHoursArr = [];
-if (sEnd) endHoursArr.push(safeNum(sEnd.split(':')[0]));
-if (shift === '拼班' && sEnd2) endHoursArr.push(safeNum(sEnd2.split(':')[0]));
-if(endHoursArr.length >0){
-  //取最晚下班小时
-  const lastEndHour = Math.max(...endHoursArr);
-  if (lastEndHour === 21) day21++;
-  if (lastEndHour === 22) day22++;
-  if (lastEndHour === 23) day23++;
+  // 统计晚班天数
+  const endHoursArr = [];
+  if (sEnd) endHoursArr.push(safeNum(sEnd.split(':')[0]));
+  if (shift === '拼班' && sEnd2) endHoursArr.push(safeNum(sEnd2.split(':')[0]));
+  if(endHoursArr.length >0){
+    const lastEndHour = Math.max(...endHoursArr);
+    if (lastEndHour === 21) day21++;
+    if (lastEndHour === 22) day22++;
+    if (lastEndHour === 23) day23++;
+  }
+});
+
+// ========== 【循环结束！一次性更新所有DOM】 ==========
+if (updateMainCard) {
+  totalWageNum.innerText = trunc2(totalWage).toFixed(2);
 }
+if (statEls['stat-work-hours']) statEls['stat-work-hours'].innerText = totalHours.toFixed(1) + ' 小时';
+if (statEls['stat-work-days']) statEls['stat-work-days'].innerText = workDays + ' 天';
+if (statEls['stat-21h-days']) statEls['stat-21h-days'].innerText = day21 + ' 天';
+if (statEls['stat-22h-days']) statEls['stat-22h-days'].innerText = day22 + ' 天';
+if (statEls['stat-23h-days']) statEls['stat-23h-days'].innerText = day23 + ' 天';
+if (statEls['stat-base-money']) statEls['stat-base-money'].innerText = '¥' + totalBase.toFixed(2);
+if (statEls['stat-allowance']) statEls['stat-allowance'].innerText = '¥' + totalAllow.toFixed(2);
 
-
-  // 只更新数字，不操作进度条
-  // 总工资四舍五入保留2位小数后显示
-  if (updateMainCard) {
-    totalWageNum.innerText = trunc2(totalWage).toFixed(2);
-  }
-  if (statEls['stat-work-hours']) statEls['stat-work-hours'].innerText = totalHours.toFixed(1) + ' 小时';
-  if (statEls['stat-work-days']) statEls['stat-work-days'].innerText = workDays + ' 天';
-  if (statEls['stat-21h-days']) statEls['stat-21h-days'].innerText = day21 + ' 天';
-  if (statEls['stat-22h-days']) statEls['stat-22h-days'].innerText = day22 + ' 天';
-  if (statEls['stat-23h-days']) statEls['stat-23h-days'].innerText = day23 + ' 天';
-  if (statEls['stat-base-money']) statEls['stat-base-money'].innerText = '¥' + totalBase.toFixed(2);
-  if (statEls['stat-allowance']) statEls['stat-allowance'].innerText = '¥' + totalAllow.toFixed(2);
-
-  // 历史周期列表
-  if (cycleGroupList) {
-    cycleGroupList.innerHTML = '';
-    const cycleMap = buildCycleMap(allBillList);
-    Object.keys(cycleMap).sort().reverse().forEach(key => {
-      const records = cycleMap[key];
-      const group = document.createElement('div');
-      group.className = 'cycle-group';
-      group.innerHTML = `
-        <div class="cycle-header" data-cycle="${key}">
-          <span>${key}</span>
-          <span style="color:#8e8e93;font-size:12px;">${records.length} 条记录</span>
-        </div>
-      `;
-      group.querySelector('.cycle-header').addEventListener('click', () => {
-        openCycleDetailPopup(key, records);
-      });
-      cycleGroupList.appendChild(group);
+// 周期列表渲染，放到循环外，只执行一次
+if (cycleGroupList) {
+  cycleGroupList.innerHTML = '';
+  const cycleMap = buildCycleMap(allBillList);
+  Object.keys(cycleMap).sort().reverse().forEach(key => {
+    const records = cycleMap[key];
+    const group = document.createElement('div');
+    group.className = 'cycle-group';
+    group.innerHTML = `
+      <div class="cycle-header" data-cycle="${key}">
+        <span>${key}</span>
+        <span style="color:#8e8e93;font-size:12px;">${records.length} 条记录</span>
+      </div>
+    `;
+    group.querySelector('.cycle-header').addEventListener('click', () => {
+      openCycleDetailPopup(key, records);
     });
-  }
+    cycleGroupList.appendChild(group);
+  });
+}
 }
 
 // ========== 周期详情弹窗（合并公共逻辑） ==========
@@ -785,7 +780,6 @@ calcBtn.onclick = function (e) {
     }
 // 新版饭点扣除逻辑（统计页面）
 const mealSelVal = item.get('mealSelectVal') || '';
-const mStart = item.get('mealStart') || '';
 const mEnd = item.get('mealEnd') || '';
 if (mStart) {
   function timeToMin(timeStr) {
@@ -1411,23 +1405,26 @@ function changeMonth(offset) {
   initTopMiniCards();
 }
 
-// 绑定点击事件
-prevMonthBtn?.addEventListener('click', function(e) {
-  e.preventDefault();
-  this.blur();
-  changeMonth(-1);
-});
+(function () {
+  initTopMiniCards();
 
-nextMonthBtn?.addEventListener('click', function(e) {
-  e.preventDefault();
-  this.blur();
-  changeMonth(1);
-});
+  prevMonthBtn?.addEventListener('click', function (e) {
+    e.preventDefault();
+    this.blur();
+    changeMonth(-1);
+  });
+
+  nextMonthBtn?.addEventListener('click', function (e) {
+    e.preventDefault();
+    this.blur();
+    changeMonth(1);
+  });
 
   initTimeSelect();
-    // ========== 新增：全局初始化兜底 ==========
+
   const cancelBtn = document.getElementById('cancel-edit-btn');
   if (cancelBtn) {
     cancelBtn.style.display = 'none';
   }
+})();
 });
