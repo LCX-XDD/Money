@@ -101,21 +101,29 @@
       <label>第二段下班：</label>
       <select id="shift-end2" class="time-select"></select>
     </div>
-    <div id="meal-wrap" class="time-row hidden">
-  <label>饭点开始：</label>
-  <input list="meal-options" id="meal-start" class="time-select" type="time">
-  <datalist id="meal-options">
-    <option value="15:00"></option>
-    <option value="16:00"></option>
-    <option value="17:00"></option>
-    <option value="18:00"></option>
-    <option value="19:00"></option>
-    <option value="20:00"></option>
-    <option value="21:00"></option>
-    <option value="22:00"></option>
-    <option value="23:00"></option>
-  </datalist>
+<div id="meal-wrap" class="time-row hidden">
+  <label>饭点：</label>
+  <select id="meal-select" class="time-select">
+    <option value="">无饭点</option>
+    <option value="15:00">15:00</option>
+    <option value="16:00">16:00</option>
+    <option value="17:00">17:00</option>
+    <option value="18:00">18:00</option>
+    <option value="19:00">19:00</option>
+    <option value="20:00">20:00</option>
+    <option value="21:00">21:00</option>
+    <option value="22:00">22:00</option>
+    <option value="23:00">23:00</option>
+    <option value="custom">自定义饭点</option>
+  </select>
+  <!-- 自定义饭点 起止时间框，默认隐藏 -->
+  <div id="meal-custom-wrap" style="display:none;margin-left:8px;gap:6px;align-items:center;">
+    <input id="meal-start" class="time-select" type="time">
+    <span>至</span>
+    <input id="meal-end" class="time-select" type="time">
+  </div>
 </div>
+
 
 
     <div class="time-tip" id="work-hours-tip">有效工时：0 小时</div>
