@@ -855,9 +855,9 @@ const mEnd = item.get('mealEnd') || '';
 if(mStart){
   if(mealSelVal === 'custom'){
     if(mEnd){
-      mealLine = `<div class="info-line">饭点：${mStart}-${mEnd}（自定义）</div>`;
+      mealLine = `<div class="info-line">饭点：${mStart}-${mEnd}</div>`;
     }else{
-      mealLine = `<div class="info-line">饭点：${mStart}-${String(Number(mStart.split(':')[0])+1).padStart(2,'0')}:${mStart.split(':')[1]}（自定义，默认1小时）</div>`;
+      mealLine = `<div class="info-line">饭点：${mStart}-${String(Number(mStart.split(':')[0])+1).padStart(2,'0')}:${mStart.split(':')[1]}</div>`;
     }
   }else{
     //预设选项
