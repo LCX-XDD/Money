@@ -264,15 +264,13 @@ function initTimeSelect() {
   const shiftEnd = document.getElementById('shift-end');
   const shiftStart2 = document.getElementById('shift-start2');
   const shiftEnd2 = document.getElementById('shift-end2');
-  const mealSelect = document.getElementById('meal-select');
-  const mealCustomWrap = document.getElementById('meal-custom-wrap');
   const mealStart = document.getElementById('meal-start');
   const mealEnd = document.getElementById('meal-end');
   const workHoursTip = document.getElementById('work-hours-tip');
   const moneyInput = document.getElementById('record-money');
   const allowanceInput = document.getElementById('record-allowance');
   const dateInput = document.getElementById('record-date');
-  if (!shiftSelect || !shiftStart || !shiftEnd || !shiftStart2 || !shiftEnd2 || !mealSelect || !mealStart || !mealEnd || !workHoursTip || !moneyInput || !allowanceInput || !dateInput) return;
+  if (!shiftSelect || !shiftStart || !shiftEnd || !shiftStart2 || !shiftEnd2 || !mealStart || !mealEnd || !workHoursTip || !moneyInput || !allowanceInput || !dateInput) return;
   const allHours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
   const allOpts = allHours.map(h => `<option value="${h}">${h}</option>`).join('');
   const workOpts = allHours.filter(h => parseInt(h) >= 8).map(h => `<option value="${h}">${h}</option>`).join('');
@@ -315,17 +313,10 @@ function initTimeSelect() {
       if (e2 > s2) total += e2 - s2;
     }
 
-    // ==========【新版饭点扣除逻辑】==========
-    let mealStartStr = "";
-    let mealEndStr = "";
-    const selVal = mealSelect.value;
-    if (selVal === 'custom') {
-      mealStartStr = mealStart.value;
-      mealEndStr = mealEnd.value;
-    } else {
-      mealStartStr = selVal;
-      mealEndStr = "";
-    }
+    // ==========【饭点扣除逻辑】==========
+    // 直接读取开始/结束饭点时间；只填开始时默认按 1 小时饭点扣除
+    const mealStartStr = mealStart.value || "";
+    const mealEndStr = mealEnd.value || "";
     let mealMinusHour = 0;
     if (mealStartStr) {
       const sMin = timeToMin(mealStartStr);
@@ -338,9 +329,9 @@ function initTimeSelect() {
         mealMinusHour = (eMin - sMin) / 60;
       }
     }
-if (mealStartStr) {
-  total = Math.max(0, total - mealMinusHour);
-}
+    if (mealStartStr) {
+      total = Math.max(0, total - mealMinusHour);
+    }
 
     // ======================================
 
@@ -352,15 +343,7 @@ if (mealStartStr) {
     moneyInput.value = calcVal.toFixed(2);
   }
 
-  // 饭点下拉切换事件
-  mealSelect.addEventListener('change', () => {
-    if (mealSelect.value === 'custom') {
-      mealCustomWrap.style.display = 'inline-flex';
-    } else {
-      mealCustomWrap.style.display = 'none';
-    }
-    calcWorkHours();
-  });
+  // 饭点开始/结束时间变化时重算
   mealStart.addEventListener('change', calcWorkHours);
   mealEnd.addEventListener('change', calcWorkHours);
 
@@ -522,7 +505,7 @@ function renderData(list) {
 
 // ========== 表单清空 ==========
 function clearForm() {
-  ['record-shift', 'shift-start', 'shift-end', 'shift-start2', 'shift-end2', 'meal-start', 'record-allowance', 'record-money', 'record-remark', 'edit-id'].forEach(id => {
+  ['record-shift', 'shift-start', 'shift-end', 'shift-start2', 'shift-end2', 'meal-start', 'meal-end', 'record-allowance', 'record-money', 'record-remark', 'edit-id'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -668,28 +651,16 @@ currentList.forEach(item => {
     if (e2 > s2) h += e2 - s2;
   }
 
-  //饭扣逻辑
-  const mealSelVal = item.get('mealSelectVal') || '';
+  //饭扣逻辑：开始/结束都有就按区间，只填开始默认扣1小时
   if (mStart) {
-    let mealStartStr = "";
-    let mealEndStr = "";
-    if (mealSelVal === 'custom') {
-      mealStartStr = mStart;
-      mealEndStr = mEnd;
-    } else {
-      mealStartStr = mStart;
-      mealEndStr = "";
-    }
     let mealMinusHour = 0;
-    if (mealStartStr) {
-      const sMin = timeToMin(mealStartStr);
-      let eMin = timeToMin(mealEndStr);
-      if (eMin === null) {
-        eMin = sMin + 60;
-      }
-      if (eMin > sMin) {
-        mealMinusHour = (eMin - sMin) / 60;
-      }
+    const sMin = timeToMin(mStart);
+    let eMin = timeToMin(mEnd);
+    if (eMin === null) {
+      eMin = sMin + 60;
+    }
+    if (eMin > sMin) {
+      mealMinusHour = (eMin - sMin) / 60;
     }
     h = Math.max(0, h - mealMinusHour);
   }
@@ -778,8 +749,7 @@ calcBtn.onclick = function (e) {
       const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
       if (e2 > s2) h += e2 - s2;
     }
-// 新版饭点扣除逻辑（统计页面）
-const mealSelVal = item.get('mealSelectVal') || '';
+// 饭点扣除逻辑：开始/结束都有就按区间，只填开始默认扣1小时
 const mEnd = item.get('mealEnd') || '';
 if (mStart) {
   function timeToMin(timeStr) {
@@ -787,25 +757,14 @@ if (mStart) {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
   }
-  let mealStartStr = "";
-  let mealEndStr = "";
-  if (mealSelVal === 'custom') {
-    mealStartStr = mStart;
-    mealEndStr = mEnd;
-  } else {
-    mealStartStr = mStart;
-    mealEndStr = "";
-  }
   let mealMinusHour = 0;
-  if (mealStartStr) {
-    const sMin = timeToMin(mealStartStr);
-    let eMin = timeToMin(mealEndStr);
-    if (eMin === null) {
-      eMin = sMin + 60;
-    }
-    if (eMin > sMin) {
-      mealMinusHour = (eMin - sMin) / 60;
-    }
+  const sMin = timeToMin(mStart);
+  let eMin = timeToMin(mEnd);
+  if (eMin === null) {
+    eMin = sMin + 60;
+  }
+  if (eMin > sMin) {
+    mealMinusHour = (eMin - sMin) / 60;
   }
   h = Math.max(0, h - mealMinusHour);
 }
@@ -849,18 +808,13 @@ if (mStart) {
       : `${s1}-${e1}`;
 
 let mealLine = '';
-const mealSelVal = item.get('mealSelectVal') || '';
 const mStart = item.get('mealStart') || '';
 const mEnd = item.get('mealEnd') || '';
 if(mStart){
-  if(mealSelVal === 'custom'){
-    if(mEnd){
-      mealLine = `<div class="info-line">饭点：${mStart}-${mEnd}</div>`;
-    }else{
-      mealLine = `<div class="info-line">饭点：${mStart}-${String(Number(mStart.split(':')[0])+1).padStart(2,'0')}:${mStart.split(':')[1]}</div>`;
-    }
+  if(mEnd){
+    mealLine = `<div class="info-line">饭点：${mStart}-${mEnd}</div>`;
   }else{
-    //预设选项
+    // 只填开始，默认1小时
     const [h, m] = mStart.split(':').map(Number);
     mealLine = `<div class="info-line">饭点：${mStart}-${String(h+1).padStart(2,'0')}:${String(m).padStart(2,'0')}</div>`;
   }
@@ -880,7 +834,7 @@ if(mStart){
             data-id="${item.id}" data-date="${date}" data-shift="${shift}"
             data-shift-start="${s1}" data-shift-end="${e1}"
             data-shift-start2="${s2}" data-shift-end2="${e2}"
-            data-meal-start="${meal}" data-allowance="${allow}"
+            data-meal-start="${meal}" data-meal-end="${item.get('mealEnd') || ''}" data-allowance="${allow}"
             data-money="${money}" data-remark="${remark}"
           >编辑</button>
           <button class="btn-sm btn-del" data-id="${item.id}">删除</button>
@@ -977,6 +931,8 @@ currentMonth = editCycle.cycleStart.getMonth();
 
         if (shiftEnd) shiftEnd.value = data.shiftEnd;
         if (mealStart) mealStart.value = data.mealStart;
+        const mealEndInput = document.getElementById('meal-end');
+        if (mealEndInput) mealEndInput.value = data.mealEnd || '';
 
         if (data.shift === '拼班' && shiftStart2) {
           shiftStart2.value = data.shiftStart2;
@@ -1139,7 +1095,6 @@ const data = {
   shiftEnd: document.getElementById('shift-end')?.value,
   shiftStart2: document.getElementById('shift-start2')?.value,
   shiftEnd2: document.getElementById('shift-end2')?.value,
-  mealSelectVal: document.getElementById('meal-select')?.value,
   mealStart: document.getElementById('meal-start')?.value,
   mealEnd: document.getElementById('meal-end')?.value,
   money: round3(safeNum(
