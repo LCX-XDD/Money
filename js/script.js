@@ -97,6 +97,8 @@ function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min 
     // 当前实时百分比
     const current = Math.round(startVal + (targetPercent - startVal) * progress);
     textEl.textContent = `${current}%`;
+    // 水位超过一半时文字切白色（在蓝水上），否则深色（在浅蓝底上）
+    textEl.style.color = current > 50 ? '#fff' : '#1d1d1f';
 
     if (progress < 1) {
       timerRef.value = requestAnimationFrame(animateFrame);
@@ -115,6 +117,7 @@ function runProgressAnim(circleEl, textEl, cssVar, targetPercent, timerRef, min 
       timerRef.value = null;
     }
     textEl.textContent = `${targetPercent}%`;
+    textEl.style.color = targetPercent > 50 ? '#fff' : '#1d1d1f';
     if (cssVar === '--progress') {
       circleEl.dataset.progress = targetPercent > 100 ? 'over' : 'normal';
     }
@@ -167,6 +170,75 @@ function calculateCycleProgress() {
   const passedMs = Date.now() - cycleStart.getTime();
   return Math.min(Math.round((passedMs / totalMs) * 100), 100);
 }
+
+// ========== 金币雨背景 ==========
+const MONEY_EMOJIS = ['💰', '💵', '💴', '💶', '💷', '🪙', '💸'];
+let moneyRainTimer = null;
+
+// ========== 工资数字滚动动画 ==========
+let wageAnimId = null;
+function animateWageNumber(target, duration = 1400) {
+  const el = document.getElementById('total-wage-num');
+  if (!el) return;
+  if (wageAnimId) cancelAnimationFrame(wageAnimId);
+  // 从目标值 55%~90% 之间随机起始，不是从 0 开始
+  const startValue = target * (0.55 + Math.random() * 0.35);
+  const start = performance.now();
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = startValue + (target - startValue) * eased;
+    el.textContent = val.toFixed(2);
+    if (t < 1) {
+      wageAnimId = requestAnimationFrame(tick);
+    } else {
+      el.textContent = target.toFixed(2);
+      wageAnimId = null;
+    }
+  };
+  wageAnimId = requestAnimationFrame(tick);
+}
+
+function updateMoneyRain(totalWage) {
+  const backLayer = document.getElementById('money-rain-back');
+  const frontLayer = document.getElementById('money-rain-front');
+  if (!backLayer || !frontLayer) return;
+  // 数量随悬赏金额：每 60 块 1 个，最少 12 个，最多 60 个
+  const total = Math.max(12, Math.min(60, Math.round(safeNum(totalWage) / 60) + 6));
+  if (backLayer.dataset.count === String(total) && frontLayer.dataset.count === String(total)) return;
+  backLayer.dataset.count = String(total);
+  frontLayer.dataset.count = String(total);
+  backLayer.innerHTML = '';
+  frontLayer.innerHTML = '';
+  // 80% 在卡片后面，20% 在卡片前面飘过
+  const backCount = Math.floor(total * 0.8);
+  const frontCount = total - backCount;
+  function makeDrop() {
+    const el = document.createElement('span');
+    el.className = 'money-drop';
+    el.textContent = MONEY_EMOJIS[Math.floor(Math.random() * MONEY_EMOJIS.length)];
+    el.style.left = (Math.random() * 100) + '%';
+    el.style.fontSize = (18 + Math.random() * 22) + 'px';
+    el.style.opacity = (0.25 + Math.random() * 0.35).toFixed(2);
+    el.style.animationDuration = (5 + Math.random() * 9) + 's';
+    el.style.animationDelay = (-Math.random() * 14) + 's';
+    return el;
+  }
+  for (let i = 0; i < backCount; i++) backLayer.appendChild(makeDrop());
+  for (let i = 0; i < frontCount; i++) frontLayer.appendChild(makeDrop());
+}
+
+// 切换设备/窗口尺寸变化时，重新散落金币位置
+window.addEventListener('resize', () => {
+  const wage = parseFloat(document.getElementById('total-wage-num')?.textContent || '0') || 0;
+  updateMoneyRain(wage);
+});
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    const wage = parseFloat(document.getElementById('total-wage-num')?.textContent || '0') || 0;
+    updateMoneyRain(wage);
+  }, 300);
+});
 
 function initTopMiniCards() {
   const bottomCircle = document.getElementById('bottom-progress');
@@ -680,8 +752,10 @@ currentList.forEach(item => {
 
 // ========== 【循环结束！一次性更新所有DOM】 ==========
 if (updateMainCard) {
-  totalWageNum.innerText = trunc2(totalWage).toFixed(2);
+  animateWageNumber(trunc2(totalWage));
 }
+// 按当前悬赏金额刷新金币雨数量
+updateMoneyRain(totalWage);
 if (statEls['stat-work-hours']) statEls['stat-work-hours'].innerText = totalHours.toFixed(1) + ' 小时';
 if (statEls['stat-work-days']) statEls['stat-work-days'].innerText = workDays + ' 天';
 if (statEls['stat-21h-days']) statEls['stat-21h-days'].innerText = day21 + ' 天';
@@ -1123,7 +1197,7 @@ const editId = document.getElementById('edit-id')?.value.trim();
       const cancelBtn = document.getElementById('cancel-edit-btn');
       if (cancelBtn) cancelBtn.style.display = 'none';
       isEditMode = false;
-      loadData();
+      loadData(0, true, false, true);
     } catch (err) {
       showToast('保存失败', 'error');
     }
@@ -1166,7 +1240,6 @@ isEditMode = false;
     e.stopPropagation();
     e.preventDefault();
     this.blur();
-    renderTotalAndStat();
     detailOverlay?.classList.add('show');
     disableBodyScroll();
   });
@@ -1264,16 +1337,15 @@ isEditMode = false;
       const targetProgress = calcWagePercent(trunc2(totalWage));
       const targetMiniProgress = calculateCycleProgress();
 
-      // 6. 等待两个进度条从0增长到目标值
+      // 6. 进度条从0增长到目标值，同时数字滚动（并行，时长同步）
+      animateWageNumber(trunc2(totalWage), 600);
       await Promise.all([
         animateProgress(targetProgress),
         animateMiniProgress(targetMiniProgress)
       ]);
 
-// 7. 动画全部完成后：同步更新工资数字 + 移除加载遮罩 + 弹出成功提示
-wageNumEl.innerText = trunc2(totalWage).toFixed(2);
-// 新增：刷新后同步周期文本
-const { cycleStart: curStart, cycleEnd: curEnd } = getCycleRange();
+      // 7. 同步周期文本 + 弹出成功提示
+      const { cycleStart: curStart, cycleEnd: curEnd } = getCycleRange();
 const cycleEl = document.getElementById('current-cycle');
 if (cycleEl) cycleEl.innerText = `${formatDate(curStart)}~${formatDate(curEnd)}`;
 showToast('数据刷新成功', 'success');
@@ -1315,14 +1387,14 @@ if (isAdmin) {
 
   renderUserCalendar();
   renderAdminCalendar();
-  loadData();
+  loadData(0, true, false, true);
   showToast('🎉欢迎回来!管理员!🎉', 'success');
 } else {
   document.body.classList.remove('admin-active');
   userView?.classList.remove('hidden');
   adminView?.classList.add('hidden');
   adminEntrance?.classList.remove('hidden');
-  loadData().then(() => {
+  loadData(0, true, false, true).then(() => {
     renderUserCalendar();
     // 主动更新用户页悬赏金卡片的周期文本（不依赖日历渲染）
     const { cycleStart, cycleEnd } = getCycleRange();

@@ -16,6 +16,10 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
+  <!-- 金币雨背景层：back 在卡片后（多），front 在卡片前（少） -->
+  <div id="money-rain-back" class="money-layer" aria-hidden="true"></div>
+  <div id="money-rain-front" class="money-layer" aria-hidden="true"></div>
+
   <!-- 用户页面内容容器 -->
   <div id="user-view">
     <!-- 主窗口 -->
@@ -218,8 +222,8 @@
   <!-- Toast提示 -->
   <div id="toast" class="toast"></div>
 
-  <!-- LeanCloud SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <!-- LeanCloud SDK（本地化，避免 jsDelivr 在国内被重置连接） -->
+  <script src="./js/av-min.js"></script>
   <script src="./js/script.js"></script>
 </body>
 </html>
