@@ -487,28 +487,56 @@ function updateMoneyRain(totalWage) {
       if (e.target.closest('button, input, select, textarea, a, #music-player, .modal-overlay, .drawer-overlay')) return;
       const sp = document.getElementById('money-rain-front');
       if (!sp) return;
-      const el = document.createElement('span');
-      el.className = 'money-drop';
-      el.textContent = MONEY_EMOJIS[Math.floor(Math.random() * MONEY_EMOJIS.length)];
-      el.style.left = (e.clientX - 10) + 'px';
-      el.style.top = (e.clientY - 10) + 'px';
-      el.style.fontSize = (18 + Math.random() * 22) + 'px';
-      el.style.opacity = '1';
-      el.style.animation = 'none';
-      // 从点击位置开始下落，到底部停 2 秒后淡出
-      sp.appendChild(el);
-      const startY = e.clientY;
-      const endY = window.innerHeight - 40;
-      const dist = endY - startY;
-      el.animate([
-        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-        { transform: 'translateY(' + dist + 'px) rotate(180deg)', opacity: 1, offset: 0.8 },
-        { transform: 'translateY(' + dist + 'px) rotate(180deg)', opacity: 1, offset: 0.95 },
-        { transform: 'translateY(' + dist + 'px) rotate(180deg)', opacity: 0 }
-      ], { duration: 8000, easing: 'ease-in', fill: 'forwards' });
-      setTimeout(() => el.remove(), 8000);
+      // 点击生成一片爱心（10-15个），分散开
+      const hearts = ['❤️', '💖', '💕', '💗', '💘', '💝'];
+      const count = 10 + Math.floor(Math.random() * 6);
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'money-drop';
+        el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+        const radius = 40 + Math.random() * 80;
+        const offsetX = Math.cos(angle) * radius;
+        const offsetY = Math.sin(angle) * radius;
+        el.style.left = (e.clientX + offsetX - 10) + 'px';
+        el.style.top = (e.clientY + offsetY - 10) + 'px';
+        el.style.fontSize = (16 + Math.random() * 14) + 'px';
+        el.style.opacity = '0.8';
+        el.style.animation = 'none';
+        sp.appendChild(el);
+        const startY = e.clientY + offsetY;
+        const endY = window.innerHeight - 20;
+        const dist = endY - startY;
+        el.animate([
+          { transform: 'translateY(0) rotate(0deg) scale(1)', opacity: 0.8 },
+          { transform: 'translateY(' + dist + 'px) rotate(20deg) scale(0.9)', opacity: 0.7, offset: 0.8 },
+          { transform: 'translateY(' + dist + 'px) rotate(30deg) scale(0.5)', opacity: 0 }
+        ], { duration: 5000 + Math.random() * 4000, easing: 'ease-in', fill: 'forwards' });
+        setTimeout(() => el.remove(), 10000);
+      }
     });
   }
+}
+
+// 卡片鼠标跟随倾斜效果
+if (!window._cardTiltBound) {
+  window._cardTiltBound = true;
+  const cards = document.querySelectorAll('.progress-window, .total-wage-box');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', function (e) {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotateY = ((x - cx) / cx) * 6;
+      const rotateX = -((y - cy) / cy) * 6;
+      card.style.transform = 'perspective(800px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+    });
+    card.addEventListener('mouseleave', function () {
+      card.style.transform = 'perspective(800px) rotateX(0) rotateY(0)';
+    });
+  });
 }
 
 // 切换设备/窗口尺寸变化时，重新散落金币位置
@@ -1932,9 +1960,58 @@ isEditMode = false;
     // 音乐文件列表：优先从 music-list.json 读取（双击"更新歌曲列表.bat"自动生成）
     // 读不到则用默认列表
     let playlist = [
-      { src: './music/M1.mp3', name: 'M1' }
+      { src: './music/M1.mp3', name: 'M1', lyrics: '' }
     ];
     let currentIdx = 0;
+    let currentLyrics = []; // 解析后的歌词 [{time, text}]
+    let lyricIdx = 0;
+
+    // 解析 LRC 文本
+    function parseLrc(text) {
+      if (!text) return [];
+      const lines = text.split('\n');
+      const result = [];
+      const timeReg = /\[(\d+):(\d+(?:\.\d+)?)\]/g;
+      lines.forEach(line => {
+        const times = [];
+        let m;
+        const regex = new RegExp(timeReg.source, 'g');
+        while ((m = regex.exec(line)) !== null) {
+          times.push(parseInt(m[1]) * 60 + parseFloat(m[2]));
+        }
+        const lyricText = line.replace(timeReg, '').trim();
+        if (lyricText) times.forEach(t => result.push({ time: t, text: lyricText }));
+      });
+      result.sort((a, b) => a.time - b.time);
+      return result;
+    }
+
+    // 更新歌词显示（网易云式竖向滚动）
+    function updateLyrics() {
+      if (!currentLyrics.length) return;
+      const t = audio.currentTime;
+      let idx = 0;
+      for (let i = 0; i < currentLyrics.length; i++) {
+        if (t >= currentLyrics[i].time) idx = i;
+        else break;
+      }
+      if (idx === lyricIdx) return;
+      lyricIdx = idx;
+      const track = document.getElementById('lyrics-track');
+      const prev = document.getElementById('lyric-prev');
+      const cur = document.getElementById('lyric-current');
+      const next = document.getElementById('lyric-next');
+      if (!track || !prev || !cur || !next) return;
+      // 先更新内容，新内容从下方滑入
+      prev.textContent = currentLyrics[idx - 1] ? currentLyrics[idx - 1].text : '';
+      cur.textContent = currentLyrics[idx].text;
+      next.textContent = currentLyrics[idx + 1] ? currentLyrics[idx + 1].text : '';
+      track.style.transition = 'none';
+      track.style.transform = 'translateY(28px)';
+      void track.offsetWidth; // 强制重绘
+      track.style.transition = 'transform 0.4s ease';
+      track.style.transform = 'translateY(0)';
+    }
 
     let isPlaying = false;
     let panelOpen = false;
@@ -2027,6 +2104,15 @@ isEditMode = false;
     function loadTrack(idx) {
       currentIdx = idx;
       audio.src = playlist[idx].src;
+      // 解析并加载歌词
+      currentLyrics = parseLrc(playlist[idx].lyrics);
+      lyricIdx = -1;
+      const prev = document.getElementById('lyric-prev');
+      const cur = document.getElementById('lyric-current');
+      const next = document.getElementById('lyric-next');
+      if (prev) prev.textContent = '';
+      if (cur) cur.textContent = currentLyrics.length ? '♪ 加载歌词中...' : '♪ 暂无歌词';
+      if (next) next.textContent = '';
       audio.play().then(() => {
         isPlaying = true;
         toggle.classList.add('playing');
@@ -2042,6 +2128,8 @@ isEditMode = false;
       // 同步当前列表项的时间
       const activeItem = listEl.querySelector('.music-item.active .music-item-time');
       if (activeItem) activeItem.textContent = fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration);
+      // 更新歌词
+      updateLyrics();
     }
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateProgress);
@@ -2101,11 +2189,15 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // 点击切换播放/暂停 + 面板
+    // 点击音乐按钮：只开关面板；首次被拦截时第一次点按钮才播放
     toggle.addEventListener('click', function (e) {
       e.stopPropagation();
       if (dragMoved) { dragMoved = false; return; }
-      if (isPlaying) pause(); else play();
+      // 首次自动播放被拦截时，第一次点按钮触发播放
+      if (window._needFirstPlay) {
+        window._needFirstPlay = false;
+        play();
+      }
       panelOpen = !panelOpen;
       panel.classList.toggle('hidden', !panelOpen);
       if (panelOpen) {
@@ -2210,7 +2302,8 @@ isEditMode = false;
           if (res && res.length > 0) {
             playlist = res.map(m => ({
               src: m.get('url'),
-              name: m.get('name')
+              name: m.get('name'),
+              lyrics: m.get('lyrics') || ''
             }));
             renderList();
             return;
@@ -2232,22 +2325,28 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // 自动播放：页面加载尝试播放，被浏览器拦截则等首次交互
+    // 自动播放：页面加载尝试播放，被浏览器拦截则等首次点播放器按钮
     function tryAutoPlay() {
-      audio.src = playlist[currentIdx].src;
+      currentIdx = 0;
+      audio.src = playlist[0].src;
+      currentLyrics = parseLrc(playlist[0].lyrics);
+      lyricIdx = -1;
+      const prev = document.getElementById('lyric-prev');
+      const cur = document.getElementById('lyric-current');
+      const next = document.getElementById('lyric-next');
+      if (prev) prev.textContent = '';
+      if (cur) cur.textContent = currentLyrics.length ? '♪ 加载歌词中...' : '♪ 暂无歌词';
+      if (next) next.textContent = '';
+      renderList();
       audio.play().then(() => {
         isPlaying = true;
         toggle.classList.add('playing');
+        if (iconPlay) iconPlay.style.display = 'none';
+        if (iconPause) iconPause.style.display = '';
+        updateProgress();
       }).catch(() => {
-        const onFirstInteract = function () {
-          play();
-          document.removeEventListener('click', onFirstInteract);
-          document.removeEventListener('touchstart', onFirstInteract);
-          document.removeEventListener('keydown', onFirstInteract);
-        };
-        document.addEventListener('click', onFirstInteract);
-        document.addEventListener('touchstart', onFirstInteract);
-        document.addEventListener('keydown', onFirstInteract);
+        // 浏览器拦截自动播放：标记需要首次点按钮才播放
+        window._needFirstPlay = true;
       });
     }
 
