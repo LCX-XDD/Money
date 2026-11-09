@@ -1,54 +1,133 @@
 @property --progress {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 0;
 }
 
 @property --mini-progress {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 0;
 }
 
 :root {
-  --bg-primary: #f5f5f7;
-  --card-primary: #ffffff;
-  --card-secondary: #f5f5f7;
+  color-scheme: light dark; /* 让日期/时间等原生控件跟随系统主题 */
+
+  --bg-primary: #dcebff;
+  --bg-image:
+    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.7), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(88, 86, 214, 0.18), transparent 55%),
+    linear-gradient(160deg, #e8f3ff 0%, #cfe4ff 45%, #b8d6ff 100%);
+
+  --card-primary: rgba(255, 255, 255, 0.55);
+  --card-secondary: rgba(255, 255, 255, 0.4);
   --text-primary: #1d1d1f;
-  --text-secondary: #8e8e93;
-  --border-color: #e5e5ea;
-  --shadow-primary: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --admin-btn-bg: rgba(0, 0, 0, 0.1);
-  --scroll-track: #f5f5f7;
-  --scroll-thumb: #c7c7cc;
-  --scroll-thumb-hover: #8e8e93;
-  --card-gradient: linear-gradient(135deg, rgba(0, 122, 255, 0.85), rgba(88, 86, 214, 0.85));
-  --loading-gradient: linear-gradient(135deg, #007aff, #5856d6);
-  --progress-fill: rgba(255, 255, 255, 0.9);
-  --progress-bg: rgba(255, 255, 255, 0.2);
-  --progress-text-color: white;
+  --text-secondary: #5b6b82;
+  --border-color: rgba(255, 255, 255, 0.6);
+  --shadow-primary: 0 8px 32px rgba(31, 90, 180, 0.15);
+
+  /* 毛玻璃「面」：浅色与深色各一套，避免出现白底白字 */
+  --surface-glass: rgba(255, 255, 255, 0.5);
+  --surface-glass-strong: rgba(255, 255, 255, 0.72);
+  --surface-glass-soft: rgba(255, 255, 255, 0.6);
+  --border-glass: rgba(255, 255, 255, 0.65);
+  --border-glass-strong: rgba(255, 255, 255, 0.6);
+  --border-card-glass: rgba(255, 255, 255, 0.45);
+  --shadow-glass: 0 8px 32px rgba(31, 90, 180, 0.15);
+  --shadow-glass-modal: 0 20px 60px rgba(31, 90, 180, 0.25);
+  --shadow-wage: 0 12px 40px rgba(31, 90, 180, 0.22);
+  --glass-btn-bg: rgba(255, 255, 255, 0.6);
+  --glass-btn-bg-hover: rgba(255, 255, 255, 0.9);
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
+  --admin-btn-bg: rgba(255, 255, 255, 0.4);
+  --scroll-track: rgba(255, 255, 255, 0.3);
+  --scroll-thumb: #b8c8e0;
+  --scroll-thumb-hover: #8ea8cc;
+  --card-gradient: linear-gradient(135deg, rgba(0, 122, 255, 0.32), rgba(88, 86, 214, 0.32));
+  --loading-gradient: linear-gradient(135deg, rgba(0, 122, 255, 0.96), rgba(88, 86, 214, 0.96));
+
+  /* 进度球 */
+  --progress-fill: #007aff;
+  --progress-bg: rgba(0, 122, 255, 0.1);
+  --progress-over-bg: rgba(255, 59, 48, 0.1);
+  --progress-text-color: #1d1d1f;      /* 进度卡标题 */
+  --progress-text-on: #ffffff;         /* 水位没过的部分 */
+  --progress-text-off: #1d1d1f;        /* 水位以下的底色上的数字 */
+
+  --accent-text: #007aff;
+  --ring-color: #ffffff;
   --exceed-color: #ff3b30;
+  --glass-blur: blur(22px) saturate(180%);
+
+  /* TDesign 风格组件色：环形进度 / 抽屉 / 分页 / 面包屑 / 回到顶部 */
+  --td-brand: #0052d9;
+  --td-brand-light: rgba(0, 82, 217, 0.08);
+  --td-track: #e7e7e7;
+  --td-panel-bg: rgba(255, 255, 255, 0.55);
+  --td-border: #e7e7e7;
+  --td-text-1: #111111;
+  --td-text-2: rgba(0, 0, 0, 0.75);
+  --td-text-3: rgba(0, 0, 0, 0.55);
+  --td-icon-hover: rgba(0, 0, 0, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #1c1c1e;
-    --card-primary: #2c2c2e;
-    --card-secondary: #3a3a3c;
+    --bg-primary: #101219;
+    --bg-image:
+      radial-gradient(ellipse at top left, rgba(96, 136, 224, 0.22), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(120, 86, 214, 0.22), transparent 55%),
+      linear-gradient(160deg, #0f1219 0%, #131722 45%, #171c2a 100%);
+
+    --card-primary: #232733;
+    --card-secondary: #2c3040;
     --text-primary: #f5f5f7;
-    --text-secondary: #aeaeb2;
-    --border-color: #48484a;
-    --shadow-primary: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --text-secondary: #a8abb3;
+    --border-color: rgba(255, 255, 255, 0.14);
+    --shadow-primary: 0 2px 12px rgba(0, 0, 0, 0.35);
+
+    --surface-glass: rgba(30, 34, 46, 0.6);
+    --surface-glass-strong: rgba(24, 27, 37, 0.86);
+    --surface-glass-soft: rgba(26, 30, 40, 0.66);
+    --border-glass: rgba(255, 255, 255, 0.13);
+    --border-glass-strong: rgba(255, 255, 255, 0.16);
+    --border-card-glass: rgba(255, 255, 255, 0.18);
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.45);
+    --shadow-glass-modal: 0 20px 60px rgba(0, 0, 0, 0.55);
+    --shadow-wage: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --glass-btn-bg: rgba(255, 255, 255, 0.1);
+    --glass-btn-bg-hover: rgba(255, 255, 255, 0.18);
+    --overlay-bg: rgba(0, 0, 0, 0.68);
+
     --admin-btn-bg: rgba(255, 255, 255, 0.1);
-    --scroll-track: #3a3a3c;
-    --scroll-thumb: #636366;
-    --scroll-thumb-hover: #8e8e93;
-    --card-gradient: linear-gradient(135deg, rgba(0, 110, 219, 0.75), rgba(75, 73, 185, 0.75));
-    --loading-gradient: linear-gradient(135deg, #005bb5, #4240a8);
-    --progress-fill: rgba(255, 255, 255, 0.7);
-    --progress-bg: rgba(255, 255, 255, 0.15);
-    --progress-text-color: rgba(255, 255, 255, 0.9);
+    --scroll-track: rgba(255, 255, 255, 0.08);
+    --scroll-thumb: #4a4f5c;
+    --scroll-thumb-hover: #6a7080;
+    --card-gradient: linear-gradient(135deg, rgba(0, 90, 190, 0.85), rgba(74, 62, 176, 0.85));
+    --loading-gradient: linear-gradient(135deg, #0a4fa0, #3a3585);
+
+    --progress-fill: #4aa3ff;
+    --progress-bg: rgba(74, 163, 255, 0.14);
+    --progress-over-bg: rgba(255, 69, 58, 0.16);
+    --progress-text-color: #f5f5f7;
+    --progress-text-on: #ffffff;
+    --progress-text-off: #f5f5f7;
+
+    --accent-text: #4aa3ff;
+    --ring-color: rgba(255, 255, 255, 0.5);
     --exceed-color: #ff453a;
+
+    /* TDesign 深色：品牌蓝提亮，面板改深色实底，避免白底白字 */
+    --td-brand: #4582e6;
+    --td-brand-light: rgba(69, 130, 230, 0.16);
+    --td-track: rgba(255, 255, 255, 0.16);
+    --td-panel-bg: #1b1f29;
+    --td-border: rgba(255, 255, 255, 0.12);
+    --td-text-1: rgba(255, 255, 255, 0.9);
+    --td-text-2: rgba(255, 255, 255, 0.6);
+    --td-text-3: rgba(255, 255, 255, 0.35);
+    --td-icon-hover: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -77,6 +156,8 @@ html, body {
 
 body {
   background-color: var(--bg-primary);
+  background-image: var(--bg-image);
+  background-attachment: fixed;
   min-height: 100vh;
   min-height: -webkit-fill-available;
   display: flex;
@@ -85,6 +166,51 @@ body {
   padding: 12px 6px;
   transition: background-color 0.3s ease;
   overflow: hidden;
+  position: relative;
+}
+
+/* 金币雨分层：两层都放在卡片之下（z-index:1），避免飘过时压住「悬赏金」「进度」等文字 */
+.money-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#money-rain-back { z-index: 1; }
+#money-rain-front { z-index: 1; }
+
+.money-drop {
+  position: absolute;
+  top: -60px;
+  display: block;
+  will-change: transform;
+  animation-name: money-fall;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.8, 0.6);
+  animation-iteration-count: infinite;
+  filter: drop-shadow(0 4px 8px rgba(31, 90, 180, 0.15));
+}
+
+/* 前层金币更小更淡，不抢卡片视觉 */
+#money-rain-front .money-drop {
+  opacity: 0.35 !important;
+  transform: scale(0.8);
+}
+
+@keyframes money-fall {
+  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); }
+  100% { transform: translate3d(18px, 115vh, 0) rotate(18deg); }
+}
+
+/* 底部固定金钱层：渐隐渐现 */
+@keyframes money-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* 主内容浮在金币雨之下（卡片被金币半透明飘过） */
+#user-view {
+  position: relative;
+  z-index: 2;
 }
 
 body.admin-active {
@@ -130,18 +256,20 @@ body.admin-active .white-window {
   transition: color 0.3s ease;
 }
 
-/* 悬赏金卡片 */
+/* 悬赏金卡片（彩色毛玻璃） */
 .total-wage-box {
   background: var(--card-gradient);
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 24px 20px;
   color: white;
   margin-bottom: 10px;
   position: relative;
   text-align: left;
   min-height: 180px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-card-glass);
+  box-shadow: var(--shadow-wage);
 }
 
 .total-wage-box .loading-overlay {
@@ -151,14 +279,14 @@ body.admin-active .white-window {
   width: 100%;
   height: 100%;
   background: var(--loading-gradient);
-  border-radius: 20px;
+  border-radius: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s ease;
-  z-index: 5;
+  z-index: 20;
 }
 
 .total-wage-box.loading .loading-overlay {
@@ -244,14 +372,14 @@ body.admin-active .white-window {
   flex: 0 0 clamp(30px, 7vw, 36px); /* 按钮宽度随屏幕宽度自适应 */
   margin: 16px 0;
   border: none;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--glass-btn-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: clamp(15px, 3.5vw, 18px); /* 圆角随宽度同步变化 */
   cursor: pointer;
   font-size: clamp(18px, 4.5vw, 22px); /* 箭头大小自适应 */
   font-weight: 300;
-  color: #007aff;
+  color: var(--accent-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +392,7 @@ body.admin-active .white-window {
 
 .calendar-btn:hover {
   margin-top: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--glass-btn-bg-hover);
 }
 
 .calendar-btn:active {
@@ -361,7 +489,7 @@ body.admin-active .white-window {
 
 .calendar-day.selected {
   border: 3px solid #ff9500;
-  box-shadow: 0 0 0 2px white inset;
+  box-shadow: 0 0 0 2px var(--ring-color) inset;
 }
 
 .calendar-day:not(.other):hover {
@@ -379,15 +507,7 @@ body.admin-active .white-window {
   background: var(--card-secondary);
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .calendar-btn {
-    background: rgba(44, 44, 46, 0.6);
-  }
-  .calendar-btn:hover {
-    background: rgba(58, 58, 60, 0.9);
-  }
-}
+/* 深色模式：日历左右按钮已由 --glass-btn-bg 变量接管 */
 
 /* ========== 小屏手机（<360px）额外适配 ========== */
 @media (max-width: 360px) {
@@ -483,12 +603,17 @@ input[type="date"].form-input {
   padding: 14px;
   border: none;
   border-radius: 12px;
-  background: #007aff;
-  color: white;
+  background: var(--td-brand);
+  color: #ffffff;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   margin-top: 8px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.88;
 }
 
 .btn-danger {
@@ -524,8 +649,8 @@ input[type="date"].form-input {
   height: 40px;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--border-glass-strong);
+  background: var(--glass-btn-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   font-size: 0;
@@ -540,7 +665,7 @@ input[type="date"].form-input {
   content: '←';
   font-size: 18px;
   font-weight: 600;
-  color: #ff3b30;
+  color: var(--exceed-color);
   line-height: 1;
 }
 
@@ -606,7 +731,7 @@ body:not(.admin-active) .btn-back {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -622,7 +747,10 @@ body:not(.admin-active) .btn-back {
 }
 
 .modal-box {
-  background: var(--card-primary);
+  background: var(--surface-glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass-strong);
   border-radius: 20px;
   width: 90%;
   max-width: 400px;
@@ -630,6 +758,7 @@ body:not(.admin-active) .btn-back {
   overflow: hidden;
   transform: translateY(20px);
   transition: transform 0.3s ease, background-color 0.3s ease;
+  box-shadow: var(--shadow-glass-modal);
 }
 
 .modal-overlay.show .modal-box {
@@ -668,30 +797,62 @@ body:not(.admin-active) .btn-back {
   transition: all 0.3s ease;
 }
 
-.modal-btn-group {
+#login-overlay .modal-btn-group {
   display: flex;
-  border-top: 1px solid var(--border-color);
-  transition: border-color 0.3s ease;
+  gap: 12px;
+  justify-content: center;
+  border-top: none;
+  padding: 4px 0 0;
 }
 
-.modal-btn {
-  flex: 1;
-  padding: 16px;
+#login-overlay .modal-btn {
+  flex: 0 0 auto;
+  min-width: 100px;
+  padding: 10px 28px;
   border: none;
-  background: var(--card-primary);
-  font-size: 16px;
+  border-radius: 999px;
+  font-size: 15px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.modal-btn.cancel {
-  color: var(--text-secondary);
-  border-right: 1px solid var(--border-color);
+#login-overlay .modal-btn.cancel {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-right: none;
 }
 
-.modal-btn.confirm {
-  color: #007aff;
+#login-overlay .modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+#login-overlay .modal-btn.confirm {
+  color: #fff;
   font-weight: 600;
+  background: rgba(0, 122, 255, 0.45);
+  border: 1px solid rgba(0, 122, 255, 0.5);
+}
+
+#login-overlay .modal-btn.confirm:hover {
+  background: rgba(0, 122, 255, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  #login-overlay .modal-btn.cancel {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  #login-overlay .modal-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  #login-overlay .modal-btn.confirm {
+    background: rgba(0, 122, 255, 0.6);
+    border-color: rgba(0, 122, 255, 0.7);
+  }
 }
 
 /* 详情列表 */
@@ -705,7 +866,7 @@ body:not(.admin-active) .btn-back {
 }
 
 .detail-item span:last-child {
-  color: #007aff;
+  color: var(--accent-text);
   font-weight: 500;
 }
 
@@ -744,7 +905,7 @@ body:not(.admin-active) .btn-back {
 }
 
 .money {
-  color: #007aff;
+  color: var(--accent-text);
   font-weight: 500;
 }
 
@@ -755,11 +916,16 @@ body:not(.admin-active) .btn-back {
   padding: 10px 14px;
   border: none;
   border-radius: 12px;
-  background: #007aff;
-  color: white;
+  background: var(--td-brand);
+  color: #ffffff;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.cycle-calc-btn:hover {
+  opacity: 0.88;
 }
 
 .item-op {
@@ -876,20 +1042,25 @@ body.admin-active .calendar-wrap {
   display: block;
 }
 
-/* 进度条卡片容器 */
+/* 进度条卡片容器（毛玻璃，深浅色各一套） */
 .progress-window {
-  background: var(--card-gradient);
-  border-radius: 20px;
+  position: relative;
+  background: var(--surface-glass);
+  border-radius: 24px;
   padding: 20px 24px;
   margin-top: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  min-height: 120px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
+  cursor: pointer;
+  transition: justify-content 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 .top-progress-window {
-  flex-direction: row-reverse;
   margin-bottom: 10px;
 }
 .progress-label {
@@ -897,83 +1068,95 @@ body.admin-active .calendar-wrap {
   font-weight: 600;
   color: var(--progress-text-color);
   margin: 0;
+  transition: all 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
-/* 环形进度条 基础样式 */
+/* 默认：进度环隐藏，只显示居中的标题文字；展开后：标题缩小到左上，环渐显到中间 */
+.progress-window .progress-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -50px;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.3s ease;
+}
+.progress-window.expanded {
+  justify-content: flex-start;
+}
+.progress-window.expanded .progress-label {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-size: 15px;
+}
+.progress-window.expanded .progress-circle {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== 圆形进度条（参考 TDesign Progress 默认样式；数值仍由代码计算结果驱动） ===== */
 .progress-circle {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 动画过渡 */
-  transition: --progress 0.5s linear, --mini-progress 0.5s linear;
-}
-
-.progress-circle::before {
-  content: '';
-  position: absolute;
-  width: 76px;
-  height: 76px;
+  background: none;
   border-radius: 50%;
-  /* 1. 用和卡片背景完全一样的不透明渐变 */
-  background: linear-gradient(135deg, #007aff, #5856d6);
-  /* 2. 彻底去掉所有透明/模糊效果 */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  opacity: 1;
-  z-index: 1;
+  flex: 0 0 100px;
 }
 
-/* 深色模式单独适配 */
-@media (prefers-color-scheme: dark) {
-  .progress-circle::before {
-    background: linear-gradient(135deg, #0066cc, #4240a8);
-  }
+.progress-circle .t-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* 从 12 点方向开始画 */
 }
 
-/* 进度文字 */
+.t-ring-track {
+  fill: none;
+  stroke: var(--td-track);
+  stroke-width: 6;
+  transition: stroke 0.3s ease;
+}
+
+.t-ring-bar {
+  fill: none;
+  stroke: var(--td-brand);
+  stroke-width: 6;
+  stroke-linecap: round;
+  /* 半径 45、线宽 6 → 周长 2πr = 282.743；dashoffset 由 JS 逐帧写入 */
+  stroke-dasharray: 282.743;
+  stroke-dashoffset: 282.743;
+  transition: stroke 0.3s ease;
+}
+
+/* 百分比文字（在环心，跟随 TDesign 主文本色） */
 .progress-text {
   position: relative;
   z-index: 3;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--progress-text-color);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--td-text-1);
+  transition: color 0.3s ease;
 }
 
-/* ====================== 下方主进度条（悬赏进度）====================== */
-/* 状态1：进度 ≤ 100% 正常样式 */
-.progress-circle[data-progress="normal"] {
-  background: conic-gradient(
-    var(--progress-fill) calc(var(--progress, 0) * 1%),
-    var(--progress-bg) calc(var(--progress, 0) * 1%)
-  );
-  box-shadow: none;
+/* 进度超过 100%：环和文字转 TDesign error 红 */
+.progress-circle[data-progress="over"] .t-ring-bar {
+  stroke: var(--exceed-color);
 }
 
-/* 状态2：进度 ＞ 100% 整体变红 + 红色阴影 */
-.progress-circle[data-progress="over"] {
-  background: conic-gradient(
-    var(--exceed-color) calc(var(--progress, 0) * 1%),
-    rgba(255, 59, 48, 0.2) calc(var(--progress, 0) * 1%)
-  );
-  /* 红色内阴影，增强覆盖质感 */
-  box-shadow: inset 0 0 14px 4px rgba(255, 59, 48, 0.5);
-}
-
-/* ====================== 顶部迷你进度条（周期进度）====================== */
-/* 周期进度固定使用 mini 变量，永远不触发红色 */
-.progress-circle.mini-progress {
-  --progress: var(--mini-progress, 0);
-}
-.progress-circle.mini-progress[data-progress="normal"] {
-  background: conic-gradient(
-    var(--progress-fill) calc(var(--mini-progress, 0) * 1%),
-    var(--progress-bg) calc(var(--mini-progress, 0) * 1%)
-  );
-  box-shadow: none !important;
+.progress-circle[data-progress="over"] .progress-text {
+  color: var(--exceed-color);
 }
 
 /* 管理员页面隐藏进度区域 */
@@ -983,7 +1166,7 @@ body.admin-active .progress-window {
 
 /* 管理员视图 */
 #admin-view {
-  background: var(--card-primary);
+  background: var(--surface-glass-soft);
   border-radius: 24px;
   padding: 60px 16px 24px;
   box-shadow: var(--shadow-primary);
@@ -991,6 +1174,9 @@ body.admin-active .progress-window {
   max-width: 100%;
   transition: all 0.3s ease;
   position: relative;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
 }
 
 @media (min-width: 768px) {
@@ -1086,3 +1272,627 @@ body {
     color: #ffffff !important;
   }
 }
+
+/* ================= TDesign 风格：Drawer 抽屉 ================= */
+.drawer-overlay {
+  align-items: flex-end;
+  justify-content: center;
+  /* 关闭时先放完滑出动画，再把 visibility 收起来，否则面板还没滑出就被藏掉 */
+  transition: opacity 0.28s ease, visibility 0s linear 0.34s;
+}
+
+.drawer-overlay.show {
+  transition: opacity 0.28s ease, visibility 0s linear 0s;
+}
+
+.modal-box.drawer-panel {
+  width: 100%;
+  max-width: 100%;
+  max-height: none;
+  height: 84vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--td-panel-bg);
+  border: none;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
+  transform: translateY(101%);
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.modal-overlay.show .modal-box.drawer-panel {
+  transform: translateY(0);
+}
+
+.drawer-head {
+  flex: 0 0 auto;
+  padding: 14px 20px 12px;
+  background: var(--td-panel-bg);
+  border-bottom: 1px solid var(--td-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.drawer-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.drawer-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--td-text-1);
+}
+
+.drawer-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--td-text-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.drawer-close:hover {
+  background: var(--td-icon-hover);
+  color: var(--td-text-1);
+}
+
+.drawer-close:active {
+  transform: scale(0.92);
+}
+
+.drawer-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 8px 0 24px; /* 底部留白（回到顶部按钮是浮层，不占布局） */
+  background: var(--td-panel-bg);
+}
+
+.drawer-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.drawer-body::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+  border-radius: 3px;
+}
+
+.drawer-body::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 3px;
+}
+
+.drawer-foot {
+  flex: 0 0 auto;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--td-panel-bg);
+  border-top: 1px solid var(--td-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.drawer-foot-btn {
+  width: 100%;
+  margin: 0;
+}
+
+/* 桌面端：从右侧滑出 */
+@media (min-width: 768px) {
+  .drawer-overlay {
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  .modal-box.drawer-panel {
+    width: 460px;
+    max-width: 460px;
+    height: 100%;
+    border-radius: 16px 0 0 16px;
+    border-left: 1px solid var(--td-border);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.22);
+    transform: translateX(101%);
+  }
+
+  .modal-overlay.show .modal-box.drawer-panel {
+    transform: translateX(0);
+  }
+}
+
+/* ================= TDesign 风格：Breadcrumb 面包屑 ================= */
+.t-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.crumb {
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+.crumb-link {
+  color: var(--td-text-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease;
+}
+
+.crumb-link:hover {
+  color: var(--td-brand);
+}
+
+.crumb-sep {
+  color: var(--td-text-3);
+  font-size: 13px;
+}
+
+.crumb-current {
+  color: var(--td-text-1);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================= TDesign 风格：Pagination 分页 ================= */
+.t-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 16px 0;
+}
+
+.pg-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--td-text-1);
+  font-family: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pg-btn:hover:not(.active):not(:disabled) {
+  background: var(--td-brand-light);
+  color: var(--td-brand);
+}
+
+.pg-btn.active {
+  background: var(--td-brand);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pg-btn:disabled {
+  color: var(--td-text-3);
+  cursor: default;
+}
+
+.pg-gap {
+  min-width: 24px;
+  text-align: center;
+  color: var(--td-text-3);
+  font-size: 14px;
+}
+
+.pg-total {
+  margin: 10px 0 4px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--td-text-2);
+}
+
+/* ================= TDesign 风格：BackTop 回到顶部 ================= */
+.t-backtop {
+  position: absolute;
+  right: 16px;
+  bottom: 76px; /* 让开固定的底部按钮栏 */
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--td-panel-bg);
+  color: var(--td-brand);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  z-index: 6;
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.24s ease, transform 0.24s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.t-backtop.show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.t-backtop:hover {
+  background: var(--td-brand);
+  color: #ffffff;
+}
+
+.t-backtop:active {
+  transform: scale(0.92);
+}
+
+/* 深色模式：回到顶部按钮用一档浅一点的实底，阴影压重，避免糊在黑底上 */
+@media (prefers-color-scheme: dark) {
+  .t-backtop {
+    background: #2a303c;
+    color: var(--td-brand);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .t-backtop:hover {
+    background: var(--td-brand);
+    color: #ffffff;
+    border-color: transparent;
+  }
+}
+/* ================= TDesign Alert 顶部警告提示 ================= */
+.alert-stack {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 24px));
+  z-index: 11000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.t-alert {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--td-panel-bg);
+  border: 1px solid var(--td-border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  font-size: 14px;
+  line-height: 1.5;
+  animation: alert-in 0.22s ease;
+}
+
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.t-alert .alert-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.t-alert .alert-main { flex: 1; min-width: 0; }
+.t-alert .alert-title { font-weight: 600; color: var(--td-text-1); }
+.t-alert .alert-desc { margin-top: 2px; font-size: 12.5px; color: var(--td-text-2); }
+
+.t-alert .alert-close {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--td-text-2);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+}
+
+.t-alert .alert-close:hover { background: var(--td-icon-hover); color: var(--td-text-1); }
+
+.t-alert.info .alert-icon { color: #0052d9; }
+.t-alert.success .alert-icon { color: #2ba471; }
+.t-alert.warning .alert-icon { color: #e37318; }
+.t-alert.error .alert-icon { color: #d54941; }
+
+@media (prefers-color-scheme: dark) {
+  .t-alert.info .alert-icon { color: #4582e6; }
+  .t-alert.success .alert-icon { color: #389a6f; }
+  .t-alert.warning .alert-icon { color: #e37318; }
+  .t-alert.error .alert-icon { color: #d54941; }
+}
+
+/* ================= TDesign Popconfirm 气泡确认 ================= */
+.t-popconfirm {
+  position: fixed;
+  z-index: 11001;
+  width: 248px;
+  padding: 12px 14px;
+  background: var(--td-panel-bg);
+  border: 1px solid var(--td-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+  animation: pop-in 0.18s ease;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.t-popconfirm-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.t-popconfirm .pc-icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.t-popconfirm.warning .pc-icon { color: #e37318; }
+.t-popconfirm.danger .pc-icon { color: #d54941; }
+
+.t-popconfirm .pc-title { font-size: 14px; font-weight: 600; color: var(--td-text-1); }
+.t-popconfirm .pc-desc { margin-top: 2px; font-size: 12.5px; color: var(--td-text-2); line-height: 1.5; }
+
+.t-popconfirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.t-popconfirm .pc-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--td-border);
+  background: transparent;
+  color: var(--td-text-1);
+  font-family: inherit;
+}
+
+.t-popconfirm .pc-btn.primary {
+  background: var(--td-brand);
+  border-color: var(--td-brand);
+  color: #ffffff;
+}
+
+.t-popconfirm.danger .pc-btn.primary {
+  background: #d54941;
+  border-color: #d54941;
+}
+
+/* ================= 背景音乐播放器 ================= */
+#music-player {
+  position: fixed;
+  right: 80px;
+  bottom: 30px;
+  width: 48px;
+  height: 48px;
+  z-index: 10500;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+#music-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--td-border);
+  background: var(--td-panel-bg);
+  color: var(--td-text-1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+#music-toggle:active { cursor: grabbing; transform: scale(0.94); }
+#music-toggle.playing { background: var(--td-brand); color: #fff; border-color: var(--td-brand); }
+
+/* 面板：绝对定位在按钮上方，不影响按钮位置 */
+#music-panel {
+  position: absolute;
+  bottom: 58px;
+  right: 0;
+  width: 240px;
+  background: var(--td-panel-bg);
+  border: 1px solid var(--td-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: music-panel-in 0.25s ease;
+}
+
+@keyframes music-panel-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#music-panel.hidden { display: none; }
+
+#music-panel-title {
+  font-size: 12px;
+  color: var(--td-text-2);
+  font-weight: 500;
+}
+
+#music-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.music-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--td-text-1);
+}
+
+.music-item:hover { background: var(--td-track); }
+.music-item.active {
+  background: rgba(0, 82, 217, 0.1);
+  color: var(--td-brand);
+  font-weight: 600;
+}
+
+.music-name-wrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.music-item-name {
+  font-size: 13px;
+  color: var(--td-text-1);
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* 歌名过长时跑马灯滚动（在固定宽度容器内左右滑动） */
+.music-item-name.marquee {
+  animation: music-marquee 8s linear infinite;
+}
+
+@keyframes music-marquee {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(0); }
+  90% { transform: translateX(calc(-100% + 130px)); }
+  100% { transform: translateX(0); }
+}
+
+.music-item-time {
+  font-size: 11px;
+  color: var(--td-text-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+#music-play-pause {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--td-track);
+  color: var(--td-text-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 28px;
+}
+
+#music-play-pause:hover { background: var(--td-brand); color: #fff; }
+
+#music-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#music-prev, #music-next {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--td-text-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 28px;
+}
+
+#music-prev:hover, #music-next:hover { background: var(--td-track); }
+
+#music-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--td-track);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+
+#music-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--td-brand);
+  border-radius: 3px;
+  position: relative;
+}
+
+/* 圆点手柄放在 fill 内部，跟随进度移动 */
+#music-progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--td-brand);
+  transform: translateY(-50%);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+#music-player.hidden { display: none; }
