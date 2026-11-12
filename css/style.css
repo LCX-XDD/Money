@@ -1,4 +1,4 @@
-﻿@property --progress {
+@property --progress {
   syntax: '<number>';
   inherits: true;
   initial-value: 0;
@@ -236,7 +236,8 @@ body::before {
   overflow: hidden;
 }
 #money-rain-back { z-index: 1; }
-#money-rain-front { z-index: 1; }
+/* 前层金币浮在内容之上：只有它在最下缘才看得见落底，否则会被底部歌词卡片压住 */
+#money-rain-front { z-index: 3; }
 
 .money-drop {
   position: absolute;
@@ -249,15 +250,31 @@ body::before {
   filter: drop-shadow(0 4px 8px rgba(31, 90, 180, 0.15));
 }
 
-/* 前层金币更小更淡，不抢卡片视觉 */
-#money-rain-front .money-drop {
+/* 爱心：仍然是半透明、仍然在卡片之下（和原来一致，不参与金币的落底淡出） */
+.heart-drop {
   opacity: 0.35 !important;
   transform: scale(0.8);
 }
 
+/* 落点：88% 时金币底边统一停在距视口底边 10px 的同一条线上
+   （位移 = 100vh + 60px(top 偏移) - 10px(距底) - 金币自身高度），
+   之后原地淡出再回到顶部重新开始，看起来是「落到底部 → 停住 → 消失」 */
 @keyframes money-fall {
-  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); }
-  100% { transform: translate3d(18px, 115vh, 0) rotate(18deg); }
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--drop-opacity, 0.7);
+  }
+  88% {
+    transform: translate3d(18px, calc(100vh + 50px - var(--coin-h, 30px)), 0) rotate(14deg);
+    opacity: var(--drop-opacity, 0.7);
+  }
+  100% {
+    transform: translate3d(18px, calc(100vh + 50px - var(--coin-h, 30px)), 0) rotate(18deg);
+    opacity: 0;
+  }
 }
 
 /* 底部固定金钱层：渐隐渐现 */

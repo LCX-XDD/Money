@@ -1,4 +1,4 @@
-﻿// ========== 全局变量 ==========
+// ========== 全局变量 ==========
 let savedScrollTop = 0;
 let clickBlocker = null;
 // 进度条定时器容器（对象引用，确保动画函数能正确修改状态）
@@ -465,35 +465,48 @@ function updateMoneyRain(totalWage) {
   const backCount = Math.floor(total * 0.8);
   const frontCount = total - backCount;
 
-  function makeDrop() {
+  function makeDrop(isFront) {
     const el = document.createElement('span');
     const leftPct = Math.random() * 100;
     el.className = 'money-drop';
     el.textContent = MONEY_EMOJIS[Math.floor(Math.random() * MONEY_EMOJIS.length)];
     el.style.left = leftPct + '%';
-    el.style.fontSize = (18 + Math.random() * 22) + 'px';
-    el.style.opacity = (0.45 + Math.random() * 0.35).toFixed(2);
+    const fontSize = Math.round(18 + Math.random() * 22);
+    el.style.fontSize = fontSize + 'px';
+    // 把自身高度告诉 CSS，落地时用它补偿字号差，保证所有金币停在同一条底线上
+    el.style.setProperty('--coin-h', fontSize + 'px');
+    // 透明度交给动画里的 var(--drop-opacity) 控制：开头淡入、落到底部后淡出；
+    // 前层金币要浮在内容之上，所以压得更淡一点，不抢卡片
+    const base = isFront ? 0.34 : 0.45;
+    el.style.setProperty('--drop-opacity', (base + Math.random() * 0.18).toFixed(2));
     const dur = 6 + Math.random() * 9;
     el.style.animationDuration = dur + 's';
     el.style.animationDelay = (-Math.random() * dur) + 's';
     return el;
   }
-  for (let i = 0; i < backCount; i++) backLayer.appendChild(makeDrop());
-  for (let i = 0; i < frontCount; i++) frontLayer.appendChild(makeDrop());
+  for (let i = 0; i < backCount; i++) backLayer.appendChild(makeDrop(false));
+  for (let i = 0; i < frontCount; i++) frontLayer.appendChild(makeDrop(true));
 
-  // 鼠标点击时在点击位置生成一个金钱图标（大小随机，从点击位置下落，8 秒后消失）
+  // 落地基准对齐：金币高度随字号变化（emoji 行高约 1.25 倍字号），
+  // 先把真实高度读出来、再写回 --coin-h，让每颗金币的底边落在同一条线上
+  const allDrops = [...backLayer.children, ...frontLayer.children];
+  const dropHeights = allDrops.map((el) => el.offsetHeight);
+  allDrops.forEach((el, i) => el.style.setProperty('--coin-h', dropHeights[i] + 'px'));
+
+  // 鼠标点击时在点击位置撒一片爱心（10-15个），从点击点向四周散开再落到底部停住
   if (!window._moneyClickBound) {
     window._moneyClickBound = true;
     document.addEventListener('click', function (e) {
       if (e.target.closest('button, input, select, textarea, a, #music-player, .modal-overlay, .drawer-overlay')) return;
-      const sp = document.getElementById('money-rain-front');
+      // 爱心仍然放到后层（在卡片之下），外观和原来完全一致
+      const sp = document.getElementById('money-rain-back');
       if (!sp) return;
       // 点击生成一片爱心（10-15个），分散开
       const hearts = ['❤️', '💖', '💕', '💗', '💘', '💝'];
       const count = 10 + Math.floor(Math.random() * 6);
       for (let i = 0; i < count; i++) {
         const el = document.createElement('span');
-        el.className = 'money-drop';
+        el.className = 'money-drop heart-drop';
         el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
         const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
         const radius = 40 + Math.random() * 80;
