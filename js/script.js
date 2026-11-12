@@ -1,4 +1,4 @@
-// ========== 全局变量 ==========
+﻿// ========== 全局变量 ==========
 let savedScrollTop = 0;
 let clickBlocker = null;
 // 进度条定时器容器（对象引用，确保动画函数能正确修改状态）
@@ -407,7 +407,8 @@ function calculateCycleProgress() {
 }
 
 // ========== 金币雨背景 ==========
-const MONEY_EMOJIS = ['💰', '💵', '💴', '💶', '💷', '🪙', '💸'];
+// 只用各平台都稳定支持的 emoji：🪙（Unicode 13）在部分 Windows 上缺字形，会渲染成空心方框，故不用
+const MONEY_EMOJIS = ['💰', '💵', '💴', '💶', '💷', '💸', '💲'];
 let moneyRainTimer = null;
 
 // ========== 工资数字滚动动画 ==========
@@ -521,7 +522,7 @@ function updateMoneyRain(totalWage) {
 // 卡片鼠标跟随倾斜效果
 if (!window._cardTiltBound) {
   window._cardTiltBound = true;
-  const cards = document.querySelectorAll('.progress-window, .total-wage-box');
+  const cards = document.querySelectorAll('.progress-window, .total-wage-box, .lyrics-box');
   cards.forEach(card => {
     card.addEventListener('mousemove', function (e) {
       const rect = card.getBoundingClientRect();
@@ -2114,8 +2115,9 @@ isEditMode = false;
       if (cur) cur.textContent = currentLyrics.length ? '♪ 加载歌词中...' : '♪ 暂无歌词';
       if (next) next.textContent = '';
       audio.play().then(() => {
-        isPlaying = true;
-        toggle.classList.add('playing');
+        hasPlayed = true;
+        markPlaying();
+        unbindGesturePlay();
       }).catch(() => { isPlaying = false; });
       renderList();
     }
@@ -2139,10 +2141,9 @@ isEditMode = false;
 
     function play() {
       audio.play().then(() => {
-        isPlaying = true;
-        toggle.classList.add('playing');
-        if (iconPlay) iconPlay.style.display = 'none';
-        if (iconPause) iconPause.style.display = '';
+        hasPlayed = true;
+        markPlaying();
+        unbindGesturePlay();
       }).catch(() => { isPlaying = false; });
     }
     function pause() {
@@ -2189,32 +2190,84 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // 点击音乐按钮：只开关面板；首次被拦截时第一次点按钮才播放
+    // ===== 自动播放：浏览器禁止“无手势播放”，所以用户第一次点击/触摸/按键页面任意位置时启动音乐 =====
+    let hasPlayed = false;      // 是否已经成功播放过（成功后就不再需要手势兜底）
+    let gesturePlaying = false; // 正在尝试播放，避免同一个手势重复触发
+
+    function markPlaying() {
+      isPlaying = true;
+      toggle.classList.add('playing');
+      if (iconPlay) iconPlay.style.display = 'none';
+      if (iconPause) iconPause.style.display = '';
+    }
+
+    function unbindGesturePlay() {
+      document.removeEventListener('pointerdown', attemptPlayByGesture, true);
+      document.removeEventListener('touchstart', attemptPlayByGesture, true);
+      document.removeEventListener('keydown', attemptPlayByGesture, true);
+    }
+
+    function bindGesturePlay() {
+      if (hasPlayed) return;
+      document.addEventListener('pointerdown', attemptPlayByGesture, true);
+      document.addEventListener('touchstart', attemptPlayByGesture, true);
+      document.addEventListener('keydown', attemptPlayByGesture, true);
+    }
+
+    function attemptPlayByGesture() {
+      if (hasPlayed || gesturePlaying) return;
+      gesturePlaying = true;
+      const reset = function () { gesturePlaying = false; };
+      audio.play().then(() => {
+        hasPlayed = true;
+        markPlaying();
+        unbindGesturePlay();
+        updateProgress();
+        reset();
+      }).catch(reset);
+    }
+    // 页面一进来就挂上，保证“第一次点击”就能生效（此时歌单可能还在加载，失败会自动等下一次手势）
+    bindGesturePlay();
+
+    // 打开/关闭歌曲面板（面板以外的任意区域都能关掉）
+    function openPanel() {
+      panelOpen = true;
+      panel.classList.remove('hidden');
+      updatePanelPosition();
+      // 面板展开后重新检测歌名是否需要跑马灯（hidden 时宽度为 0 检测不到）
+      requestAnimationFrame(() => {
+        listEl.querySelectorAll('.music-item-name').forEach(nameEl => {
+          const wrap = nameEl.parentElement;
+          if (wrap && nameEl.scrollWidth > wrap.clientWidth + 2) {
+            nameEl.classList.add('marquee');
+          } else {
+            nameEl.classList.remove('marquee');
+          }
+        });
+      });
+    }
+
+    function closePanel() {
+      if (!panelOpen) return;
+      panelOpen = false;
+      panel.classList.add('hidden');
+    }
+
+    // 点击音乐按钮：只开关面板
     toggle.addEventListener('click', function (e) {
       e.stopPropagation();
       if (dragMoved) { dragMoved = false; return; }
-      // 首次自动播放被拦截时，第一次点按钮触发播放
-      if (window._needFirstPlay) {
-        window._needFirstPlay = false;
-        play();
-      }
-      panelOpen = !panelOpen;
-      panel.classList.toggle('hidden', !panelOpen);
-      if (panelOpen) {
-        updatePanelPosition();
-        // 面板展开后重新检测歌名是否需要跑马灯（hidden 时宽度为 0 检测不到）
-        requestAnimationFrame(() => {
-          listEl.querySelectorAll('.music-item-name').forEach(nameEl => {
-            const wrap = nameEl.parentElement;
-            if (wrap && nameEl.scrollWidth > wrap.clientWidth + 2) {
-              nameEl.classList.add('marquee');
-            } else {
-              nameEl.classList.remove('marquee');
-            }
-          });
-        });
-      }
+      // 兜底：万一首次手势没启动成功，点按钮这次点击也算用户手势，再试一次
+      if (!hasPlayed) attemptPlayByGesture();
+      if (panelOpen) closePanel(); else openPanel();
     });
+
+    // 点面板以外的任一区域关闭面板（捕获阶段执行，先于其他点击逻辑，互不干扰）
+    document.addEventListener('pointerdown', function (e) {
+      if (!panelOpen) return;
+      if (e.target.closest && e.target.closest('#music-player')) return;
+      closePanel();
+    }, true);
 
     // 进度条拖动/点击
     function seekTo(clientX) {
@@ -2325,7 +2378,7 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // 自动播放：页面加载尝试播放，被浏览器拦截则等首次点播放器按钮
+    // 自动播放：页面加载先试一次，被浏览器拦截就等用户第一次点击/触摸页面任意位置
     function tryAutoPlay() {
       currentIdx = 0;
       audio.src = playlist[0].src;
@@ -2339,14 +2392,13 @@ isEditMode = false;
       if (next) next.textContent = '';
       renderList();
       audio.play().then(() => {
-        isPlaying = true;
-        toggle.classList.add('playing');
-        if (iconPlay) iconPlay.style.display = 'none';
-        if (iconPause) iconPause.style.display = '';
+        hasPlayed = true;
+        markPlaying();
+        unbindGesturePlay();
         updateProgress();
       }).catch(() => {
-        // 浏览器拦截自动播放：标记需要首次点按钮才播放
-        window._needFirstPlay = true;
+        // 浏览器拦截自动播放：保持手势监听，用户第一次点页面任意位置就会开始播放
+        bindGesturePlay();
       });
     }
 
@@ -2359,6 +2411,102 @@ isEditMode = false;
         });
       }
     });
+  })();
+
+  // ========== 显示模式切换：浅色 / 深色 / 跟随系统 ==========
+  (function initThemeSwitcher() {
+    const switcher = document.getElementById('theme-switcher');
+    const toggleBtn = document.getElementById('theme-toggle');
+    const menu = document.getElementById('theme-menu');
+    if (!switcher || !toggleBtn || !menu) return;
+
+    const STORAGE_KEY = 'theme-mode-v2'; // 换键：默认浅色后旧版记忆失效，首次统一浅色
+    const modes = ['light', 'dark', 'auto'];
+    const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    let mode = 'light'; // 没选过时默认浅色，只有用户主动选“跟随系统”才跟系统走
+    let menuOpen = false;
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (modes.indexOf(saved) !== -1) mode = saved;
+    } catch (e) {}
+
+    // auto 时按系统偏好决定实际深浅，其余直接用选项值
+    function resolveMode(m) {
+      if (m === 'light' || m === 'dark') return m;
+      return (mql && mql.matches) ? 'dark' : 'light';
+    }
+
+    function applyTheme(m, persist) {
+      const effective = resolveMode(m);
+      document.documentElement.setAttribute('data-theme', effective);
+      document.documentElement.style.colorScheme = effective;
+      const meta = document.getElementById('theme-color-meta');
+      if (meta) meta.setAttribute('content', effective === 'dark' ? '#0f1219' : '#fff8fc');
+
+      modes.forEach(function (k) {
+        const icon = document.getElementById('theme-icon-' + k);
+        if (icon) icon.style.display = (k === m) ? '' : 'none';
+        const opt = menu.querySelector('.theme-option[data-mode="' + k + '"]');
+        if (opt) {
+          const active = (k === m);
+          opt.classList.toggle('active', active);
+          opt.setAttribute('aria-checked', active ? 'true' : 'false');
+        }
+      });
+
+      toggleBtn.setAttribute('aria-label', m === 'light' ? '浅色模式' : (m === 'dark' ? '深色模式' : '跟随系统'));
+
+      mode = m;
+      if (persist) {
+        try { localStorage.setItem(STORAGE_KEY, m); } catch (e) {}
+      }
+    }
+
+    function openMenu() {
+      menuOpen = true;
+      menu.classList.remove('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      if (!menuOpen) return;
+      menuOpen = false;
+      menu.classList.add('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    // 首次进入时按保存的模式（或系统）落一次，修正预加载脚本可能没覆盖到的情况
+    applyTheme(mode, false);
+
+    toggleBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menuOpen) closeMenu(); else openMenu();
+    });
+
+    menu.addEventListener('click', function (e) {
+      const opt = e.target.closest ? e.target.closest('.theme-option') : null;
+      if (!opt) return;
+      e.stopPropagation();
+      applyTheme(opt.dataset.mode, true);
+      closeMenu();
+    });
+
+    // 点菜单以外的任意区域关闭菜单
+    document.addEventListener('pointerdown', function (e) {
+      if (!menuOpen) return;
+      if (e.target.closest && e.target.closest('#theme-switcher')) return;
+      closeMenu();
+    }, true);
+
+    // 选“跟随系统”时，系统深浅色变化要实时跟上
+    if (mql) {
+      const onSystemThemeChange = function () {
+        if (mode === 'auto') applyTheme('auto', false);
+      };
+      if (mql.addEventListener) mql.addEventListener('change', onSystemThemeChange);
+      else if (mql.addListener) mql.addListener(onSystemThemeChange);
+    }
   })();
 
   const cycleTotalOverlay = document.getElementById('cycle-total-overlay');

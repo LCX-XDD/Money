@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -7,9 +7,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#dcebff">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101219">
+  <meta name="theme-color" id="theme-color-meta" content="#fff8fc">
   <title>LCX的工资</title>
+
+  <!-- 主题预加载：在页面渲染前先按「本地保存的显示模式」定好深浅，避免闪白 -->
+  <script>
+    (function () {
+      try {
+        // v2：默认浅色后的新存储键，旧版本记忆的深浅选择不再沿用，保证首次打开都是浅色
+        var mode = localStorage.getItem('theme-mode-v2') || 'light';
+        var isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.setAttribute('content', isDark ? '#0f1219' : '#fff8fc');
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- iOS 桌面图标 -->
   <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/512/4969/4969649.png">
@@ -264,6 +278,48 @@
 
   <!-- Toast提示 -->
   <div id="toast" class="toast"></div>
+
+  <!-- 主题切换（浅色 / 深色 / 跟随系统），右下角圆形按钮，点击弹出选项菜单 -->
+  <div id="theme-switcher">
+    <div id="theme-menu" class="hidden" role="menu" aria-label="显示模式">
+      <button class="theme-option" type="button" data-mode="light" role="menuitemradio" aria-checked="false">
+        <span>浅色模式</span>
+        <svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="theme-option" type="button" data-mode="dark" role="menuitemradio" aria-checked="false">
+        <span>深色模式</span>
+        <svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="theme-option" type="button" data-mode="auto" role="menuitemradio" aria-checked="false">
+        <span>跟随系统</span>
+        <svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="切换显示模式" aria-haspopup="true" aria-expanded="false">
+      <!-- 浅色模式：太阳（默认浅色，先显示这个） -->
+      <svg id="theme-icon-light" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7" fill="none"/>
+        <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"
+              stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+      </svg>
+      <!-- 深色模式：月亮 -->
+      <svg id="theme-icon-dark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="display:none">
+        <path d="M20 14.6a8.2 8.2 0 0 1-10.8-10.4 8.4 8.4 0 1 0 10.8 10.4z"
+              stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <!-- 跟随系统：半明半暗 -->
+      <svg id="theme-icon-auto" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="display:none">
+        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6" fill="none"/>
+        <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- 背景音乐播放器（可拖动圆形按钮，点击弹出面板） -->
   <div id="music-player">

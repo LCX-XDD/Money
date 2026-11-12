@@ -1,4 +1,4 @@
-@property --progress {
+﻿@property --progress {
   syntax: '<number>';
   inherits: true;
   initial-value: 0;
@@ -11,13 +11,17 @@
 }
 
 :root {
-  color-scheme: light dark; /* 让日期/时间等原生控件跟随系统主题 */
+  /* 未手动指定时跟随系统；指定后由下方 data-theme 规则覆盖 */
+  color-scheme: light dark; /* 让日期/时间等原生控件跟随主题 */
 
-  --bg-primary: #ffe4ef;
-  --bg-image:
-    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.7), transparent 55%),
-    radial-gradient(ellipse at bottom right, rgba(255, 105, 180, 0.18), transparent 55%),
-    linear-gradient(160deg, #ffeef5 0%, #ffd6e8 45%, #ffb8d4 100%);
+  --bg-primary: #fff8fc;
+  /* 动态背景的四个色团：浅粉、浅蓝、浅紫 + 浅薄荷绿（用来和粉紫做冷暖平衡）。
+     写法参考腾讯云教程：radial-gradient(closest-side, 颜色, 同色全透明)，
+     末尾一定要用同色透明而不是 transparent，否则扩散过程中会发灰 */
+  --bg-blob-1: radial-gradient(closest-side, rgba(255, 176, 212, 0.36), rgba(255, 176, 212, 0));
+  --bg-blob-2: radial-gradient(closest-side, rgba(168, 208, 255, 0.40), rgba(168, 208, 255, 0));
+  --bg-blob-3: radial-gradient(closest-side, rgba(196, 176, 255, 0.38), rgba(196, 176, 255, 0));
+  --bg-blob-4: radial-gradient(closest-side, rgba(150, 232, 205, 0.34), rgba(150, 232, 205, 0));
 
   --card-primary: rgba(255, 255, 255, 0.55);
   --card-secondary: rgba(255, 255, 255, 0.4);
@@ -72,13 +76,22 @@
   --td-icon-hover: rgba(0, 0, 0, 0.06);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #101219;
-    --bg-image:
-      radial-gradient(ellipse at top left, rgba(96, 136, 224, 0.22), transparent 55%),
-      radial-gradient(ellipse at bottom right, rgba(120, 86, 214, 0.22), transparent 55%),
-      linear-gradient(160deg, #0f1219 0%, #131722 45%, #171c2a 100%);
+/* 手动主题：JS 会把 data-theme 写成 light / dark，覆盖上方的默认浅色变量 */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] {
+    --bg-primary: #0f1219;
+    /* 深色模式同一套色团结构，只是换成压暗的蓝紫粉雾，避免浅色光团冲掉深色主题 */
+    --bg-blob-1: radial-gradient(closest-side, rgba(255, 138, 190, 0.20), rgba(255, 138, 190, 0));
+    --bg-blob-2: radial-gradient(closest-side, rgba(112, 164, 255, 0.20), rgba(112, 164, 255, 0));
+    --bg-blob-3: radial-gradient(closest-side, rgba(150, 122, 255, 0.18), rgba(150, 122, 255, 0));
+    --bg-blob-4: radial-gradient(closest-side, rgba(86, 208, 182, 0.14), rgba(86, 208, 182, 0));
 
     --card-primary: #232733;
     --card-secondary: #2c3040;
@@ -104,8 +117,9 @@
     --scroll-track: rgba(255, 255, 255, 0.08);
     --scroll-thumb: #4a4f5c;
     --scroll-thumb-hover: #6a7080;
-    --card-gradient: linear-gradient(135deg, rgba(0, 90, 190, 0.85), rgba(74, 62, 176, 0.85));
-    --loading-gradient: linear-gradient(135deg, #0a4fa0, #3a3585);
+    /* 深色模式悬赏金卡片：沿用浅色的粉紫调，但压暗、降饱和，避免在深色背景上过于刺眼 */
+    --card-gradient: linear-gradient(135deg, rgba(150, 78, 106, 0.92), rgba(92, 66, 116, 0.92));
+    --loading-gradient: linear-gradient(135deg, #7c4a62, #52406b);
 
     --progress-fill: #4aa3ff;
     --progress-bg: rgba(74, 163, 255, 0.14);
@@ -128,7 +142,6 @@
     --td-text-2: rgba(255, 255, 255, 0.6);
     --td-text-3: rgba(255, 255, 255, 0.35);
     --td-icon-hover: rgba(255, 255, 255, 0.1);
-  }
 }
 
 * {
@@ -142,6 +155,8 @@
 
 html {
   height: 100%;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 html, body {
@@ -155,9 +170,8 @@ html, body {
 }
 
 body {
-  background-color: var(--bg-primary);
-  background-image: var(--bg-image);
-  background-attachment: fixed;
+  /* 底色交给 html，body 保持透明，负 z-index 的动态背景层才能显示出来 */
+  background-color: transparent;
   min-height: 100vh;
   min-height: -webkit-fill-available;
   display: flex;
@@ -167,6 +181,51 @@ body {
   transition: background-color 0.3s ease;
   overflow: hidden;
   position: relative;
+}
+
+/* 动态背景：四团浅色径向渐变（浅粉/浅蓝/浅紫/浅薄荷）各自铺一层，
+   写法同教程——radial-gradient(closest-side, 颜色, 同色全透明) + background-size/position + no-repeat。
+   整块比视口大一圈再绕中心缓慢旋转并轻微缩放，光团就会一圈圈飘过屏幕；
+   用 transform 动而不是逐帧改 background-position，是为了交给 GPU 合成、不卡帧 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 130vmax;
+  height: 130vmax;
+  margin: -65vmax 0 0 -65vmax;
+  z-index: -1;
+  pointer-events: none;
+  background-color: transparent;
+  background-image: var(--bg-blob-1), var(--bg-blob-2), var(--bg-blob-3), var(--bg-blob-4);
+  background-size: 56vmax 56vmax, 56vmax 56vmax, 56vmax 56vmax, 56vmax 56vmax;
+  background-position: 12vmax 12vmax, 62vmax 12vmax, 62vmax 62vmax, 12vmax 62vmax;
+  background-repeat: no-repeat;
+  will-change: transform;
+  animation: bg-drift 56s linear infinite;
+}
+
+@keyframes bg-drift {
+  0% {
+    transform: rotate(0deg) translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: rotate(120deg) translate3d(4vmax, -3vmax, 0) scale(1.04);
+  }
+  66% {
+    transform: rotate(240deg) translate3d(-4vmax, 3vmax, 0) scale(1.03);
+  }
+  100% {
+    transform: rotate(360deg) translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* 系统要求减少动效时停转，只保留静态的多色径向渐变 */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
 }
 
 /* 金币雨分层：两层都放在卡片之下（z-index:1），避免飘过时压住「悬赏金」「进度」等文字 */
@@ -848,19 +907,19 @@ body:not(.admin-active) .btn-back {
   background: rgba(0, 122, 255, 0.65);
 }
 
-@media (prefers-color-scheme: dark) {
-  #login-overlay .modal-btn.cancel {
+:root[data-theme="dark"] #login-overlay .modal-btn.cancel {
     color: #fff;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  #login-overlay .modal-btn.cancel:hover {
+}
+
+:root[data-theme="dark"] #login-overlay .modal-btn.cancel:hover {
     background: rgba(255, 255, 255, 0.2);
-  }
-  #login-overlay .modal-btn.confirm {
+}
+
+:root[data-theme="dark"] #login-overlay .modal-btn.confirm {
     background: rgba(0, 122, 255, 0.6);
     border-color: rgba(0, 122, 255, 0.7);
-  }
 }
 
 /* 详情列表 */
@@ -1127,6 +1186,9 @@ body.admin-active .calendar-wrap {
   height: 96px;
   overflow: hidden;
   position: relative;
+  /* 和上面三张卡片一致的 3D 倾斜：保留 3D 空间 + 跟随鼠标微调时平滑过渡 */
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
 }
 .lyrics-track {
   display: flex;
@@ -1155,6 +1217,16 @@ body.admin-active .calendar-wrap {
 }
 .lyrics-box {
   background: linear-gradient(135deg, rgba(255, 192, 203, 0.35), rgba(255, 105, 180, 0.25));
+}
+
+/* 深色模式：上一句 / 下一句改成浅白灰，避免黑字压在深色底上看不清 */
+:root[data-theme="dark"] .lyric-prev,
+:root[data-theme="dark"] .lyric-next {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="dark"] .lyrics-box {
+  background: linear-gradient(135deg, rgba(255, 192, 203, 0.10), rgba(255, 105, 180, 0.08));
 }
 
 /* ===== 圆形进度条（参考 TDesign Progress 默认样式；数值仍由代码计算结果驱动） ===== */
@@ -1309,25 +1381,23 @@ body {
   background-color: var(--border-color) !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  #cycle-total-info {
+:root[data-theme="dark"] #cycle-total-info {
     color: #ffffff !important;
-  }
-  #cycle-total-info hr {
+}
+
+:root[data-theme="dark"] #cycle-total-info hr {
     /* 深色模式：浅白色分割线 */
     background-color: rgba(255, 255, 255, 0.25) !important;
-  }
 }
 
 /* 深色模式 顶部返回按钮适配 */
-@media (prefers-color-scheme: dark) {
-  .btn-back button {
+:root[data-theme="dark"] .btn-back button {
     background: rgba(255, 255, 255, 0.25) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
-  }
-  .btn-back button::before {
+}
+
+:root[data-theme="dark"] .btn-back button::before {
     color: #ffffff !important;
-  }
 }
 
 /* ================= TDesign 风格：Drawer 抽屉 ================= */
@@ -1610,19 +1680,17 @@ body {
 }
 
 /* 深色模式：回到顶部按钮用一档浅一点的实底，阴影压重，避免糊在黑底上 */
-@media (prefers-color-scheme: dark) {
-  .t-backtop {
+:root[data-theme="dark"] .t-backtop {
     background: #2a303c;
     color: var(--td-brand);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+}
 
-  .t-backtop:hover {
+:root[data-theme="dark"] .t-backtop:hover {
     background: var(--td-brand);
     color: #ffffff;
     border-color: transparent;
-  }
 }
 /* ================= TDesign Alert 顶部警告提示 ================= */
 .alert-stack {
@@ -1690,12 +1758,10 @@ body {
 .t-alert.warning .alert-icon { color: #e37318; }
 .t-alert.error .alert-icon { color: #d54941; }
 
-@media (prefers-color-scheme: dark) {
-  .t-alert.info .alert-icon { color: #4582e6; }
-  .t-alert.success .alert-icon { color: #389a6f; }
-  .t-alert.warning .alert-icon { color: #e37318; }
-  .t-alert.error .alert-icon { color: #d54941; }
-}
+:root[data-theme="dark"] .t-alert.info .alert-icon { color: #4582e6; }
+:root[data-theme="dark"] .t-alert.success .alert-icon { color: #389a6f; }
+:root[data-theme="dark"] .t-alert.warning .alert-icon { color: #e37318; }
+:root[data-theme="dark"] .t-alert.error .alert-icon { color: #d54941; }
 
 /* ================= TDesign Popconfirm 气泡确认 ================= */
 .t-popconfirm {
@@ -1713,6 +1779,12 @@ body {
 @keyframes pop-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* 深色模式：气泡确认框用深色实底，否则白底 + 白字看不到内容 */
+:root[data-theme="dark"] .t-popconfirm {
+  background: var(--td-panel-bg);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
 }
 
 .t-popconfirm-head {
@@ -1953,3 +2025,94 @@ body {
 }
 
 #music-player.hidden { display: none; }
+
+
+/* ================= 主题切换按钮（浅色 / 深色 / 跟随系统） ================= */
+#theme-switcher {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 10500;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--td-border);
+  background: var(--td-panel-bg);
+  color: var(--td-text-1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+#theme-toggle:hover { color: var(--td-brand); border-color: var(--td-brand); }
+#theme-toggle:active { transform: scale(0.94); }
+#theme-toggle svg { display: block; }
+
+/* 菜单：弹在按钮上方，与音乐面板同一套观感 */
+#theme-menu {
+  position: absolute;
+  left: 0;
+  bottom: 50px;
+  width: 148px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--td-panel-bg);
+  border: 1px solid var(--td-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  animation: theme-menu-in 0.2s ease;
+}
+
+#theme-menu.hidden { display: none; }
+
+@keyframes theme-menu-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.theme-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--td-text-1);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-option:hover { background: var(--td-track); }
+
+.theme-option.active {
+  color: var(--td-brand);
+  font-weight: 600;
+  background: var(--td-brand-light);
+}
+
+.theme-option .theme-check {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.theme-option.active .theme-check { opacity: 1; }
