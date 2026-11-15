@@ -1,0 +1,2127 @@
+/* ============================================================
+   管理员页面：底部悬浮导航 + 数据导出视图
+   仅由管理员视图使用，普通用户页不受影响
+   ============================================================ */
+
+:root {
+  --exp-money: #e0407f;
+  --exp-chip-bg: rgba(255, 255, 255, 0.5);
+  --exp-input-bg: rgba(255, 255, 255, 0.62);
+  --exp-row-alt: rgba(255, 255, 255, 0.32);
+  --exp-hairline: rgba(120, 150, 200, 0.18);
+}
+
+:root[data-theme="dark"] {
+  --exp-money: #ff8fbb;
+  --exp-chip-bg: rgba(255, 255, 255, 0.08);
+  --exp-input-bg: rgba(255, 255, 255, 0.1);
+  --exp-row-alt: rgba(255, 255, 255, 0.04);
+  --exp-hairline: rgba(255, 255, 255, 0.1);
+}
+
+/* 管理页提到金币雨之上，避免飘落的钞票压住表单与数字（金币仍会在面板四周飘过） */
+#admin-view:not(.hidden) {
+  position: relative;
+  z-index: 4;
+}
+
+/* ===== 底部胶囊导航 ===== */
+#admin-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(342px, calc(100% - 28px));
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-glass-strong);
+  box-shadow:
+    0 12px 34px rgba(31, 90, 180, 0.24),
+    0 2px 6px rgba(31, 90, 180, 0.12);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  z-index: 900;
+}
+
+#admin-view:not(.hidden) ~ #admin-bottom-nav {
+  display: flex;
+  animation: adminNavIn 0.3s ease both;
+}
+
+/* 滑动高亮块：位置与宽度由 JS 按当前按钮实测，三个标签宽度不一致时也能严丝合缝 */
+.tab-thumb {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: var(--thumb-w, 0px);
+  height: calc(100% - 12px);
+  border-radius: 999px;
+  background: var(--td-brand);
+  box-shadow: 0 4px 14px rgba(0, 82, 217, 0.3);
+  transform: translate3d(var(--thumb-x, 0px), 0, 0);
+  z-index: 0;
+  pointer-events: none;
+}
+
+#admin-bottom-nav.thumb-ready .tab-thumb {
+  transition:
+    transform 0.36s cubic-bezier(0.32, 1.24, 0.38, 1),
+    width 0.36s cubic-bezier(0.32, 1.24, 0.38, 1);
+}
+
+/* 进入管理页后，右下角 LCX 入口让位给底部导航 */
+#admin-view:not(.hidden) ~ #admin-entrance {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 管理页里音乐圆钮保持可用：挪到右下角与回顶按钮并排，避开居中胶囊导航 */
+#admin-view:not(.hidden) ~ #music-player {
+  right: 78px;
+  bottom: 90px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
+}
+
+@keyframes adminNavIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.tab-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    color 0.24s ease,
+    background-color 0.24s ease,
+    transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
+  flex: none;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+/* 文字标签：只有选中的那一项展开，其余收成图标；宽度平滑过渡 */
+.tab-label {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transform: translateX(-4px);
+  transition:
+    max-width 0.32s cubic-bezier(0.32, 1.24, 0.38, 1),
+    opacity 0.24s ease,
+    transform 0.32s ease;
+}
+
+.tab-btn.active .tab-label {
+  max-width: 92px;
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 380px) {
+  .tab-btn {
+    font-size: 12px;
+    padding: 9px 8px;
+    gap: 5px;
+  }
+
+  .tab-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .tab-btn.active .tab-label {
+    max-width: 76px;
+  }
+}
+
+.tab-btn:not(.active):hover {
+  background: var(--glass-btn-bg-hover);
+  color: var(--td-brand);
+  transform: translateY(-1px);
+}
+
+.tab-btn:not(.active):hover svg {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+.tab-btn.active {
+  background: transparent;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.tab-btn.active svg {
+  opacity: 1;
+}
+
+.tab-btn.active:hover {
+  color: #ffffff;
+  filter: brightness(1.06);
+}
+
+.tab-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===== 两个视图的底部留白：避免被导航压住 ===== */
+#admin-record-view,
+#admin-export-view {
+  padding-bottom: 82px;
+}
+
+/* 视图切换过渡：只做透明度淡入。
+   注意：绝不能在视图容器上做 transform / scale / filter 动画——
+   一旦容器带上 transform，它会变成子元素（返回按钮等绝对定位元素）的定位参照物，
+   动画结束后布局会错位（日历变宽、返回按钮跑位）。 */
+@keyframes adminViewFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#admin-record-view.admin-view-enter,
+#admin-export-view.admin-view-enter {
+  animation: adminViewFadeIn 0.32s ease;
+}
+
+/* ============================================================
+   导出视图
+   ============================================================ */
+.exp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.exp-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.exp-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.exp-head-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 540px) {
+  .exp-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .exp-head-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.exp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--card-secondary);
+  border: 1px solid var(--border-card-glass);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.exp-status .exp-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  flex: none;
+}
+
+.exp-status.ok {
+  color: #0b8a51;
+}
+
+.exp-status.ok .exp-dot {
+  background: #12b76a;
+  box-shadow: 0 0 0 3px rgba(18, 183, 106, 0.16);
+}
+
+.exp-status.connecting .exp-dot {
+  background: #f79009;
+  animation: expPulse 1.1s ease-in-out infinite;
+}
+
+.exp-status.fail {
+  color: #d92d20;
+}
+
+.exp-status.fail .exp-dot {
+  background: #f04438;
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.16);
+}
+
+@keyframes expPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.exp-card {
+  background: var(--card-secondary);
+  border: 1px solid var(--border-card-glass);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(31, 90, 180, 0.08);
+}
+
+.exp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.exp-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.exp-card-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-head-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exp-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--td-brand);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.exp-link:hover {
+  opacity: 0.75;
+}
+
+.exp-link.muted {
+  color: var(--text-secondary);
+}
+
+.exp-field {
+  margin-bottom: 12px;
+}
+
+.exp-field:last-child {
+  margin-bottom: 0;
+}
+
+.exp-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+  letter-spacing: 0.02em;
+}
+
+.exp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exp-chip {
+  border: 1px solid var(--border-color);
+  background: var(--exp-chip-bg);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.exp-chip:hover {
+  color: var(--td-brand);
+  border-color: var(--td-brand);
+}
+
+.exp-chip.active {
+  background: var(--td-brand);
+  border-color: var(--td-brand);
+  color: #ffffff;
+}
+
+.exp-dates {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.exp-sep {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: none;
+}
+
+.exp-input {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background: var(--exp-input-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exp-input:focus {
+  border-color: var(--td-brand);
+  box-shadow: 0 0 0 3px var(--td-brand-light);
+}
+
+input[type="date"].exp-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 38px;
+  line-height: 1;
+}
+
+/* ===== 统计 ===== */
+.exp-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 520px) {
+  .exp-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.exp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--card-primary);
+  border: 1px solid var(--border-card-glass);
+  min-width: 0;
+}
+
+.exp-stat-label {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.exp-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exp-stat-unit {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.exp-stat.money {
+  background: rgba(224, 64, 127, 0.09);
+  border-color: rgba(224, 64, 127, 0.26);
+}
+
+.exp-stat.money .exp-stat-value {
+  color: var(--exp-money);
+}
+
+.exp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.exp-btn {
+  flex: 1 1 130px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 82, 217, 0.3);
+  background: var(--exp-input-bg);
+  color: var(--td-brand);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.exp-btn.primary {
+  background: var(--td-brand);
+  border-color: var(--td-brand);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 82, 217, 0.24);
+}
+
+.exp-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.exp-btn:hover {
+  border-color: var(--td-brand);
+}
+
+.exp-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.exp-btn.ghost {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  background: var(--card-secondary);
+}
+
+.exp-note {
+  margin: 9px 0 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== 表格 ===== */
+.exp-table-wrap {
+  border-radius: 12px;
+  border: 1px solid var(--border-card-glass);
+  overflow: auto;
+  max-height: 52vh;
+  background: var(--card-primary);
+}
+
+.exp-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11.5px;
+  min-width: 760px;
+}
+
+/* 固定列宽：日期 / 星期 / 班次 / 上班 / 下班 / 工时 / 基本 / 补贴 / 合计，剩余给备注 */
+/* 列宽按比例分配，宽屏下均匀铺满整行，不再挤在左边 */
+.exp-table thead th:nth-child(1) { width: 11%; }
+.exp-table thead th:nth-child(2) { width: 7%; }
+.exp-table thead th:nth-child(3) { width: 9%; }
+.exp-table thead th:nth-child(4) { width: 9%; }
+.exp-table thead th:nth-child(5) { width: 9%; }
+.exp-table thead th:nth-child(6) { width: 8%; }
+.exp-table thead th:nth-child(7) { width: 12%; }
+.exp-table thead th:nth-child(8) { width: 11%; }
+.exp-table thead th:nth-child(9) { width: 12%; }
+.exp-table thead th:nth-child(10) { width: 12%; }
+
+.exp-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 8px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  background: var(--surface-glass-strong);
+  border-bottom: 1px solid var(--exp-hairline);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.exp-table thead th.num {
+  text-align: right;
+}
+
+.exp-table tbody td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--exp-hairline);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.exp-table tbody tr:nth-child(even) {
+  background: var(--exp-row-alt);
+}
+
+.exp-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.exp-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-table td.remark {
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+
+.exp-table-hint {
+  display: none;
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .exp-table-hint {
+    display: block;
+  }
+}
+
+.exp-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--td-brand-light);
+  color: var(--td-brand);
+}
+
+.exp-badge.rest {
+  background: rgba(120, 150, 200, 0.16);
+  color: var(--text-secondary);
+}
+
+.exp-money-cell {
+  color: var(--exp-money);
+  font-weight: 600;
+}
+
+.exp-state {
+  padding: 34px 16px !important;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  white-space: normal !important;
+  line-height: 1.7;
+}
+
+.exp-state strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* ===== 分页 ===== */
+.exp-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.exp-pager-info {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-pager-btns {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exp-page-btn {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 9px;
+  border: 1px solid var(--border-color);
+  background: var(--exp-chip-bg);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.exp-page-btn:hover:not([disabled]) {
+  color: var(--td-brand);
+  border-color: var(--td-brand);
+}
+
+.exp-page-btn.current {
+  background: var(--td-brand);
+  border-color: var(--td-brand);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.exp-page-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===================== 数据概览页 ===================== */
+#admin-overview-view {
+  padding-bottom: 82px;
+}
+
+.ov-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.ov-head .exp-status {
+  flex: none;
+}
+
+.ov-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.ov-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* 卡片错峰入场 */
+@keyframes ovIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ov-anim {
+  animation: ovIn 0.42s cubic-bezier(0.22, 0.8, 0.32, 1) both;
+}
+
+/* ---- 关键指标 ---- */
+.ov-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .ov-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ov-kpi {
+  position: relative;
+  overflow: hidden;
+  padding: 12px 12px 11px;
+  border-radius: 14px;
+  background: var(--glass-btn-bg);
+  border: 1px solid var(--border-card-glass);
+}
+
+.ov-kpi .k-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.ov-kpi .k-value {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-kpi .k-value small {
+  margin-left: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0;
+}
+
+.ov-kpi.money .k-value {
+  color: var(--td-brand);
+}
+
+.ov-kpi.hot .k-value {
+  color: var(--exp-money);
+}
+
+/* ---- 图表通用 ---- */
+.ov-chart {
+  margin: 2px 0 0;
+}
+
+.ov-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ov-axis-text {
+  font-size: 9px;
+  fill: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-value-text {
+  font-size: 9.5px;
+  fill: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-donut-num {
+  font-size: 21px;
+  font-weight: 800;
+  fill: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-donut-cap {
+  font-size: 10px;
+  fill: var(--text-secondary);
+}
+
+.ov-pie-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ov-pie-svg {
+  flex: 0 0 150px;
+  width: 150px;
+}
+
+@media (max-width: 460px) {
+  .ov-pie-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ov-pie-svg {
+    flex: none;
+    width: 100%;
+    max-width: 210px;
+    margin: 0 auto;
+  }
+}
+
+/* ---- 图例 ---- */
+.ov-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 12px;
+}
+
+.ov-legend .lg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-legend .lg b {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ov-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ---- 进度条对比 ---- */
+.ov-barlist {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ov-bar-row .bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.ov-bar-row .bar-head b {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--exp-chip-bg);
+  overflow: hidden;
+}
+
+.ov-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4b8bff, #0052d9);
+}
+
+.ov-bar-fill.hot {
+  background: linear-gradient(90deg, #ff9dc0, #e0407f);
+}
+
+/* ---- 收入构成堆叠条 ---- */
+.ov-stack {
+  display: flex;
+  height: 16px;
+  margin-top: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--exp-chip-bg);
+}
+
+.ov-stack i {
+  display: block;
+  height: 100%;
+}
+
+.ov-empty {
+  padding: 18px 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ---- 星期分布 ---- */
+.ov-week-row {
+  display: grid;
+  grid-template-columns: 34px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.ov-week-row .wk-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--exp-chip-bg);
+  overflow: hidden;
+}
+
+.ov-week-row .wk-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7fb2ff, #0052d9);
+}
+
+.ov-week-row .wk-num {
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 悬停交互：数值气泡 / 曲线点 / 环形扇区 / KPI ---- */
+.ov-tip {
+  position: fixed;
+  z-index: 1100;
+  left: 0;
+  top: 0;
+  max-width: min(340px, calc(100vw - 28px));
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(20, 24, 35, 0.86);
+  color: #ffffff;
+  font-size: 11.5px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  word-break: break-word;
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
+}
+
+.ov-tip.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ov-hit {
+  cursor: crosshair;
+  transition: fill 0.16s ease;
+}
+
+.ov-hit:hover {
+  fill: rgba(0, 82, 217, 0.09);
+}
+
+.ov-svg .ov-dot-pt {
+  transition: r 0.16s ease, filter 0.16s ease;
+}
+
+.ov-arc {
+  cursor: pointer;
+  transition: stroke-width 0.18s ease, filter 0.18s ease;
+}
+
+.ov-arc:hover {
+  stroke-width: 27;
+  filter: drop-shadow(0 2px 6px rgba(0, 82, 217, 0.18));
+}
+
+.ov-bar-rect {
+  transition: filter 0.18s ease;
+}
+
+.ov-bar-rect:hover {
+  filter: brightness(1.08) saturate(1.05);
+}
+
+.ov-bar-row:hover .ov-bar-fill {
+  filter: brightness(1.06);
+}
+
+.ov-stack:hover i {
+  filter: brightness(1.08);
+}
+
+.ov-kpi {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.ov-kpi:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(15, 45, 92, 0.1);
+}
+
+.ov-kpi .k-value {
+  transition: color 0.2s ease, letter-spacing 0.2s ease;
+}
+
+.ov-kpi:hover .k-value {
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-anim,
+  .ov-bar-fill,
+  .ov-week-row .wk-fill,
+  .tab-label {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #admin-bottom-nav,
+  .tab-btn,
+  .tab-thumb,
+  .exp-chip,
+  .exp-btn,
+  #admin-record-view,
+  #admin-export-view {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   数据概览 v2：整页铺开的指标大盘（参考 Ant Design 可视化页规范）
+   要点：概览第一 → 筛选聚焦 → 按需明细；一卡一主题；模块 5–9 个
+   ============================================================ */
+
+/* 只有概览标签下放宽容器，记录页 / 导出页仍是原窄卡 */
+#admin-view[data-tab="overview"] {
+  max-width: 1240px !important;
+  width: 100% !important;
+  padding: 40px 26px 100px !important;
+}
+
+.ov-page {
+  width: 100%;
+}
+
+.ov-head {
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.ov-head-left {
+  min-width: 0;
+}
+
+.ov-title {
+  font-size: 22px;
+}
+
+.ov-sub {
+  font-size: 12.5px;
+}
+
+.ov-head-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 统计范围分段筛选器 */
+.ov-range {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--glass-btn-bg);
+  border: 1px solid var(--border-card-glass);
+}
+
+.ov-range button {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ov-range button:hover:not(.on) {
+  color: var(--td-brand);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ov-range button.on {
+  color: #fff;
+  background: var(--td-brand);
+  box-shadow: 0 4px 12px rgba(0, 82, 217, 0.24);
+}
+
+/* 12 栅格 */
+.ov-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.ov-card {
+  margin-bottom: 0;
+  padding: 16px;
+}
+
+#admin-overview-view .span-12 { grid-column: span 12; }
+#admin-overview-view .span-8 { grid-column: span 8; }
+#admin-overview-view .span-6 { grid-column: span 6; }
+#admin-overview-view .span-4 { grid-column: span 4; }
+
+@media (min-width: 900px) {
+  .ov-card {
+    padding: 18px 18px 16px;
+    border-radius: 18px;
+  }
+  .ov-card .exp-card-title {
+    font-size: 14px;
+  }
+}
+
+/* 关键指标：宽屏一屏 6 张平铺 */
+@media (min-width: 1180px) {
+  .ov-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1179px) {
+  .ov-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 指标卡辅助说明：补口径，比只给数字更清楚 */
+.ov-kpi .k-sub {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 7px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* 收入构成：两个数值块 + 堆叠条 */
+.ov-compose-nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ov-num-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ov-num-block span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ov-num-block b {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--td-brand);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-num-block.allow b {
+  color: var(--exp-money);
+}
+
+.ov-num-block small {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-compose .ov-stack {
+  margin-top: 14px;
+}
+
+/* 饼图卡片里的图例改成竖排，五个班次都放得下 */
+#ov-pie .ov-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* 最近记录：明细行 */
+.ov-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rc-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto 58px 84px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  transition: background-color 0.18s ease;
+}
+
+.rc-row:hover {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.rc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.rc-date {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rc-date i {
+  margin-left: 4px;
+  font-style: normal;
+  opacity: 0.72;
+}
+
+.rc-shift {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.rc-hours {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rc-money {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--td-brand);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- 断点 ---- */
+@media (max-width: 1100px) {
+  #admin-overview-view .ov-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  #admin-overview-view .span-12 {
+    grid-column: span 2;
+  }
+  #admin-overview-view .span-8,
+  #admin-overview-view .span-6,
+  #admin-overview-view .span-4 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 720px) {
+  #admin-view[data-tab="overview"] {
+    padding: 22px 10px 96px !important;
+    border-radius: 18px;
+  }
+  #admin-overview-view .ov-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  #admin-overview-view .span-12,
+  #admin-overview-view .span-8,
+  #admin-overview-view .span-6,
+  #admin-overview-view .span-4 {
+    grid-column: span 1;
+  }
+  .ov-head {
+    align-items: flex-start;
+  }
+  .ov-kpis {
+    gap: 8px;
+  }
+  .ov-kpi .k-value {
+    font-size: 18px;
+  }
+  .ov-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .rc-row {
+    grid-template-columns: 8px minmax(0, 1fr) auto 76px;
+  }
+  .rc-hours {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .ov-range button {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+  .ov-compose-nums {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-range button,
+  .rc-row {
+    transition: none !important;
+  }
+}
+/* 每月工资对比：行间距（旧版有 ov-barlist 包裹，新版直接排） */
+.ov-bar-row {
+  min-width: 0;
+}
+
+.ov-bar-row + .ov-bar-row {
+  margin-top: 10px;
+}
+/* ---- 收尾修正：去掉多余留白 + 同排卡片等高 ---- */
+#admin-view[data-tab="overview"] {
+  padding: 40px 26px 88px !important;
+}
+
+#admin-view[data-tab="overview"] #admin-overview-view {
+  padding-bottom: 0;
+}
+
+.ov-grid {
+  align-items: stretch;
+}
+
+.ov-card {
+  display: flex;
+  flex-direction: column;
+}
+
+#ov-compose {
+  flex: 1;
+}
+
+.ov-compose {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+.ov-compose .ov-stack {
+  margin-top: 16px;
+}
+
+@media (max-width: 720px) {
+  #admin-view[data-tab="overview"] {
+    padding: 22px 10px 86px !important;
+  }
+}
+
+/* 宽度切换不做过渡：max-width 一旦参与 transition，浏览器会持续给出插值中间值，
+   切回记录页时宽度长期回不到位（实测 2 秒后仍停在 1152px）。宽度直接跳变，
+   页面切换本身已有淡入动画，观感不突兀 */
+#admin-view {
+  transition: padding 0.25s ease;
+}
+
+/* ============================================================
+   宽屏铺开：记录管理 / 数据导出 与概览共用 1240 宽度，
+   只有窄屏与手机才收窄成单列
+   ============================================================ */
+@media (min-width: 1024px) {
+  #admin-view,
+  #admin-view[data-tab="record"],
+  #admin-view[data-tab="export"] {
+    max-width: 1240px !important;
+    width: 100% !important;
+  }
+  #admin-view[data-tab="record"],
+  #admin-view[data-tab="export"] {
+    padding: 68px 40px 44px !important;
+  }
+  #admin-view[data-tab="export"] {
+    padding-bottom: 88px !important;
+  }
+}
+
+/* 记录页：日历在左、表单在右；列表通栏 */
+@media (min-width: 1024px) {
+  #admin-view[data-tab="record"] #admin-record-view {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    column-gap: 34px;
+    align-items: start;
+  }
+  #admin-view[data-tab="record"] .calendar-container {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  #admin-view[data-tab="record"] .record-form {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  #admin-view[data-tab="record"] .record-list,
+  #admin-view[data-tab="record"] .sub-title {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 导出页：筛选与结果并排，明细通栏 */
+@media (min-width: 1024px) {
+  #admin-view[data-tab="export"] #admin-export-view {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 20px;
+    row-gap: 20px;
+    align-items: stretch;
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-head {
+    grid-column: 1 / -1;
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-card {
+    margin-bottom: 0;
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-card:nth-of-type(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================================
+   一键回到顶部
+   ============================================================ */
+#back-to-top {
+  position: fixed;
+  right: 22px;
+  bottom: 96px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-glass-strong);
+  background: var(--glass-btn-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--td-brand, #0052d9);
+  box-shadow: 0 10px 26px rgba(15, 45, 92, 0.16);
+  cursor: pointer;
+  z-index: 9000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+#back-to-top.show {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+#back-to-top:hover {
+  background: var(--card-primary, #ffffff);
+  box-shadow: 0 14px 30px rgba(15, 45, 92, 0.2);
+}
+
+#back-to-top:active {
+  transform: scale(0.94);
+}
+
+#back-to-top svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 720px) {
+  #back-to-top {
+    right: 14px;
+    bottom: 88px;
+    width: 40px;
+    height: 40px;
+  }
+  /* 手机宽屏底部导航通栏铺满，主题按钮上移让开，避免与导航压在一起 */
+  #admin-view:not(.hidden) ~ #theme-switcher {
+    bottom: 92px;
+    left: 14px;
+  }
+}
+
+/* ============================================================
+   筛选切换时的图表过渡动效（条形生长 / 折线重绘 / 环形展开）
+   ============================================================ */
+.ov-bar-fill,
+.ov-week-row .wk-fill,
+.ov-stack i {
+  transform-origin: left center;
+  animation: ovGrowX 0.62s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.ov-svg .ov-bar-rect {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: ovGrowY 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.ov-donut {
+  animation: ovDonutIn 0.66s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.ov-dot-pt {
+  animation: ovDotIn 0.35s ease both;
+}
+
+.ov-kpi {
+  animation: ovKpiIn 0.45s ease both;
+}
+
+@keyframes ovGrowX {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes ovGrowY {
+  from { transform: scaleY(0.03); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes ovDonutIn {
+  from { opacity: 0; transform: rotate(-14deg) scale(0.9); }
+  to { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+@keyframes ovDotIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ovKpiIn {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+/* ============================================================
+   手机端：明细预览改为卡片式两行布局（不再横向挤压 / 左列被裁）
+   ============================================================ */
+@media (max-width: 720px) {
+  #admin-view:not(.hidden) ~ #music-player {
+    right: 62px;
+    bottom: 88px;
+  }
+
+  .exp-table-wrap {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .exp-table {
+    min-width: 0;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .exp-table-hint {
+    display: none !important;
+  }
+
+  .exp-table thead {
+    display: none;
+  }
+
+  .exp-table tbody {
+    display: block;
+  }
+
+  .exp-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 6px;
+    row-gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--exp-hairline);
+    align-items: baseline;
+  }
+
+  .exp-table tbody tr:nth-child(even) {
+    background: var(--exp-row-alt);
+  }
+
+  .exp-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .exp-table tbody td {
+    border: 0;
+    padding: 0;
+    min-width: 0;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 第一行：日期 · 星期 · 班次 */
+  .exp-table tbody td:nth-child(1) {
+    grid-area: 1 / 1 / 2 / 5;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  .exp-table tbody td:nth-child(2) {
+    grid-area: 1 / 5 / 2 / 7;
+    align-self: center;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  .exp-table tbody td:nth-child(3) {
+    grid-area: 1 / 7 / 2 / 9;
+    font-weight: 600;
+  }
+
+  /* 第二行：班次时间（上班 – 下班）· 工时 · 合计总工资 */
+  .exp-table tbody td:nth-child(4) {
+    grid-area: 2 / 1 / 3 / 3;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .exp-table tbody td:nth-child(4)::after {
+    content: "–";
+    margin-left: 2px;
+    color: var(--text-secondary);
+  }
+
+  .exp-table tbody td:nth-child(5) {
+    grid-area: 2 / 3 / 3 / 5;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .exp-table tbody td:nth-child(6) {
+    grid-area: 2 / 5 / 3 / 9;
+    text-align: left;
+    color: var(--text-secondary);
+  }
+
+  .exp-table tbody td:nth-child(9) {
+    grid-area: 2 / 9 / 3 / 13;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--td-brand);
+  }
+
+  /* 第三行：备注（挂在班次时间下方，占满整行） */
+  .exp-table tbody td:nth-child(10) {
+    grid-area: 3 / 1 / 4 / 13;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  .exp-table tbody td:nth-child(10)::before {
+    content: "备注 ";
+    color: var(--text-secondary);
+    opacity: 0.8;
+  }
+
+  /* 第四行：基本 / 补贴 */
+  .exp-table tbody td:nth-child(7) {
+    grid-area: 4 / 1 / 5 / 5;
+    text-align: left;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  .exp-table tbody td:nth-child(8) {
+    grid-area: 4 / 5 / 5 / 11;
+    text-align: left;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  /* 去掉表头后用小标签说明每块数字 */
+  .exp-table tbody td:nth-child(6)::before {
+    content: "工时 ";
+  }
+
+  .exp-table tbody td:nth-child(7)::before {
+    content: "基本 ";
+  }
+
+  .exp-table tbody td:nth-child(8)::before {
+    content: "补贴 ";
+  }
+
+  .exp-table tbody td:nth-child(9)::before {
+    content: "合计 ";
+    font-size: 10px;
+    font-weight: 600;
+  }
+}
+
+/* ============================================================
+   导出页与记录表单的过渡动效
+   ============================================================ */
+:root {
+  interpolate-size: allow-keywords;
+}
+
+.exp-card {
+  animation: expCardIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes expCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.exp-stat {
+  animation: expStatIn 0.44s ease both;
+}
+
+@keyframes expStatIn {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exp-table tbody tr {
+  animation: expRowIn 0.34s ease both;
+}
+
+@keyframes expRowIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exp-chip {
+  transition:
+    transform 0.16s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.exp-chip:active {
+  transform: scale(0.94);
+}
+
+.exp-btn {
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.exp-btn:not(:disabled):hover {
+  box-shadow: 0 10px 22px rgba(0, 82, 217, 0.18);
+}
+
+.exp-btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.exp-stat-value {
+  transition: color 0.2s ease;
+}
+
+/* 记录管理：选班次后，时间/饭点/备注行像下拉框一样展开 */
+.record-form .time-row.anim-row {
+  overflow: hidden;
+  transition:
+    height 0.34s cubic-bezier(0.22, 1.2, 0.36, 1),
+    opacity 0.26s ease,
+    transform 0.34s cubic-bezier(0.22, 1.2, 0.36, 1),
+    margin 0.3s ease;
+}
+
+.record-form .time-row.anim-row.hidden {
+  display: flex !important;
+  height: 0;
+  min-height: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exp-card,
+  .exp-stat,
+  .exp-table tbody tr {
+    animation: none !important;
+  }
+  .record-form .time-row.anim-row {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   宽屏底部撑满：导出页明细预览铺到导航上方；概览页填满一屏
+   ============================================================ */
+@media (min-width: 1024px) {
+  #admin-view[data-tab="export"] {
+    min-height: calc(100vh - 32px);
+  }
+  #admin-view[data-tab="export"] #admin-export-view {
+    min-height: calc(100vh - 188px);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-card:nth-of-type(3) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-card:nth-of-type(3) .exp-table-wrap {
+    flex: 1 1 auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  #admin-view[data-tab="overview"] {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 32px);
+  }
+  #admin-view[data-tab="overview"] #admin-overview-view {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #admin-view[data-tab="overview"] .ov-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  /* 同排卡片等高，但不把整页行高强行拉满，避免卡片内出现大片空白 */
+  #admin-view[data-tab="overview"] #ov-month {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  #admin-view[data-tab="overview"] #ov-hours {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+/* ---- 班次时间：桌面端分「上班 / 下班」两列，手机端合并为「上班 – 下班」 ---- */
+.exp-t-range {
+  display: none;
+}
+
+/* ============================================================
+   手机端明细：三行卡片
+   1) 日期 · 星期 · 班次
+   2) 班次时间（上班 – 下班）· 工时 · 合计总工资
+   3) 备注（挂在班次时间下方）
+   ============================================================ */
+@media (max-width: 720px) {
+  .exp-table tbody td:nth-child(4) {
+    grid-area: 2 / 1 / 3 / 6;
+    overflow: visible;
+  }
+  .exp-table tbody td:nth-child(4)::after {
+    content: none !important;
+  }
+  .exp-table tbody td:nth-child(5),
+  .exp-table tbody td:nth-child(7),
+  .exp-table tbody td:nth-child(8) {
+    display: none !important;
+  }
+  .exp-table tbody td:nth-child(6) {
+    grid-area: 2 / 6 / 3 / 8;
+  }
+  .exp-table tbody td:nth-child(9) {
+    grid-area: 2 / 8 / 3 / 13;
+    overflow: visible;
+  }
+  .exp-table tbody td:nth-child(10) {
+    grid-area: 3 / 1 / 4 / 13;
+  }
+  .exp-t-start {
+    display: none;
+  }
+  .exp-t-range {
+    display: inline;
+  }
+  .exp-table tbody td:nth-child(9)::before {
+    content: "合计总工资 ";
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+}
+
+/* ============================================================
+   宽屏：底部不留空
+   1) 导出页去掉重复的底部内边距，明细卡直接铺到面板底；
+   2) 明细表行高撑满卡片，20 行不够高时也把剩余空间摊到每一行；
+   3) 概览页底部只留导航避让的那一点距离。
+   ============================================================ */
+@media (min-width: 1024px) {
+  #admin-view[data-tab="export"] {
+    padding-bottom: 76px !important;
+  }
+  #admin-view[data-tab="export"] #admin-export-view {
+    padding-bottom: 0 !important;
+  }
+  #admin-view[data-tab="overview"] {
+    padding-bottom: 76px !important;
+  }
+  #admin-view[data-tab="export"] #admin-export-view > .exp-card:nth-of-type(3) .exp-table {
+    height: 100%;
+  }
+}
+
+/* 高分辨率大屏：概览内容不足一屏时，把剩余高度摊到卡片间距，底部不空 */
+@media (min-width: 1024px) {
+  #admin-view[data-tab="overview"] #admin-overview-view .ov-grid {
+    flex: 1 1 auto;
+    align-content: space-between;
+    min-height: 0;
+  }
+}
+
+/* ============================================================
+   悬停底色走主题变量：夜间模式下不能再铺白底，否则数字看不清
+   ============================================================ */
+:root {
+  --ov-hover-bg: rgba(255, 255, 255, 0.92);
+  --ov-row-hover: rgba(255, 255, 255, 0.88);
+  --ov-chip-hover: rgba(255, 255, 255, 0.7);
+  --ov-hover-shadow: 0 10px 24px rgba(15, 45, 92, 0.1);
+}
+
+:root[data-theme="dark"] {
+  --ov-hover-bg: rgba(255, 255, 255, 0.08);
+  --ov-row-hover: rgba(255, 255, 255, 0.07);
+  --ov-chip-hover: rgba(255, 255, 255, 0.14);
+  --ov-hover-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+}
+
+.ov-kpi:hover {
+  background: var(--ov-hover-bg);
+  box-shadow: var(--ov-hover-shadow);
+}
+
+.ov-range button:hover:not(.on) {
+  background: var(--ov-chip-hover);
+  color: var(--td-brand);
+}
+
+.rc-row:hover {
+  background: var(--ov-row-hover);
+}

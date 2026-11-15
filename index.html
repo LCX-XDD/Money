@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -31,6 +31,8 @@
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4969/4969649.png">
 
   <link rel="stylesheet" href="./css/style.css">
+  <!-- 管理员页专用：底部悬浮导航 + 数据导出视图 -->
+  <link rel="stylesheet" href="./css/export-tool.css">
 </head>
 <body>
     <!-- 金币雨背景层：back 在卡片后（多），front 在卡片前（少） -->
@@ -91,6 +93,8 @@
 
   <!-- 管理员页面 -->
   <div id="admin-view" class="hidden">
+    <!-- 记录管理视图（原有表单与列表） -->
+    <div id="admin-record-view">
     <!-- ✅ 管理员日历：新左右按钮布局，ID唯一 -->
     <div class="calendar-container">
       <!-- 左：上一月按钮 -->
@@ -111,7 +115,8 @@
       <button id="admin-next-month-btn" class="calendar-btn next-btn">›</button>
     </div>
 
-    <!-- 记录表单 -->
+    <!-- 记录表单（宽屏时与日历左右分栏，窄屏自动回落成竖排） -->
+    <div class="record-form">
     <input type="date" id="record-date" class="form-input">
     <select id="record-shift" class="form-input">
       <option value="">请选择班次</option>
@@ -122,23 +127,23 @@
       <option value="休息">休息</option>
     </select>
 
-    <div id="normal-time-row" class="time-row hidden">
+    <div id="normal-time-row" class="time-row anim-row hidden">
       <label>上班时间：</label>
       <select id="shift-start" class="time-select"></select>
     </div>
-    <div id="normal-end-row" class="time-row hidden">
+    <div id="normal-end-row" class="time-row anim-row hidden">
       <label>下班时间：</label>
       <select id="shift-end" class="time-select"></select>
     </div>
-    <div id="part2-start-row" class="time-row hidden">
+    <div id="part2-start-row" class="time-row anim-row hidden">
       <label>第二段上班：</label>
       <select id="shift-start2" class="time-select"></select>
     </div>
-    <div id="part2-end-row" class="time-row hidden">
+    <div id="part2-end-row" class="time-row anim-row hidden">
       <label>第二段下班：</label>
       <select id="shift-end2" class="time-select"></select>
     </div>
-<div id="meal-wrap" class="time-row hidden">
+<div id="meal-wrap" class="time-row anim-row hidden">
   <label>饭点：</label>
   <!-- 只保留开始/结束饭点时间输入框；只填开始时默认按1小时饭点扣除 -->
   <div style="display:flex;margin-left:8px;gap:6px;align-items:center;flex:1;">
@@ -161,14 +166,58 @@
     <div class="btn-back">
       <button id="back-user">返回用户页</button>
     </div>
+    </div><!-- /.record-form -->
 
     <!-- 管理列表 -->
-    <h3 class="sub-title">管理列表</h3>
-    <div class="list" id="admin-list"></div>
+    <div class="record-list">
+      <h3 class="sub-title">管理列表</h3>
+      <div class="list" id="admin-list"></div>
+    </div>
+    </div><!-- /#admin-record-view -->
+
+    <!-- 数据导出视图（内容由 js/export-tool.js 渲染） -->
+    <div id="admin-export-view" class="hidden"></div>
+
+    <!-- 数据概览视图（内容由 js/export-tool.js 渲染） -->
+    <div id="admin-overview-view" class="hidden"></div>
   </div>
 
   <!-- 管理员入口（右下角） -->
   <div id="admin-entrance">LCX</div>
+
+  <!-- 管理员页底部悬浮导航：固定屏幕底部、毛玻璃胶囊，覆盖在页面内容之上 -->
+  <nav id="admin-bottom-nav" data-active="record" aria-label="管理员页面切换">
+    <span class="tab-thumb" aria-hidden="true"></span>
+    <button class="tab-btn active" type="button" data-admin-tab="record" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 6h12M8 12h12M8 18h8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <circle cx="4.6" cy="6" r="1.4" fill="currentColor"/>
+        <circle cx="4.6" cy="12" r="1.4" fill="currentColor"/>
+        <circle cx="4.6" cy="18" r="1.4" fill="currentColor"/>
+      </svg>
+      <span class="tab-label">记录管理</span>
+    </button>
+    <button class="tab-btn" type="button" data-admin-tab="export" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4v10m0 0l-4-4m4 4l4-4M5 17v2h14v-2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="tab-label">数据导出</span>
+    </button>
+    <button class="tab-btn" type="button" data-admin-tab="overview" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19V9m5 10V5m5 14V8m5 5v14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M3 21h18" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".5"/>
+      </svg>
+      <span class="tab-label">数据概览</span>
+    </button>
+  </nav>
+
+  <!-- 一键回到顶部（滚动超过一屏后出现） -->
+  <button id="back-to-top" type="button" aria-label="回到顶部">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 19V6m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
   <!-- 登录弹窗 -->
   <div id="login-overlay" class="modal-overlay">
@@ -360,5 +409,7 @@
   <!-- LeanCloud SDK -->
   <script src="./js/av-min.js"></script>
   <script src="./js/script.js"></script>
+  <!-- 管理页数据导出模块（底部导航切换 + 导出） -->
+  <script src="./js/export-tool.js"></script>
 </body>
 </html>
