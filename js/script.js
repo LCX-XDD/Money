@@ -1401,7 +1401,7 @@ calcBtn.onclick = function (e) {
     <strong>本期总工资：¥${round2(totalWage).toFixed(2)}</strong>
   `;
   document.getElementById('cycle-total-overlay').classList.add('show');
-  disableBodyScroll();
+  /* 弹窗自身是全屏遮罩，不再锁 body：锁了会触发 iOS 整页重排，动画反而生硬 */
 };
   if (showCalc) listEl.appendChild(calcBtn);
 

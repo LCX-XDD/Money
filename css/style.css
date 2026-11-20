@@ -304,7 +304,7 @@ body.admin-active {
   padding: 0;
   width: 100%;
   max-width: 100%;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body.admin-active .white-window {
@@ -368,14 +368,15 @@ body.admin-active .white-window {
   justify-content: center;
   align-items: center;
   opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
+  pointer-events: none;
+  /* 常驻 + 只淡入淡出，避免 visibility 切换在 iOS 上丢首帧 */
+  transition: opacity 0.2s ease;
   z-index: 20;
 }
 
 .total-wage-box.loading .loading-overlay {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
 }
 
 .refresh-btn {
@@ -561,8 +562,8 @@ body.admin-active .white-window {
   cursor: pointer;
   position: relative;
   color: var(--text-primary);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, box-shadow;
+  /* 只过渡真正会变的属性；42 个格子常驻 will-change 会在 iOS 上堆出一堆合成层，反而拖慢整页 */
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   min-width: 0; /* 强制不被内容撑开 */
   overflow: hidden;
 }
@@ -836,19 +837,21 @@ body:not(.admin-active) .btn-back {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+  /* 同样不切 visibility：常驻 + 背景色渐变，避免 iOS 首帧丢帧导致的“啪一下出现” */
+  background: rgba(0, 0, 0, 0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  transition: background-color 0.26s ease;
 }
 
 .modal-overlay.show {
-  opacity: 1;
-  visibility: visible;
+  background: var(--overlay-bg);
+  pointer-events: auto;
 }
 
 .modal-box {
@@ -861,13 +864,16 @@ body:not(.admin-active) .btn-back {
   max-width: 400px;
   max-height: 80vh;
   overflow: hidden;
-  transform: translateY(20px);
-  transition: transform 0.3s ease, background-color 0.3s ease;
+  /* 收起时缩小并下沉、同时透明，打开时回位：小弹窗用“轻微放大 + 淡入”比纯位移更不生硬 */
+  transform: translateY(14px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.30s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.24s ease, background-color 0.3s ease;
   box-shadow: var(--shadow-glass-modal);
 }
 
 .modal-overlay.show .modal-box:not(.drawer-panel) {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
 .modal-content {
@@ -1071,13 +1077,14 @@ body:not(.admin-active) .btn-back {
   font-size: 14px;
   z-index: 10000;
   opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+  pointer-events: none;
+  transform: translate(-50%, -8px);
+  transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.2, 0.7, 0.3, 1), background-color 0.3s ease;
 }
 
 .toast.show {
   opacity: 1;
-  visibility: visible;
+  transform: translate(-50%, 0);
 }
 
 .toast.success {
@@ -1180,7 +1187,7 @@ body.admin-active .calendar-wrap {
   font-weight: 600;
   color: var(--progress-text-color);
   margin: 0;
-  transition: all 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+  transition: font-size 0.45s cubic-bezier(0.34, 1.4, 0.64, 1), color 0.3s ease;
 }
 
 /* 默认：进度环隐藏，只显示居中的标题文字；展开后：标题缩小到左上，环渐显到中间 */
@@ -1339,7 +1346,7 @@ body.admin-active .progress-window {
   box-shadow: var(--shadow-primary);
   width: 100%;
   max-width: 100%;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
   position: relative;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -1485,6 +1492,7 @@ body.drawer-open::before {
      这里背景本身够淡，去掉 blur 肉眼几乎看不出差别，但滑入顺很多。 */
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  opacity: 1;   /* 抽屉是子元素，不能被通用弹窗的 opacity:0 收起态压暗 */
   border: none;
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
@@ -1951,15 +1959,20 @@ body.drawer-open::before {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  animation: music-panel-in 0.25s ease;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-@keyframes music-panel-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+#music-panel:not(.hidden) {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
-#music-panel.hidden { display: none; }
+/* 关着时保持布局常驻（用透明态隐藏），别用 display:none：每次打开都要重建，iOS 上会先闪一下 */
+#music-panel.hidden { display: flex !important; }  /* 压过全局 .hidden 的 display:none!important，用透明态收起 */
 
 #music-panel-title {
   font-size: 12px;
@@ -2141,15 +2154,20 @@ body.drawer-open::before {
   border: 1px solid var(--td-border);
   border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
-  animation: theme-menu-in 0.2s ease;
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  pointer-events: none;
+  transform-origin: bottom right;
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-#theme-menu.hidden { display: none; }
-
-@keyframes theme-menu-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+#theme-menu:not(.hidden) {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
+
+#theme-menu.hidden { display: flex !important; }
 
 .theme-option {
   width: 100%;
