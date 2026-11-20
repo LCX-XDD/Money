@@ -60,6 +60,20 @@
     return isNaN(n) ? 0 : n;
   }
 
+  /* 计薪口径与 js/script.js 保持一致：试用期 2700、转正 2900，月标准工时 208 */
+  var BASE_SALARY = 2900;
+  var TRIAL_SALARY = 2700;
+  var TRIAL_END_DATE = '2026-05-31';
+  var MONTH_HOURS = 208;
+
+  function hourlyRate(dateStr) {
+    var base = (String(dateStr || '').slice(0, 10) <= TRIAL_END_DATE) ? TRIAL_SALARY : BASE_SALARY;
+    return base / MONTH_HOURS;
+  }
+
+  function round3(n) { return Math.round((safeNum(n) + Number.EPSILON) * 1000) / 1000; }
+
+
   function trunc2(n) {
     return Math.floor(safeNum(n) * 100) / 100;
   }
@@ -111,26 +125,32 @@
     }
   }
 
-  /* 工时算法：与主页面 calcWorkHours 完全一致 */
+  /* 工时算法：与主页面 calcRecordHours 完全一致
+     工作时长 − 饭点与实际工作时段的重叠部分（拼班中场休息里吃饭不重复扣） */
   function calcHours(r) {
-    if (r.shift === '休息') return 0;
-    var h = 0;
-    var s = hourOf(r.shiftStart);
-    var e = hourOf(r.shiftEnd);
-    if (s !== null && e !== null && e > s) h += e - s;
-    if (r.shift === '拼班') {
-      var s2 = hourOf(r.shiftStart2);
-      var e2 = hourOf(r.shiftEnd2);
-      if (s2 !== null && e2 !== null && e2 > s2) h += e2 - s2;
+    if (!r || r.shift === '休息') return 0;
+    var segs = [];
+    var push = function (s, e) {
+      var a = minOf(s);
+      var b = minOf(e);
+      if (a !== null && b !== null && b > a) segs.push([a, b]);
+    };
+    push(r.shiftStart, r.shiftEnd);
+    if (r.shift === '拼班') push(r.shiftStart2, r.shiftEnd2);
+    var worked = 0;
+    segs.forEach(function (s) { worked += s[1] - s[0]; });
+    var meal = 0;
+    var ms = minOf(r.mealStart);
+    if (ms !== null) {
+      var meRaw = minOf(r.mealEnd);
+      var me = meRaw === null ? ms + 60 : meRaw;
+      if (me > ms) {
+        segs.forEach(function (s) { meal += Math.max(0, Math.min(s[1], me) - Math.max(s[0], ms)); });
+      }
     }
-    if (r.mealStart) {
-      var sm = minOf(r.mealStart);
-      var em = minOf(r.mealEnd);
-      if (em === null) em = sm + 60;
-      if (em > sm) h = Math.max(0, h - (em - sm) / 60);
-    }
-    return h;
+    return Math.max(0, (worked - meal) / 60);
   }
+
 
   function cycleRange(now) {
     var start, end;
@@ -315,6 +335,8 @@
       list.forEach(function (r) {
         r.weekday = weekdayOf(r.date);
         r.hours = calcHours(r);
+        // 基本工资统一由「工时 × 当期时薪」推导（试用期 2700 / 转正 2900），和主页面同源
+        r.money = round3(r.hours * hourlyRate(r.date));
       });
       state.all = list;
       state.loaded = true;
@@ -1254,6 +1276,83 @@
     return map;
   }
 
+  /* 计薪周期 26 日 ~ 次月 25 日：给周期维度出图用 */
+  function cycleOf(dateStr) {
+    var p = String(dateStr || '').split('-');
+    if (p.length < 3) return null;
+    var y = Number(p[0]), m = Number(p[1]), d = Number(p[2]);
+    if (!y || !m || !d) return null;
+    return d >= 26
+      ? { start: formatDate(new Date(y, m - 1, 26)), end: formatDate(new Date(y, m, 25)) }
+      : { start: formatDate(new Date(y, m - 2, 26)), end: formatDate(new Date(y, m - 1, 25)) };
+  }
+
+  function buildCycleMap(list) {
+    var map = {};
+    list.forEach(function (r) {
+      var c = cycleOf(r.date);
+      if (!c) return;
+      var m = map[c.start] || (map[c.start] = {
+        key: c.start, end: c.end, records: 0, days: 0, hours: 0, base: 0, allow: 0, total: 0
+      });
+      m.records += 1;
+      if (r.shift !== '休息') {
+        m.days += 1;
+        m.hours += r.hours;
+      }
+      m.base += r.money;
+      m.allow += r.allowance;
+      m.total = m.base + m.allow;
+    });
+    return map;
+  }
+
+  /* 周期短标签：6.26-7.25 */
+  function cycleLabel(item) {
+    return Number(item.key.slice(5, 7)) + '.' + Number(item.key.slice(8, 10)) + '-' +
+      Number(item.end.slice(5, 7)) + '.' + Number(item.end.slice(8, 10));
+  }
+
+  function cycleSeries(map, count) {
+    var keys = Object.keys(map).sort();
+    if (!keys.length) return [];
+    var picked = count ? keys.slice(Math.max(0, keys.length - count)) : keys;
+    return picked.map(function (k) { return map[k]; });
+  }
+
+  /* 周期内每一天：给「当下周期」的每日曲线/柱图用，没记录的日子也占位（0 元 / 0 小时） */
+  function buildDailySeries(list, from, to) {
+    var byDate = {};
+    list.forEach(function (r) {
+      if (!r.date) return;
+      var d = byDate[r.date] || (byDate[r.date] = { total: 0, hours: 0, days: 0 });
+      d.total += safeNum(r.money) + safeNum(r.allowance);
+      if (r.shift !== '休息') {
+        d.days += 1;
+        d.hours += safeNum(r.hours);
+      }
+    });
+    var out = [];
+    var sy = Number(String(from).slice(0, 4)), sm = Number(String(from).slice(5, 7)), sd = Number(String(from).slice(8, 10));
+    var ey = Number(String(to).slice(0, 4)), em = Number(String(to).slice(5, 7)), ed = Number(String(to).slice(8, 10));
+    var start = new Date(sy, sm - 1, sd);
+    var end = new Date(ey, em - 1, ed);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return out;
+    for (var t = start.getTime(); t <= end.getTime(); t += 86400000) {
+      var ds = formatDate(new Date(t));
+      var d = byDate[ds];
+      out.push({
+        key: ds,
+        label: Number(ds.slice(5, 7)) + '.' + Number(ds.slice(8, 10)),
+        tip: ds + (d ? '' : ' · 无记录'),
+        total: d ? d.total : 0,
+        hours: d ? d.hours : 0,
+        days: d ? d.days : 0
+      });
+    }
+    return out;
+  }
+
   function recentMonths(map, count) {
     var keys = Object.keys(map).sort();
     var end = keys.length ? keys[keys.length - 1] : formatDate(new Date()).slice(0, 7);
@@ -1307,9 +1406,12 @@
 
     var xlab = '';
     items.forEach(function (it, idx) {
-      if (n > 8 && idx % 2 === 1 && idx !== n - 1) return;
-      xlab += '<text x="' + pts[idx].x.toFixed(1) + '" y="' + (H - 8) +
-        '" text-anchor="middle" class="ov-axis-text">' + monthText(it.key) + '</text>';
+      if (n > 10 && idx % 2 === 1 && idx !== n - 1) return;
+      if (n > 10 && idx === n - 2) return;                 /* 倒数第二个让位给末日标签，避免叠字 */
+      var isLast = (n > 10 && idx === n - 1);
+      xlab += '<text x="' + (isLast ? pts[idx].x + 2 : pts[idx].x).toFixed(1) + '" y="' + (H - 8) +
+        '" text-anchor="' + (isLast ? 'end' : 'middle') + '" class="ov-axis-text">' +
+        (it.label || monthText(it.key)) + '</text>';
     });
 
     var dots = '';
@@ -1323,8 +1425,8 @@
     /* 每个点的透明热区：悬停出数值气泡 */
     var hits = '';
     items.forEach(function (it, idx) {
-      var tipText = it.key + ' · ' + fmtMoney(it.total) + ' 元 · ' + fmtHours(it.hours) + ' 小时 · ' +
-        it.days + ' 天出勤';
+      var tipText = (it.tip || it.label || it.key) + ' · ' + fmtMoney(it.total) + ' 元 · ' +
+        fmtHours(it.hours) + ' 小时 · ' + it.days + ' 天出勤';
       hits += '<circle class="ov-hit" cx="' + pts[idx].x.toFixed(1) + '" cy="' + pts[idx].y.toFixed(1) +
         '" r="10" fill="transparent" data-tip="' + escapeHtml(tipText) + '"/>';
     });
@@ -1356,7 +1458,7 @@
     var step = iw / (items.length || 1);
     var bw = Math.min(step * 0.5, 36);
     var max = niceMax(Math.max.apply(null, items.map(function (it) { return it[valueKey]; }).concat([1])));
-    var bars = '', vals = '', labs = '';
+    var bars = '', vals = '', labs = '', skipLab = step < 34;
 
     items.forEach(function (it, i) {
       var v = safeNum(it[valueKey]);
@@ -1366,13 +1468,21 @@
       bars += '<rect class="ov-bar-rect" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) +
         '" height="' + Math.max(h, 1.5).toFixed(1) + '" rx="' + Math.min(bw / 2, 5).toFixed(1) +
         '" fill="' + color + '" opacity="' + (v > 0 ? 0.92 : 0.14) + '"' +
-        ' data-tip="' + escapeHtml(it.key + ' · ' + fmtHours(v) + ' 小时 · ' + it.days + ' 天出勤') + '"/>';
+        ' data-tip="' + escapeHtml((it.tip || it.label || it.key) + ' · ' + fmtHours(v) + ' 小时 · ' +
+          (it.days ? it.days + ' 天出勤' : '无出勤')) + '"/>';
       if (v > 0) {
         vals += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) +
           '" text-anchor="middle" class="ov-value-text">' + fmtHours(v) + '</text>';
       }
-      labs += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 9) +
-        '" text-anchor="middle" class="ov-axis-text">' + monthText(it.key) + '</text>';
+      var total = items.length;
+      var showLab = !skipLab || i % 2 === 0 || i === total - 1;
+      if (skipLab && i === total - 2) showLab = false;      /* 倒数第二个让位给末日标签 */
+      if (showLab) {
+        var isLastBar = skipLab && i === total - 1;
+        labs += '<text x="' + (x + bw / 2 + (isLastBar ? 2 : 0)).toFixed(1) + '" y="' + (H - 9) +
+          '" text-anchor="' + (isLastBar ? 'end' : 'middle') + '" class="ov-axis-text">' +
+          (it.label || monthText(it.key)) + '</text>';
+      }
     });
 
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="ov-svg">' + bars + vals + labs + '</svg>';
@@ -1425,24 +1535,24 @@
         return r.date && r.date >= cs && r.date <= ce;
       });
     }
-    var n = Number(range);
-    if (!isFinite(n) || n <= 0) return records;
-    var keys = records.map(function (r) { return monthOf(r.date); }).filter(Boolean).sort();
+    /* 近 6 个月 = 最近 6 个计薪周期（26 日 ~ 次月 25 日），不按自然月切 */
+    var keys = Object.keys(buildCycleMap(records)).sort();
     if (!keys.length) return records;
-    var start = monthList(n, keys[keys.length - 1])[0];
+    var keep = {};
+    keys.slice(Math.max(0, keys.length - 6)).forEach(function (k) { keep[k] = 1; });
     return records.filter(function (r) {
-      var k = monthOf(r.date);
-      return k && k >= start;
+      var cy = cycleOf(r.date);
+      return cy && keep[cy.start];
     });
   }
 
-  function rangeText() {
+  function ovRangeText() {
     if (ovRange === 'cycle') {
       var c = cycleRange(new Date());
       return '本计薪周期 ' + formatDate(c.start).slice(5) + ' 至 ' + formatDate(c.end).slice(5);
     }
-    if (ovRange === 'all') return '全部时间';
-    return ovRange === '6' ? '近 6 个月' : '近 12 个月';
+    if (ovRange === 'all') return '全部周期';
+    return '近 6 个周期';
   }
 
   function buildOverviewUI() {
@@ -1455,12 +1565,11 @@
         '<header class="ov-head">' +
           '<div class="ov-head-left">' +
             '<h2 class="ov-title">数据概览</h2>' +
-            '<p class="ov-sub">月度趋势、班次结构与收入构成，一屏看全</p>' +
+            '<p class="ov-sub">周期趋势、班次结构与收入构成，一屏看全</p>' +
           '</div>' +
           '<div class="ov-head-tools">' +
             '<div class="ov-range" id="ov-range" role="group" aria-label="统计范围">' +
               '<button type="button" class="on" data-range="all">全部</button>' +
-              '<button type="button" data-range="12">近 12 个月</button>' +
               '<button type="button" data-range="6">近 6 个月</button>' +
               '<button type="button" data-range="cycle">当下周期</button>' +
             '</div>' +
@@ -1478,8 +1587,8 @@
           '</section>' +
 
           '<section class="exp-card ov-card span-8 ov-anim" style="animation-delay:.06s">' +
-            '<div class="exp-card-head"><span class="exp-card-title">月度收入趋势</span>' +
-              '<span class="exp-card-meta" id="ov-trend-meta">最近 12 个月</span></div>' +
+            '<div class="exp-card-head"><span class="exp-card-title" id="ov-trend-title">周期收入趋势</span>' +
+              '<span class="exp-card-meta" id="ov-trend-meta">全部周期</span></div>' +
             '<div class="ov-chart" id="ov-trend"><div class="ov-empty">正在读取数据库…</div></div>' +
           '</section>' +
 
@@ -1490,14 +1599,14 @@
           '</section>' +
 
           '<section class="exp-card ov-card span-6 ov-anim" style="animation-delay:.12s">' +
-            '<div class="exp-card-head"><span class="exp-card-title">每月工资对比</span>' +
-              '<span class="exp-card-meta" id="ov-month-meta">最近 6 个月</span></div>' +
+            '<div class="exp-card-head"><span class="exp-card-title">周期工资对比</span>' +
+              '<span class="exp-card-meta" id="ov-month-meta">最近 6 个周期</span></div>' +
             '<div id="ov-month"><div class="ov-empty">正在读取数据库…</div></div>' +
           '</section>' +
 
           '<section class="exp-card ov-card span-6 ov-anim" style="animation-delay:.18s">' +
-            '<div class="exp-card-head"><span class="exp-card-title">月度工时</span>' +
-              '<span class="exp-card-meta" id="ov-hours-meta">最近 6 个月</span></div>' +
+            '<div class="exp-card-head"><span class="exp-card-title" id="ov-hours-title">周期工时</span>' +
+              '<span class="exp-card-meta" id="ov-hours-meta">全部周期</span></div>' +
             '<div class="ov-chart" id="ov-hours"><div class="ov-empty">正在读取数据库…</div></div>' +
           '</section>' +
 
@@ -1559,33 +1668,60 @@
       return;
     }
 
-    var label = rangeText();
+    var label = ovRangeText();
     var src = rangeRecords(state.all, ovRange);
     var sum = summarize(src);
-    var map = buildMonthMap(src);
-    var keys = Object.keys(map).sort();
-    /* 图表窗口跟随筛选联动：全部 / 近 12 → 12 个月，近 6 → 6 个月，
-       当下周期 → 周期内实际覆盖的月份，保证每张卡都随筛选变 */
-    var winCount = ovRange === '6' ? 6 : 12;
-    var monthsTrend = ovRange === 'cycle'
-      ? recentMonths(map, Math.max(1, Math.min(keys.length, 12)))
-      : recentMonths(map, winCount);
-    /* 每月工资对比 / 月度工时跟随档位：全部→全部月份，近 12/近 6→对应窗口，当下周期→周期内月份 */
-    var monthsBars = ovRange === 'cycle'
-      ? monthsTrend
-      : recentMonths(map, ovRange === 'all' ? Math.max(1, keys.length)
-        : (ovRange === '12' ? 12 : 6));
-    var windowLabel = ovRange === 'cycle' ? label : '最近 ' + winCount + ' 个月';
-    var barLabel = ovRange === 'cycle'
-      ? label
-      : (ovRange === 'all'
-        ? '全部 ' + monthsBars.length + ' 个月'
-        : '近 ' + (ovRange === '12' ? 12 : 6) + ' 个月 · ' + monthsBars.length + ' 个月有记录');
+
+    /* 统一口径：一切按计薪周期（26 日 ~ 次月 25 日）分组，卡片 x 轴都取自这里 */
+    var cmap = buildCycleMap(src);
+    var ckeys = Object.keys(cmap).sort();
+    var cycleBars = cycleSeries(cmap, 0).map(function (m) {
+      m.label = cycleLabel(m);
+      m.tip = m.key + ' ~ ' + m.end;
+      return m;
+    });
+
+    var isCycle = ovRange === 'cycle';
+    var axisItems, axisMeta, trendTitle, hoursTitle, windowLabel;
+
+    if (isCycle) {
+      /* 当下周期：趋势/工时都拆到周期内的每一天，未来日期不占位 */
+      var cr = cycleRange(new Date());
+      var cs = formatDate(cr.start);
+      var ce = formatDate(cr.end);
+      var todayStr = formatDate(new Date());
+      var lastDay = ce < todayStr ? ce : todayStr;
+      axisItems = buildDailySeries(src, cs, lastDay);
+      axisMeta = cycleLabel({ key: cs, end: ce }) + ' · 每日';
+      trendTitle = '周期内每日收入';
+      hoursTitle = '周期内每日工时';
+      windowLabel = '本计薪周期 ' + cs.slice(5) + ' 至 ' + ce.slice(5);
+    } else {
+      axisItems = cycleBars;
+      trendTitle = '周期收入趋势';
+      hoursTitle = '周期工时';
+      axisMeta = ovRange === '6'
+        ? '近 6 个周期 · 共 ' + axisItems.length + ' 个'
+        : '全部 ' + axisItems.length + ' 个周期';
+      windowLabel = axisMeta;
+    }
+
+    var cycleMeta = isCycle
+      ? '本期 ' + (cycleBars[0] ? cycleBars[0].label : '')
+      : axisMeta;
 
     chip.className = 'exp-status ok';
     statusText.textContent = '已连接 · ' + state.all.length + ' 条';
 
-    var rate = sum.hours > 0 ? sum.total / sum.hours : 0;
+    /* 平均时薪：剔除试用期 3–5 月，统一按正式工 2900/208 折算，随筛选实时重算 */
+    var RATE_FORMAL = 2900 / 208;
+    var formalHours = 0, formalMoney = 0;
+    src.forEach(function (r) {
+      if (r.shift === '休息' || !r.date || r.date < '2026-06-01') return;
+      formalHours += safeNum(r.hours);
+      formalMoney += round3(safeNum(r.hours) * RATE_FORMAL) + safeNum(r.allowance);
+    });
+    var rate = formalHours > 0 ? formalMoney / formalHours : 0;
     var perDay = sum.days ? sum.hours / sum.days : 0;
     var restCount = src.filter(function (r) { return r.shift === '休息'; }).length;
     var shareTips = state.all.length ? Math.round((src.length / state.all.length) * 100) : 0;
@@ -1597,39 +1733,41 @@
       kpiHtml('有效工时', fmtHours(sum.hours), '小时', '', Math.round(sum.hours * 10) / 10, sum.hours % 1 ? 1 : 0,
         sum.days ? '日均 ' + perDay.toFixed(2) + ' 小时' : '暂无出勤') +
       kpiHtml('出勤天数', String(sum.days), '天', '', sum.days, 0,
-        '含休息 ' + restCount + ' 天 · 覆盖 ' + keys.length + ' 个月') +
+        '含休息 ' + restCount + ' 天 · 覆盖 ' + ckeys.length + ' 个周期') +
       kpiHtml('平均时薪', rate.toFixed(2), '元/时', 'hot', Math.round(rate * 100) / 100, 2,
-        '按有效工时折算') +
+        '正式工 2900 折算 · 不含试用期 3–5 月') +
       kpiHtml('记录条数', String(sum.records), '条', '', sum.records, 0,
         src.length === state.all.length ? '全部记录' : '占全部 ' + shareTips + '%') +
-      kpiHtml('覆盖月份', String(keys.length), '个月', '', keys.length, 0,
-        keys.length ? keys[0] + ' 至 ' + keys[keys.length - 1] : '暂无数据');
+      kpiHtml('覆盖周期', String(ckeys.length), '个', '', ckeys.length, 0,
+        ckeys.length ? cycleLabel(cmap[ckeys[0]]) + ' 起' : '暂无数据');
 
-    $('ov-kpi-meta').textContent = keys.length
-      ? keys[0] + ' ~ ' + keys[keys.length - 1] + ' · ' + label
+    $('ov-kpi-meta').textContent = ckeys.length
+      ? cycleLabel(cmap[ckeys[0]]) + ' 起 · ' + label
       : label;
 
-    var currentKey = formatDate(new Date()).slice(0, 7);
-    var inProgress = keys.length && keys[keys.length - 1] === currentKey;
-    var running = (ovRange === 'cycle' ? '' : (inProgress ? ' · 本月进行中' : ''));
+    var curStart = formatDate(cycleRange(new Date()).start);
+    var inProgress = ckeys.length && ckeys[ckeys.length - 1] === curStart;
+    var running = (isCycle ? '' : (inProgress ? ' · 本期进行中' : ''));
+    $('ov-trend-title').textContent = trendTitle;
+    $('ov-hours-title').textContent = hoursTitle;
     $('ov-trend-meta').textContent = windowLabel + running;
-    $('ov-month-meta').textContent = barLabel + (ovRange === 'cycle' ? '' : (inProgress ? ' · 本月进行中' : ''));
+    $('ov-month-meta').textContent = cycleMeta + running;
 
-    /* 月度收入趋势 */
+    /* 收入趋势：全部/近 6 → 每个周期一个点；当下周期 → 周期内每天一个点 */
     /* 手机上把图表的 viewBox 收窄，字号才不会被等比缩小 */
     var narrow = (window.innerWidth || 1024) < 720;
     $('ov-trend').innerHTML = sum.records
-      ? svgTrend(monthsTrend, narrow ? 440 : 660)
+      ? svgTrend(axisItems, narrow ? 440 : 660)
       : '<div class="ov-empty">暂无数据</div>';
 
-    /* 每月工资对比 */
-    var maxTotal = Math.max.apply(null, monthsBars.map(function (m) { return m.total; }).concat([0]));
-    var rows = monthsBars.map(function (m) {
+    /* 周期工资对比：每个计薪周期一根条 */
+    var maxTotal = Math.max.apply(null, cycleBars.map(function (m) { return m.total; }).concat([0]));
+    var rows = cycleBars.map(function (m) {
       var pct = maxTotal ? (m.total / maxTotal) * 100 : 0;
-      var tipText = m.key + ' · ' + fmtMoney(m.total) + ' 元 · ' + fmtHours(m.hours) + ' 小时 · ' +
-        m.days + ' 天 · 占最高月 ' + pct.toFixed(1) + '%';
+      var tipText = m.key + ' ~ ' + m.end + ' · ' + fmtMoney(m.total) + ' 元 · ' + fmtHours(m.hours) + ' 小时 · ' +
+        m.days + ' 天 · 占最高周期 ' + pct.toFixed(1) + '%';
       return '<div class="ov-bar-row">' +
-        '<div class="bar-head"><span>' + m.key + '</span><b>' + fmtMoney(m.total) + ' 元</b></div>' +
+        '<div class="bar-head"><span>' + cycleLabel(m) + '</span><b>' + fmtMoney(m.total) + ' 元</b></div>' +
         '<div class="ov-bar-track"><i class="ov-bar-fill" style="width:' + pct.toFixed(1) + '%"' +
           ' data-tip="' + escapeHtml(tipText) + '"></i></div>' +
         '</div>';
@@ -1684,12 +1822,12 @@
       : '<div class="ov-empty">暂无数据</div>';
     $('ov-pie-meta').textContent = label + ' · ' + shiftTotal + ' 条';
 
-    /* 月度工时 */
-    var hoursSum = monthsBars.reduce(function (a, m) { return a + m.hours; }, 0);
+    /* 工时：与收入趋势同一根 x 轴（周期 / 周期内每天） */
+    var hoursSum = axisItems.reduce(function (a, m) { return a + m.hours; }, 0);
     $('ov-hours').innerHTML = sum.records
-      ? svgBars(monthsBars, 'hours', PALETTE[2], narrow ? 420 : 640, narrow ? 230 : 320)
+      ? svgBars(axisItems, 'hours', PALETTE[2], narrow ? 420 : 640, narrow ? 230 : 320)
       : '<div class="ov-empty">暂无数据</div>';
-    $('ov-hours-meta').textContent = barLabel + ' · ' + fmtHours(hoursSum) + ' 小时';
+    $('ov-hours-meta').textContent = axisMeta + ' · ' + fmtHours(hoursSum) + ' 小时';
 
     /* 星期分布 */
     var wk = [0, 0, 0, 0, 0, 0, 0];

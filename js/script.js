@@ -19,15 +19,64 @@ let isEditMode = false; // 标记是否处于编辑模式
 const LC_APP_ID = "PkkbpTxYiRWgHbA8h0noWSwh-gzGzoHsz";
 const LC_APP_KEY = "suQbFb5BnNKjjSIEPlxfr7BW";
 const LC_SERVER = "https://pkkbptxy.lc-cn-n1-shared.com";
-const BASE_SALARY = 2900;
+const BASE_SALARY = 2900;        // 转正后月薪
+const TRIAL_SALARY = 2700;       // 试用期月薪（2026-03 ~ 2026-05）
+const TRIAL_END_DATE = '2026-05-31'; // 试用期最后一天，6 月 1 日起按转正月薪
 
 // ========== 通用工具函数 ==========
 
 // 时薪计算：BASE_SALARY 月薪 2900，按每月标准工时折算
 function getBaseWageByDate(dateStr) {
   const monthTotalHours = 208; // 月度标准计薪工时，可按需修改
-  return BASE_SALARY / monthTotalHours;
+  // 工资表口径：2026-03-01 ~ 2026-05-31 为试用期（2700/208 ≈ 12.9808），6 月起转正 2900/208 ≈ 13.9423
+  const base = (String(dateStr || '').slice(0, 10) <= TRIAL_END_DATE) ? TRIAL_SALARY : BASE_SALARY;
+  return base / monthTotalHours;
 }
+
+// 时间字符串 → 分钟数（HH:MM），空值返回 null
+function hhmmToMin(v) {
+  if (!v) return null;
+  const parts = String(v).split(':');
+  const h = Number(parts[0]);
+  const m = Number(parts[1] || 0);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+// 统一工时算法：工作时段总长 − 饭点与实际工作时段重叠的部分
+// 拼班的中场休息里吃饭不再重复扣（以前会把 8 小时算成 7 小时）
+function calcRecordHours(rec) {
+  if (!rec) return 0;
+  const get = (k) => (typeof rec.get === 'function' ? (rec.get(k) || '') : (rec[k] || ''));
+  if (get('shift') === '休息') return 0;
+  const segs = [];
+  const push = (s, e) => {
+    const a = hhmmToMin(s);
+    const b = hhmmToMin(e);
+    if (a !== null && b !== null && b > a) segs.push([a, b]);
+  };
+  push(get('shiftStart'), get('shiftEnd'));
+  if (get('shift') === '拼班') push(get('shiftStart2'), get('shiftEnd2'));
+  let worked = 0;
+  segs.forEach(([a, b]) => { worked += b - a; });
+  let meal = 0;
+  const ms = hhmmToMin(get('mealStart'));
+  if (ms !== null) {
+    const meRaw = hhmmToMin(get('mealEnd'));
+    const me = meRaw === null ? ms + 60 : meRaw; // 只填开始默认扣 1 小时
+    if (me > ms) {
+      segs.forEach(([a, b]) => { meal += Math.max(0, Math.min(b, me) - Math.max(a, ms)); });
+    }
+  }
+  return Math.max(0, (worked - meal) / 60);
+}
+
+// 单日基本工资：始终由「工时 × 当前时薪」推导，工时与金额永远对得上
+function calcRecordBaseMoney(rec) {
+  const dateStr = (typeof rec.get === 'function' ? rec.get('date') : rec.date) || formatDate(new Date());
+  return round3(calcRecordHours(rec) * getBaseWageByDate(dateStr));
+}
+
 
 function safeNum(val, fallback = 0) {
   const num = Number(val);
@@ -803,40 +852,15 @@ function initTimeSelect() {
   }
 
   function calcWorkHours() {
-    let total = 0;
-    if (shiftStart.value && shiftEnd.value) {
-      const s = parseInt(shiftStart.value.split(':')[0]);
-      const e = parseInt(shiftEnd.value.split(':')[0]);
-      if (e > s) total += e - s;
-    }
-    if (shiftSelect.value === '拼班' && shiftStart2.value && shiftEnd2.value) {
-      const s2 = parseInt(shiftStart2.value.split(':')[0]);
-      const e2 = parseInt(shiftEnd2.value.split(':')[0]);
-      if (e2 > s2) total += e2 - s2;
-    }
-
-    // ==========【饭点扣除逻辑】==========
-    // 直接读取开始/结束饭点时间；只填开始时默认按 1 小时饭点扣除
-    const mealStartStr = mealStart.value || "";
-    const mealEndStr = mealEnd.value || "";
-    let mealMinusHour = 0;
-    if (mealStartStr) {
-      const sMin = timeToMin(mealStartStr);
-      let eMin = timeToMin(mealEndStr);
-      // 结束为空，默认+60分钟（1小时饭点）
-      if (eMin === null) {
-        eMin = sMin + 60;
-      }
-      if (eMin > sMin) {
-        mealMinusHour = (eMin - sMin) / 60;
-      }
-    }
-    if (mealStartStr) {
-      total = Math.max(0, total - mealMinusHour);
-    }
-
-    // ======================================
-
+    const total = calcRecordHours({
+      shift: shiftSelect.value,
+      shiftStart: shiftStart.value,
+      shiftEnd: shiftEnd.value,
+      shiftStart2: shiftStart2.value,
+      shiftEnd2: shiftEnd2.value,
+      mealStart: mealStart.value,
+      mealEnd: mealEnd.value
+    });
     workHoursTip.textContent = `有效工时：${total} 小时`;
     const hourly = getBaseWageByDate(dateInput.value || formatDate(new Date()));
     // 后台计算保留3位精度，输入框展示四舍五入2位
@@ -946,6 +970,11 @@ async function loadData(retryCount = 0, autoRender = true, showLoading = true, a
     }
 
     allBillList = res;
+    // 统一按当期时薪重算基本工资（试用期 2700、转正 2900），保证「工时 × 时薪 = 基本工资」恒等
+    allBillList.forEach(item => {
+      if (!item.get) return;
+      item.set('money', calcRecordBaseMoney(item));
+    });
     recordDates = new Set(res.map(i => i.get('date') || ''));
 
     if (autoRender) {
@@ -1222,31 +1251,7 @@ currentList.forEach(item => {
   totalAllow += allow;
   totalWage += money + allow;
 
-  // 工时计算
-  let h = 0;
-  const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
-  const e = safeNum((sEnd || '00:00').split(':')[0]);
-  if (e > s) h += e - s;
-  if (shift === '拼班') {
-    const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
-    const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
-    if (e2 > s2) h += e2 - s2;
-  }
-
-  //饭扣逻辑：开始/结束都有就按区间，只填开始默认扣1小时
-  if (mStart) {
-    let mealMinusHour = 0;
-    const sMin = timeToMin(mStart);
-    let eMin = timeToMin(mEnd);
-    if (eMin === null) {
-      eMin = sMin + 60;
-    }
-    if (eMin > sMin) {
-      mealMinusHour = (eMin - sMin) / 60;
-    }
-    h = Math.max(0, h - mealMinusHour);
-  }
-  totalHours += h;
+  totalHours += calcRecordHours(item);
 
   // 统计晚班天数
   const endHoursArr = [];
@@ -1324,42 +1329,7 @@ calcBtn.onclick = function (e) {
     totalAllow += allow;
     totalWage += money + allow;
 
-    // ========== 新增：工时计算逻辑（和主统计页保持一致）==========
-    const sEnd = item.get('shiftEnd') || '';
-    const sEnd2 = item.get('shiftEnd2') || '';
-    const mStart = item.get('mealStart') || '';
-
-    let h = 0;
-    const s = safeNum((item.get('shiftStart') || '00:00').split(':')[0]);
-    const e = safeNum((sEnd || '00:00').split(':')[0]);
-    if (e > s) h += e - s;
-
-    if (shift === '拼班') {
-      const s2 = safeNum((item.get('shiftStart2') || '00:00').split(':')[0]);
-      const e2 = safeNum((sEnd2 || '00:00').split(':')[0]);
-      if (e2 > s2) h += e2 - s2;
-    }
-// 饭点扣除逻辑：开始/结束都有就按区间，只填开始默认扣1小时
-const mEnd = item.get('mealEnd') || '';
-if (mStart) {
-  function timeToMin(timeStr) {
-    if (!timeStr) return null;
-    const [h, m] = timeStr.split(':').map(Number);
-    return h * 60 + m;
-  }
-  let mealMinusHour = 0;
-  const sMin = timeToMin(mStart);
-  let eMin = timeToMin(mEnd);
-  if (eMin === null) {
-    eMin = sMin + 60;
-  }
-  if (eMin > sMin) {
-    mealMinusHour = (eMin - sMin) / 60;
-  }
-  h = Math.max(0, h - mealMinusHour);
-}
-
-    totalHours += h;
+    totalHours += calcRecordHours(item);
   });
 
   document.getElementById('cycle-total-title').innerText = `${listEl.dataset.cycle} 工资统计`;
@@ -2203,9 +2173,9 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // ===== 自动播放：浏览器禁止“无手势播放”，所以用户第一次点击/触摸/按键页面任意位置时启动音乐 =====
-    let hasPlayed = false;      // 是否已经成功播放过（成功后就不再需要手势兜底）
-    let gesturePlaying = false; // 正在尝试播放，避免同一个手势重复触发
+    // ===== 音乐只由用户手动点播放（自动播放已关闭，相关监听不再挂载） =====
+    let hasPlayed = false;      // 是否已经成功播放过
+    let gesturePlaying = false; // 保留变量，手势自动播放已停用
 
     function markPlaying() {
       isPlaying = true;
@@ -2215,11 +2185,14 @@ isEditMode = false;
     }
 
     function unbindGesturePlay() {
+      // 手势自动播放已停用，这里做成空操作，避免引用已注释的函数
+      if (typeof attemptPlayByGesture !== 'function') return;
       document.removeEventListener('pointerdown', attemptPlayByGesture, true);
       document.removeEventListener('touchstart', attemptPlayByGesture, true);
       document.removeEventListener('keydown', attemptPlayByGesture, true);
     }
 
+    /* 自动播放相关的手势兜底：已停用（保留代码便于日后恢复）
     function bindGesturePlay() {
       if (hasPlayed) return;
       document.addEventListener('pointerdown', attemptPlayByGesture, true);
@@ -2241,6 +2214,7 @@ isEditMode = false;
     }
     // 页面一进来就挂上，保证“第一次点击”就能生效（此时歌单可能还在加载，失败会自动等下一次手势）
     bindGesturePlay();
+    */
 
     // 打开/关闭歌曲面板（面板以外的任意区域都能关掉）
     function openPanel() {
@@ -2266,12 +2240,10 @@ isEditMode = false;
       panel.classList.add('hidden');
     }
 
-    // 点击音乐按钮：只开关面板
+    // 点击音乐按钮：只开关面板（不在这里触发播放，播放必须由用户点面板里的播放键）
     toggle.addEventListener('click', function (e) {
       e.stopPropagation();
       if (dragMoved) { dragMoved = false; return; }
-      // 兜底：万一首次手势没启动成功，点按钮这次点击也算用户手势，再试一次
-      if (!hasPlayed) attemptPlayByGesture();
       if (panelOpen) closePanel(); else openPanel();
     });
 
@@ -2391,7 +2363,23 @@ isEditMode = false;
       } catch (e) {}
     }
 
-    // 自动播放：页面加载先试一次，被浏览器拦截就等用户第一次点击/触摸页面任意位置
+    // 页面加载只做准备（选定第一首、加载歌词、渲染歌单），绝不自动出声
+    function prepareFirstTrack() {
+      if (!playlist.length) return;
+      currentIdx = 0;
+      audio.src = playlist[0].src;
+      currentLyrics = parseLrc(playlist[0].lyrics);
+      lyricIdx = -1;
+      const prev = document.getElementById('lyric-prev');
+      const cur = document.getElementById('lyric-current');
+      const next = document.getElementById('lyric-next');
+      if (prev) prev.textContent = '';
+      if (cur) cur.textContent = currentLyrics.length ? '♪ 点播放键开始' : '♪ 暂无歌词';
+      if (next) next.textContent = '';
+      renderList();
+    }
+
+    /* 自动播放：已停用（保留代码便于日后恢复）
     function tryAutoPlay() {
       currentIdx = 0;
       audio.src = playlist[0].src;
@@ -2410,17 +2398,17 @@ isEditMode = false;
         unbindGesturePlay();
         updateProgress();
       }).catch(() => {
-        // 浏览器拦截自动播放：保持手势监听，用户第一次点页面任意位置就会开始播放
         bindGesturePlay();
       });
     }
+    */
 
     loadPlaylist().finally(() => {
       if (document.readyState === 'complete') {
-        setTimeout(function () { tryAutoPlay(); updatePanelPosition(); }, 200);
+        setTimeout(function () { prepareFirstTrack(); updatePanelPosition(); }, 200);
       } else {
         window.addEventListener('load', function () {
-          setTimeout(function () { tryAutoPlay(); updatePanelPosition(); }, 200);
+          setTimeout(function () { prepareFirstTrack(); updatePanelPosition(); }, 200);
         });
       }
     });
