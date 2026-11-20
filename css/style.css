@@ -1460,6 +1460,8 @@ body.drawer-open::before {
   opacity: 1;
   pointer-events: none;
   background: rgba(0, 0, 0, 0);
+  /* 裁掉收起时露在遮罩外的面板和它的投影，保证页面底部不会多出一条黑边 */
+  overflow: hidden;
   transition: background-color 0.32s ease;
 }
 
@@ -1487,7 +1489,8 @@ body.drawer-open::before {
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
   /* 走 GPU 合成；滑入由 .ready 触发，避免 iOS 同帧改 visibility+transform 导致硬跳 */
-  transform: translate3d(0, 101%, 0);
+  /* 收起位置多退 90px：面板自带 -12px/40px 的黑色投影，只退 101% 时那圈阴影会露在屏幕最底部，看起来就是一条黑边 */
+  transform: translate3d(0, calc(100% + 90px), 0);
   /* 关闭：前段略快、后段收尾，0.32s */
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.7, 0.4), background-color 0.3s ease;
   will-change: transform;
@@ -1599,7 +1602,7 @@ body.drawer-open::before {
     border-radius: 16px 0 0 16px;
     border-left: 1px solid var(--td-border);
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.22);
-    transform: translate3d(101%, 0, 0);
+    transform: translate3d(calc(100% + 90px), 0, 0);
   }
 
   .drawer-overlay.ready .modal-box.drawer-panel {

@@ -676,9 +676,10 @@ function disableBodyScroll() {
 }
 
 function enableBodyScroll() {
+  const wasLocked = bodyScrollLockCount > 0;
   bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
-  // 还有弹窗未关闭，不恢复滚动
-  if (bodyScrollLockCount > 0) return;
+  // 还有弹窗未关闭，或本来就没锁过，不恢复滚动
+  if (bodyScrollLockCount > 0 || !wasLocked) return;
 
   document.body.style.position = '';
   document.body.style.top = '';
@@ -1329,6 +1330,30 @@ if (cycleGroupList) {
 }
 }
 
+// ========== 抽屉开合（全局）：记录页/详情抽屉/周期抽屉共用 ==========
+let drawerResumeTimer = 0;
+
+function openDrawerPanel(overlay) {
+  if (!overlay) return;
+  clearTimeout(drawerResumeTimer);   // 上一轮关闭还没到恢复时间就再打开，取消恢复
+  overlay.classList.remove('ready');
+  overlay.classList.add('open');
+  document.body.classList.add('drawer-open');
+  void overlay.offsetHeight;        // 同步强制重排：先让面板落到初始位置，过渡才有起点可算
+  overlay.classList.add('ready');   // 同一任务内的第二次改类，浏览器会正常播放滑入
+}
+
+function closeDrawerPanel(overlay) {
+  if (!overlay) return;
+  overlay.classList.remove('ready');   // 面板滑出
+  overlay.classList.remove('open');    // 遮罩淡出
+  // 背景动画晚 0.38s 再恢复：滑出那几帧不去抢主线程，否则 iOS 上会顿一下再消失
+  clearTimeout(drawerResumeTimer);
+  drawerResumeTimer = setTimeout(function () {
+    if (!document.querySelector('.drawer-overlay.open')) document.body.classList.remove('drawer-open');
+  }, 380);
+}
+
 // ========== 周期详情弹窗（合并公共逻辑） ==========
 // records：当前这一页要渲染的记录；allRecords：整个周期（供“查看本期总工资”统计用）
 function buildDetailList(listEl, records, showActions = false, allRecords = null, showCalc = true) {
@@ -1568,7 +1593,7 @@ function openCycleDetailPopup(cycleKey, records, showActions = false) {
   if (body) body.scrollTop = 0;
   openDrawerPanel(overlay);
   requestAnimationFrame(refreshBackTops);
-  disableBodyScroll();
+  /* 抽屉本身是全屏 fixed 遮罩，已挡住背景滚动；不再锁 body，避免 iOS 整页重排 */
 }
 
 function openAdminCycleDetailPopup(cycleKey, records) {
@@ -1870,29 +1895,6 @@ isEditMode = false;
 
   /* 抽屉开合：先让遮罩可见并强制渲染一帧，再用 .ready 触发滑入。
      iOS Safari 不会为「刚变可见的元素」补算初始 transform，同帧改 visibility + transform 会直接跳到终点（看起来就是卡一下突然弹出）。 */
-  let drawerResumeTimer = 0;
-
-  function openDrawerPanel(overlay) {
-    if (!overlay) return;
-    clearTimeout(drawerResumeTimer);   // 上一轮关闭还没到恢复时间就再打开，取消恢复
-    overlay.classList.remove('ready');
-    overlay.classList.add('open');
-    document.body.classList.add('drawer-open');
-    void overlay.offsetHeight;        // 同步强制重排：先让面板落到 101% 起点，过渡才有起点可算
-    overlay.classList.add('ready');   // 同一任务内的第二次改类，浏览器会正常播放滑入
-  }
-
-  function closeDrawerPanel(overlay) {
-    if (!overlay) return;
-    overlay.classList.remove('ready');   // 面板滑出
-    overlay.classList.remove('open');    // 遮罩淡出，visibility 由 CSS 延迟收起
-    // 背景动画晚 0.38s 再恢复：滑出那几帧不去抢主线程，否则 iOS 上会顿一下再消失
-    clearTimeout(drawerResumeTimer);
-    drawerResumeTimer = setTimeout(function () {
-      if (!document.querySelector('.drawer-overlay.open')) document.body.classList.remove('drawer-open');
-    }, 380);
-  }
-
   function openDetailDrawer() {
     if (detailBody) detailBody.scrollTop = 0;
     openDrawerPanel(detailOverlay);
