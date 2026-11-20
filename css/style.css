@@ -436,7 +436,7 @@ body.admin-active .white-window {
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.14s ease-out, box-shadow 0.18s ease;
 }
 
 /* 悬停/按下阴影：桌面走 hover，触屏走 .is-pressed（transform 由 JS 统一合成） */
@@ -866,7 +866,7 @@ body:not(.admin-active) .btn-back {
   box-shadow: var(--shadow-glass-modal);
 }
 
-.modal-overlay.show .modal-box {
+.modal-overlay.show .modal-box:not(.drawer-panel) {
   transform: translateY(0);
 }
 
@@ -1438,15 +1438,27 @@ body {
     color: #ffffff !important;
 }
 
+/* 抽屉打开时暂停全屏金币雨与背景流光，iOS 上少一层合成，滑入更顺 */
+body.drawer-open #money-rain-back,
+body.drawer-open #money-rain-front {
+  visibility: hidden;
+}
+
+body.drawer-open::before {
+  animation: none !important;
+}
+
 /* ================= TDesign 风格：Drawer 抽屉 ================= */
 .drawer-overlay {
   align-items: flex-end;
   justify-content: center;
   /* 关闭时先放完滑出动画，再把 visibility 收起来，否则面板还没滑出就被藏掉 */
-  transition: opacity 0.28s ease, visibility 0s linear 0.34s;
+  transition: opacity 0.28s ease, visibility 0s linear 0.4s;
 }
 
-.drawer-overlay.show {
+.drawer-overlay.open {
+  visibility: visible;
+  opacity: 1;
   transition: opacity 0.28s ease, visibility 0s linear 0s;
 }
 
@@ -1463,13 +1475,17 @@ body {
   border: none;
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
-  transform: translateY(101%);
-  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease;
+  /* 走 GPU 合成；滑入由 .ready 触发，避免 iOS 同帧改 visibility+transform 导致硬跳 */
+  transform: translate3d(0, 101%, 0);
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   overflow: hidden;
 }
 
-.modal-overlay.show .modal-box.drawer-panel {
-  transform: translateY(0);
+.drawer-overlay.ready .modal-box.drawer-panel {
+  transform: translate3d(0, 0, 0);
 }
 
 .drawer-head {
@@ -1569,11 +1585,11 @@ body {
     border-radius: 16px 0 0 16px;
     border-left: 1px solid var(--td-border);
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.22);
-    transform: translateX(101%);
+    transform: translate3d(101%, 0, 0);
   }
 
-  .modal-overlay.show .modal-box.drawer-panel {
-    transform: translateX(0);
+  .drawer-overlay.ready .modal-box.drawer-panel {
+    transform: translate3d(0, 0, 0);
   }
 }
 

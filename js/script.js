@@ -598,7 +598,7 @@ if (!window._cardTiltBound) {
   /* 按下缩放：iOS Safari 不触发 :active，触摸端由这里驱动 */
   window.setCardPressState = function (card, pressed) {
     if (!card) return;
-    card._pressScale = pressed ? 0.985 : 1;
+    card._pressScale = pressed ? 0.96 : 1;
     window.applyCardTransform(card);
   };
 
@@ -1566,7 +1566,7 @@ function openCycleDetailPopup(cycleKey, records, showActions = false) {
   renderCycleDetailPage();
 
   if (body) body.scrollTop = 0;
-  overlay.classList.add('show');
+  openDrawerPanel(overlay);
   requestAnimationFrame(refreshBackTops);
   disableBodyScroll();
 }
@@ -1580,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // 编辑/删除事件委托
 // 编辑：回填表单（从记录按钮点击里抽出来，日历点日期进编辑也复用）
 function doEditRecord(editBtn) {
-  document.getElementById('cycle-detail-overlay')?.classList.remove('show');
+  closeDrawerPanel(document.getElementById('cycle-detail-overlay'));
   enableBodyScroll();
 
   try {
@@ -1655,7 +1655,7 @@ function doDeleteRecord(delBtn) {
     .then(() => {
       loadData();
       showAlert({ theme: 'success', title: '删除成功', description: '该条记录已从数据库移除' });
-      document.getElementById('cycle-detail-overlay')?.classList.remove('show');
+      closeDrawerPanel(document.getElementById('cycle-detail-overlay'));
       enableBodyScroll();
     })
     .catch((err) => {
@@ -1868,11 +1868,31 @@ isEditMode = false;
   const detailOverlay = document.getElementById('detail-overlay');
   const detailBody = document.getElementById('detail-body');
 
+  /* 抽屉开合：先让遮罩可见并强制渲染一帧，再用 .ready 触发滑入。
+     iOS Safari 不会为「刚变可见的元素」补算初始 transform，同帧改 visibility + transform 会直接跳到终点（看起来就是卡一下突然弹出）。 */
+  function openDrawerPanel(overlay) {
+    if (!overlay) return;
+    overlay.classList.remove('ready');
+    overlay.classList.add('open');
+    document.body.classList.add('drawer-open');
+    void overlay.offsetHeight;        // 同步强制重排：先让面板落到 101% 起点，过渡才有起点可算
+    overlay.classList.add('ready');   // 同一任务内的第二次改类，浏览器会正常播放滑入
+  }
+
+  function closeDrawerPanel(overlay) {
+    if (!overlay) return;
+    overlay.classList.remove('ready');   // 面板滑出
+    overlay.classList.remove('open');    // 遮罩淡出，visibility 由 CSS 延迟 0.4s 收起
+    // 只有所有抽屉都关掉才恢复背景动画（详情 → 本期详情之间回退时保持暂停）
+    if (!document.querySelector('.drawer-overlay.open')) document.body.classList.remove('drawer-open');
+  }
+
   function openDetailDrawer() {
     if (detailBody) detailBody.scrollTop = 0;
-    detailOverlay?.classList.add('show');
+    openDrawerPanel(detailOverlay);
     requestAnimationFrame(refreshBackTops);
-    disableBodyScroll();
+    /* 详情抽屉本身是全屏 fixed 遮罩，足够挡住背景滚动；不锁 body，避免 iOS 整页重排 */
+
   }
 
   /* 原「查看详细信息」按钮已删除，改为点整张悬赏金卡片展开详情 */
@@ -1917,14 +1937,12 @@ isEditMode = false;
     e.stopPropagation();
     e.preventDefault();
     this.blur();
-    detailOverlay?.classList.remove('show');
-    enableBodyScroll();
+    closeDrawerPanel(detailOverlay);
   });
   document.getElementById('detail-x')?.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
-    detailOverlay?.classList.remove('show');
-    enableBodyScroll();
+    closeDrawerPanel(detailOverlay);
   });
 
   const cycleDetailOverlay = document.getElementById('cycle-detail-overlay');
@@ -1932,13 +1950,13 @@ isEditMode = false;
     e.stopPropagation();
     e.preventDefault();
     this.blur();
-    cycleDetailOverlay?.classList.remove('show');
+    closeDrawerPanel(cycleDetailOverlay);
     enableBodyScroll();
   });
   document.getElementById('cycle-detail-x')?.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
-    cycleDetailOverlay?.classList.remove('show');
+    closeDrawerPanel(cycleDetailOverlay);
     enableBodyScroll();
   });
 
@@ -1946,8 +1964,8 @@ isEditMode = false;
   document.getElementById('cycle-crumb-back')?.addEventListener('click', function (e) {
     e.stopPropagation();
     e.preventDefault();
-    cycleDetailOverlay?.classList.remove('show');
-    detailOverlay?.classList.add('show');
+    closeDrawerPanel(cycleDetailOverlay);
+    openDrawerPanel(detailOverlay);
     requestAnimationFrame(refreshBackTops);
   });
 
@@ -2592,7 +2610,8 @@ isEditMode = false;
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
       if (e.target === this) {
-        this.classList.remove('show');
+        if (this.classList.contains('drawer-overlay')) closeDrawerPanel(this);
+        else this.classList.remove('show');
         enableBodyScroll();
       }
     });
