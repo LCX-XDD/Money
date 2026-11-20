@@ -1870,8 +1870,11 @@ isEditMode = false;
 
   /* 抽屉开合：先让遮罩可见并强制渲染一帧，再用 .ready 触发滑入。
      iOS Safari 不会为「刚变可见的元素」补算初始 transform，同帧改 visibility + transform 会直接跳到终点（看起来就是卡一下突然弹出）。 */
+  let drawerResumeTimer = 0;
+
   function openDrawerPanel(overlay) {
     if (!overlay) return;
+    clearTimeout(drawerResumeTimer);   // 上一轮关闭还没到恢复时间就再打开，取消恢复
     overlay.classList.remove('ready');
     overlay.classList.add('open');
     document.body.classList.add('drawer-open');
@@ -1882,9 +1885,12 @@ isEditMode = false;
   function closeDrawerPanel(overlay) {
     if (!overlay) return;
     overlay.classList.remove('ready');   // 面板滑出
-    overlay.classList.remove('open');    // 遮罩淡出，visibility 由 CSS 延迟 0.4s 收起
-    // 只有所有抽屉都关掉才恢复背景动画（详情 → 本期详情之间回退时保持暂停）
-    if (!document.querySelector('.drawer-overlay.open')) document.body.classList.remove('drawer-open');
+    overlay.classList.remove('open');    // 遮罩淡出，visibility 由 CSS 延迟收起
+    // 背景动画晚 0.38s 再恢复：滑出那几帧不去抢主线程，否则 iOS 上会顿一下再消失
+    clearTimeout(drawerResumeTimer);
+    drawerResumeTimer = setTimeout(function () {
+      if (!document.querySelector('.drawer-overlay.open')) document.body.classList.remove('drawer-open');
+    }, 380);
   }
 
   function openDetailDrawer() {
@@ -1897,19 +1903,31 @@ isEditMode = false;
 
   /* 原「查看详细信息」按钮已删除，改为点整张悬赏金卡片展开详情 */
   const totalWageBox = document.getElementById('total-wage-box');
+  /* 手指抬起就开抽屉，不等 click：iOS 的 click 要等触摸判定结束才派发，
+     那几十到上百毫秒的空白正是「点了没反应、然后突然弹出」的来源 */
+  let openedByPointerAt = 0;
   totalWageBox?.addEventListener('click', function (e) {
     // 卡片里的刷新按钮、加载遮罩不触发详情
     if (e.target.closest && (e.target.closest('#refresh-data-btn') || e.target.closest('.loading-overlay'))) return;
     totalWageBox.classList.remove('is-pressed');
+    if (Date.now() - openedByPointerAt < 500) return;   // 已经由 pointerup 打开过，别再开一次把动画从头重启
     openDetailDrawer();
   });
 
   /* iOS Safari / 主屏 Web App 不响应 :active，用指针与触摸事件手动驱动按压缩放 */
   let pressTimer = null;
-  const pressOn = function () {
+  let cardPressStart = null;
+  const pressOn = function (e) {
     clearTimeout(pressTimer);
     totalWageBox.classList.add('is-pressed');
     if (window.setCardPressState) window.setCardPressState(totalWageBox, true);
+    const pt = (e.touches && e.touches[0]) || e;
+    cardPressStart = {
+      x: pt && pt.clientX,
+      y: pt && pt.clientY,
+      t: Date.now(),
+      skip: !!(e.target.closest && (e.target.closest('#refresh-data-btn') || e.target.closest('.loading-overlay')))
+    };
   };
   const pressOff = function (delay) {
     clearTimeout(pressTimer);
@@ -1918,14 +1936,27 @@ isEditMode = false;
       if (window.setCardPressState) window.setCardPressState(totalWageBox, false);
     }, delay || 0);
   };
+  const pressRelease = function (e, openDrawer) {
+    pressOff(140);
+    const start = cardPressStart;
+    cardPressStart = null;
+    if (!openDrawer || !start || start.skip) return;
+    const pt = (e.changedTouches && e.changedTouches[0]) || e;
+    const moved = (typeof pt.clientX === 'number')
+      ? Math.sqrt(Math.pow(pt.clientX - start.x, 2) + Math.pow(pt.clientY - start.y, 2))
+      : 0;
+    if (moved > 12 || Date.now() - start.t > 800) return;   // 滑动/长按不算点击
+    openedByPointerAt = Date.now();
+    openDetailDrawer();
+  };
   ['pointerdown', 'touchstart'].forEach(function (t) {
     totalWageBox.addEventListener(t, pressOn, { passive: true });
   });
   ['pointerup', 'touchend'].forEach(function (t) {
-    totalWageBox.addEventListener(t, function () { pressOff(140); }, { passive: true });
+    totalWageBox.addEventListener(t, function (e) { pressRelease(e, true); }, { passive: true });
   });
   ['pointercancel', 'touchcancel'].forEach(function (t) {
-    totalWageBox.addEventListener(t, function () { pressOff(0); }, { passive: true });
+    totalWageBox.addEventListener(t, function (e) { pressRelease(e, false); }, { passive: true });
   });
   totalWageBox?.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') {

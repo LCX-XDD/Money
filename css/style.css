@@ -1439,27 +1439,34 @@ body {
 }
 
 /* 抽屉打开时暂停全屏金币雨与背景流光，iOS 上少一层合成，滑入更顺 */
-body.drawer-open #money-rain-back,
-body.drawer-open #money-rain-front {
-  visibility: hidden;
+/* 不清空合成层，只暂停动画：藏掉再显示会让 iOS 在动画起点重建整层，反而卡第一帧 */
+body.drawer-open #money-rain-back *,
+body.drawer-open #money-rain-front * {
+  animation-play-state: paused !important;
 }
 
 body.drawer-open::before {
-  animation: none !important;
+  animation-play-state: paused !important;
 }
 
 /* ================= TDesign 风格：Drawer 抽屉 ================= */
+/* 遮罩层常驻（不再切 visibility）：iOS 对「刚变可见的元素」不会补算初始状态，
+   每开一次都要新建合成层，首帧必然丢；常驻后只改 transform，滑入从第一帧就是连续的。
+   关闭状态用 pointer-events:none 让点击穿透到页面，视觉上完全透明。 */
 .drawer-overlay {
   align-items: flex-end;
   justify-content: center;
-  /* 关闭时先放完滑出动画，再把 visibility 收起来，否则面板还没滑出就被藏掉 */
-  transition: opacity 0.28s ease, visibility 0s linear 0.4s;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0);
+  transition: background-color 0.32s ease;
 }
 
 .drawer-overlay.open {
-  visibility: visible;
-  opacity: 1;
-  transition: opacity 0.28s ease, visibility 0s linear 0s;
+  pointer-events: auto;
+  background: var(--overlay-bg);
+  transition: background-color 0.32s ease;
 }
 
 .modal-box.drawer-panel {
@@ -1472,12 +1479,17 @@ body.drawer-open::before {
   display: flex;
   flex-direction: column;
   background: var(--td-panel-bg);
+  /* 面板不做毛玻璃：iOS 上 blur 会为每一帧重新采样背后（还有金币雨在动），滑动必然抖动。
+     这里背景本身够淡，去掉 blur 肉眼几乎看不出差别，但滑入顺很多。 */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border: none;
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
   /* 走 GPU 合成；滑入由 .ready 触发，避免 iOS 同帧改 visibility+transform 导致硬跳 */
   transform: translate3d(0, 101%, 0);
-  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease;
+  /* 关闭：前段略快、后段收尾，0.32s */
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.7, 0.4), background-color 0.3s ease;
   will-change: transform;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -1486,6 +1498,8 @@ body.drawer-open::before {
 
 .drawer-overlay.ready .modal-box.drawer-panel {
   transform: translate3d(0, 0, 0);
+  /* 打开：用先慢后快的标准缓动，起步不会一帧窜出去一大截（之前 0.36s 的 (.32,.72,0,1) 前 100ms 就跑了近一半） */
+  transition: transform 0.44s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
 }
 
 .drawer-head {
