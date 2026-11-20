@@ -58,13 +58,13 @@
       </div>
       
       <!-- 蓝色总工资卡片 -->
-      <div class="total-wage-box">
+      <div class="total-wage-box" id="total-wage-box" role="button" tabindex="0"
+           aria-label="查看详细信息" title="点击卡片查看详细信息">
         <div class="loading-overlay"><div class="loading-spinner"></div></div>
         <button class="refresh-btn" id="refresh-data-btn">↻</button>
         <div class="cycle-text" id="current-cycle"></div>
         <div class="total-wage-label">悬赏金</div>
         <div class="total-wage-value" id="total-wage-num">0.00</div>
-        <button class="btn-detail" id="detail-btn">查看详细信息</button>
       </div>
 
       <!-- 下方 抓捕进度 卡片 -->
@@ -385,8 +385,8 @@
           <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6v12M18 6L9 12l9 6V6z" fill="currentColor"/></svg>
         </button>
         <button id="music-play-pause" type="button" aria-label="播放/暂停">
-          <svg id="icon-pause" viewBox="0 0 24 24" width="16" height="16"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>
-          <svg id="icon-play" viewBox="0 0 24 24" width="16" height="16" style="display:none"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
+          <svg id="icon-pause" viewBox="0 0 24 24" width="16" height="16" style="display:none"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>
+          <svg id="icon-play" viewBox="0 0 24 24" width="16" height="16"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
         </button>
         <div id="music-progress-bar">
           <div id="music-progress-fill"></div>

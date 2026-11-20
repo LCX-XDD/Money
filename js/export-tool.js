@@ -74,8 +74,8 @@
   function round3(n) { return Math.round((safeNum(n) + Number.EPSILON) * 1000) / 1000; }
 
 
-  function trunc2(n) {
-    return Math.floor(safeNum(n) * 100) / 100;
+  function round2(n) {
+    return Math.round((safeNum(n) + Number.EPSILON) * 100) / 100;
   }
 
   function escapeHtml(s) {
@@ -336,7 +336,8 @@
         r.weekday = weekdayOf(r.date);
         r.hours = calcHours(r);
         // 基本工资统一由「工时 × 当期时薪」推导（试用期 2700 / 转正 2900），和主页面同源
-        r.money = round3(r.hours * hourlyRate(r.date));
+        // 保留 6 位精度，周期合计才与工资表逐分对齐
+        r.money = Math.round(r.hours * hourlyRate(r.date) * 1e6) / 1e6;
       });
       state.all = list;
       state.loaded = true;
@@ -456,7 +457,7 @@
     expCountNum($('exp-hours'), s.hours, fmtHours, fromZero);
     expCountNum($('exp-base'), s.base, moneyFmt, fromZero);
     expCountNum($('exp-allow'), s.allow, moneyFmt, fromZero);
-    expCountNum($('exp-total'), trunc2(s.total), moneyFmt, fromZero);
+    expCountNum($('exp-total'), round2(s.total), moneyFmt, fromZero);
     $('exp-match').textContent = s.records + ' 条';
     $('exp-range').textContent = rangeText(
       $('exp-from') ? $('exp-from').value : '',

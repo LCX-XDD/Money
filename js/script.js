@@ -74,7 +74,8 @@ function calcRecordHours(rec) {
 // 单日基本工资：始终由「工时 × 当前时薪」推导，工时与金额永远对得上
 function calcRecordBaseMoney(rec) {
   const dateStr = (typeof rec.get === 'function' ? rec.get('date') : rec.date) || formatDate(new Date());
-  return round3(calcRecordHours(rec) * getBaseWageByDate(dateStr));
+  // 保留 6 位精度：只在最终展示取整，避免每天先取整、周期合计偏几分钱
+  return Math.round(calcRecordHours(rec) * getBaseWageByDate(dateStr) * 1e6) / 1e6;
 }
 
 
@@ -99,10 +100,9 @@ function round3(num) {
   return Math.round((safeNum(num) + Number.EPSILON) * 1000) / 1000;
 }
 
-// 总工资截断到2位小数，不四舍五入（直接舍去第三位及以后，最终显示用）
-function trunc2(num) {
-  const n = safeNum(num);
-  return Math.floor(n * 100) / 100;
+// 总工资四舍五入到2位小数（最终显示用，和工资表单元格的显示值一致）
+function round2(num) {
+  return Math.round((safeNum(num) + Number.EPSILON) * 100) / 100;
 }
 
 function formatDate(date) {
@@ -1266,7 +1266,7 @@ currentList.forEach(item => {
 });
 
 // ========== 【循环结束！一次性更新所有DOM】 ==========
-const finalWage = trunc2(totalWage);
+const finalWage = round2(totalWage);
 currentCycleTotalWage = finalWage;
 if (updateMainCard) {
   animateWageNumber(finalWage, PROGRESS_DURATION);
@@ -1339,7 +1339,7 @@ calcBtn.onclick = function (e) {
     总基本工资：¥${totalBase.toFixed(2)}<br>
     总加班补贴：¥${totalAllow.toFixed(2)}<br>
     <hr style="margin:8px 0;border:1px solid rgba(0,0,0,0.1);">
-    <strong>本期总工资：¥${trunc2(totalWage).toFixed(2)}</strong>
+    <strong>本期总工资：¥${round2(totalWage).toFixed(2)}</strong>
   `;
   document.getElementById('cycle-total-overlay').classList.add('show');
   disableBodyScroll();
@@ -1361,7 +1361,7 @@ calcBtn.onclick = function (e) {
     const remark = item.get('title') || '无';
 
     // 直接用数据库存储的基本工资+补贴，和表格明细完全一致
-    const dailyTotal = trunc2(money + allow);
+    const dailyTotal = round2(money + allow);
 
     let timeInfo = shift === '拼班'
       ? `${s1 && e1 ? s1+'-'+e1 : '未设置'} / ${s2 && e2 ? s2+'-'+e2 : '未设置'}`
@@ -1777,10 +1777,10 @@ const data = {
   shiftEnd2: document.getElementById('shift-end2')?.value,
   mealStart: document.getElementById('meal-start')?.value,
   mealEnd: document.getElementById('meal-end')?.value,
-  money: round3(safeNum(
+  money: Math.round(safeNum(
     document.getElementById('record-money')?.dataset.raw ||
     document.getElementById('record-money')?.value || 0
-  )),
+  ) * 1e6) / 1e6,
   allowance: safeNum(document.getElementById('record-allowance')?.value),
   title: document.getElementById('record-remark')?.value.trim()
 };
@@ -1851,11 +1851,18 @@ isEditMode = false;
     disableBodyScroll();
   }
 
-  document.getElementById('detail-btn')?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    this.blur();
+  /* 原「查看详细信息」按钮已删除，改为点整张悬赏金卡片展开详情 */
+  const totalWageBox = document.getElementById('total-wage-box');
+  totalWageBox?.addEventListener('click', function (e) {
+    // 卡片里的刷新按钮、加载遮罩不触发详情
+    if (e.target.closest && (e.target.closest('#refresh-data-btn') || e.target.closest('.loading-overlay'))) return;
     openDetailDrawer();
+  });
+  totalWageBox?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openDetailDrawer();
+    }
   });
   document.getElementById('detail-close')?.addEventListener('click', function (e) {
     e.stopPropagation();
@@ -2122,19 +2129,18 @@ isEditMode = false;
       loadTrack((currentIdx + 1) % playlist.length);
     });
 
+    /* 首次播放兜底：确保 src 已指定，否则 <audio> 播放会被静默拒绝 */
     function play() {
-      audio.play().then(() => {
-        hasPlayed = true;
-        markPlaying();
-        unbindGesturePlay();
-      }).catch(() => { isPlaying = false; });
+      if (!audio.src) {
+        const first = playlist[currentIdx] || playlist[0];
+        if (first && first.src) audio.src = first.src;
+      }
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') p.catch(function () { markPaused(); });
     }
     function pause() {
       audio.pause();
-      isPlaying = false;
-      toggle.classList.remove('playing');
-      if (iconPlay) iconPlay.style.display = '';
-      if (iconPause) iconPause.style.display = 'none';
+      markPaused();
     }
 
     // 恢复上次位置（校验在屏幕内）
@@ -2183,6 +2189,20 @@ isEditMode = false;
       if (iconPlay) iconPlay.style.display = 'none';
       if (iconPause) iconPause.style.display = '';
     }
+
+    /* 播放态：完全跟随 <audio> 的真实事件，不再手工猜状态 */
+    function markPaused() {
+      isPlaying = false;
+      toggle.classList.remove('playing');
+      if (iconPlay) iconPlay.style.display = '';
+      if (iconPause) iconPause.style.display = 'none';
+    }
+
+    audio.addEventListener('play', function () { hasPlayed = true; markPlaying(); });
+    audio.addEventListener('playing', markPlaying);
+    audio.addEventListener('pause', markPaused);
+    audio.addEventListener('ended', markPaused);
+    markPaused();   /* 首屏默认：未播放 */
 
     function unbindGesturePlay() {
       // 手势自动播放已停用，这里做成空操作，避免引用已注释的函数
@@ -2584,11 +2604,11 @@ isEditMode = false;
         totalWage += safeNum(item.get('money')) + safeNum(item.get('allowance'));
       });
 
-      const targetProgress = calcWagePercent(trunc2(totalWage));
+      const targetProgress = calcWagePercent(round2(totalWage));
       const targetMiniProgress = calculateCycleProgress();
 
       // 6. 进度条从0增长到目标值，同时数字滚动（并行，时长同步）
-      animateWageNumber(trunc2(totalWage), PROGRESS_DURATION);
+      animateWageNumber(round2(totalWage), PROGRESS_DURATION);
       await Promise.all([
         animateProgress(targetProgress),
         animateMiniProgress(targetMiniProgress)
