@@ -1332,15 +1332,25 @@ if (cycleGroupList) {
 
 // ========== 抽屉开合（全局）：记录页/详情抽屉/周期抽屉共用 ==========
 let drawerResumeTimer = 0;
+let lastDrawerOpenAt = 0;   // 抬手打开抽屉后，系统还会补发一次 click，会打在刚出现的遮罩上把抽屉关掉
 
 function openDrawerPanel(overlay) {
   if (!overlay) return;
+  lastDrawerOpenAt = Date.now();
   clearTimeout(drawerResumeTimer);   // 上一轮关闭还没到恢复时间就再打开，取消恢复
   overlay.classList.remove('ready');
   overlay.classList.add('open');
   document.body.classList.add('drawer-open');
   void overlay.offsetHeight;        // 同步强制重排：先让面板落到初始位置，过渡才有起点可算
   overlay.classList.add('ready');   // 同一任务内的第二次改类，浏览器会正常播放滑入
+  /* 抬手那一刻产生的 click 会落在刚滑出的面板上（可能点到某行记录），这 0.5s 内的 click 直接吞掉。
+     用定时器移除，别用 once：万一这次没补发 click，once 会留下来把用户下一次正常点击吃掉。 */
+  const strayClickGuard = function (ev) {
+    if (Date.now() - lastDrawerOpenAt < 500) { ev.stopPropagation(); ev.preventDefault(); }
+    document.removeEventListener('click', strayClickGuard, true);
+  };
+  document.addEventListener('click', strayClickGuard, true);
+  setTimeout(function () { document.removeEventListener('click', strayClickGuard, true); }, 500);
 }
 
 function closeDrawerPanel(overlay) {
@@ -2643,8 +2653,13 @@ isEditMode = false;
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
       if (e.target === this) {
-        if (this.classList.contains('drawer-overlay')) closeDrawerPanel(this);
-        else this.classList.remove('show');
+        if (this.classList.contains('drawer-overlay')) {
+          // iOS 抬手后补发的那次 click 落在刚刚出现的遮罩上，会把抽屉立刻关掉（表现为点了没反应）
+          if (Date.now() - lastDrawerOpenAt < 450) return;
+          closeDrawerPanel(this);
+        } else {
+          this.classList.remove('show');
+        }
         enableBodyScroll();
       }
     });
