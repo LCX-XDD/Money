@@ -432,13 +432,19 @@ body.admin-active .white-window {
 /* 整张悬赏金卡片即详情入口：按下有轻微回弹，提示可点 */
 #total-wage-box {
   cursor: pointer;
+  touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-#total-wage-box:hover { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
-#total-wage-box:active { transform: scale(0.985); }
+/* 悬停/按下阴影：桌面走 hover，触屏走 .is-pressed（transform 由 JS 统一合成） */
+@media (hover: hover) and (pointer: fine) {
+  #total-wage-box:hover { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+}
+
+#total-wage-box.is-pressed { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
 #total-wage-box:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: 4px; }
 
 /* 刷新按钮保持独立：点它只刷新，不进详情 */

@@ -582,10 +582,30 @@ function updateMoneyRain(totalWage) {
 }
 
 // 卡片鼠标跟随倾斜效果
+// 统一合成行内 transform（倾斜 + 按压缩放），否则行内 transform 会盖掉按下反馈
 if (!window._cardTiltBound) {
   window._cardTiltBound = true;
   const cards = document.querySelectorAll('.progress-window, .total-wage-box, .lyrics-box');
+
+  window.applyCardTransform = function (card) {
+    if (!card) return;
+    const rx = card._tiltRx || 0;
+    const ry = card._tiltRy || 0;
+    const sc = card._pressScale === undefined ? 1 : card._pressScale;
+    card.style.transform = 'perspective(800px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(' + sc + ')';
+  };
+
+  /* 按下缩放：iOS Safari 不触发 :active，触摸端由这里驱动 */
+  window.setCardPressState = function (card, pressed) {
+    if (!card) return;
+    card._pressScale = pressed ? 0.985 : 1;
+    window.applyCardTransform(card);
+  };
+
   cards.forEach(card => {
+    card._tiltRx = 0;
+    card._tiltRy = 0;
+    card._pressScale = 1;
     card.addEventListener('mousemove', function (e) {
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -594,10 +614,14 @@ if (!window._cardTiltBound) {
       const cy = rect.height / 2;
       const rotateY = ((x - cx) / cx) * 6;
       const rotateX = -((y - cy) / cy) * 6;
-      card.style.transform = 'perspective(800px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+      card._tiltRx = rotateX;
+      card._tiltRy = rotateY;
+      window.applyCardTransform(card);
     });
     card.addEventListener('mouseleave', function () {
-      card.style.transform = 'perspective(800px) rotateX(0) rotateY(0)';
+      card._tiltRx = 0;
+      card._tiltRy = 0;
+      window.applyCardTransform(card);
     });
   });
 }
@@ -1856,7 +1880,32 @@ isEditMode = false;
   totalWageBox?.addEventListener('click', function (e) {
     // 卡片里的刷新按钮、加载遮罩不触发详情
     if (e.target.closest && (e.target.closest('#refresh-data-btn') || e.target.closest('.loading-overlay'))) return;
+    totalWageBox.classList.remove('is-pressed');
     openDetailDrawer();
+  });
+
+  /* iOS Safari / 主屏 Web App 不响应 :active，用指针与触摸事件手动驱动按压缩放 */
+  let pressTimer = null;
+  const pressOn = function () {
+    clearTimeout(pressTimer);
+    totalWageBox.classList.add('is-pressed');
+    if (window.setCardPressState) window.setCardPressState(totalWageBox, true);
+  };
+  const pressOff = function (delay) {
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(function () {
+      totalWageBox.classList.remove('is-pressed');
+      if (window.setCardPressState) window.setCardPressState(totalWageBox, false);
+    }, delay || 0);
+  };
+  ['pointerdown', 'touchstart'].forEach(function (t) {
+    totalWageBox.addEventListener(t, pressOn, { passive: true });
+  });
+  ['pointerup', 'touchend'].forEach(function (t) {
+    totalWageBox.addEventListener(t, function () { pressOff(140); }, { passive: true });
+  });
+  ['pointercancel', 'touchcancel'].forEach(function (t) {
+    totalWageBox.addEventListener(t, function () { pressOff(0); }, { passive: true });
   });
   totalWageBox?.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') {
