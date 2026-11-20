@@ -488,8 +488,10 @@ function updateMoneyRain(totalWage) {
   const backLayer = document.getElementById('money-rain-back');
   const frontLayer = document.getElementById('money-rain-front');
   if (!backLayer || !frontLayer) return;
-  // 数量随悬赏金额：每 60 块 1 个，最少 12 个，最多 60 个
-  const total = Math.max(12, Math.min(60, Math.round(safeNum(totalWage) / 60) + 6));
+  // 数量随悬赏金额增长，但手机上限压到 16：原来 50 颗 emoji 同时下落，iOS 上是最主要的一处掉帧源
+  const compact = (window.innerWidth || 390) < 768;
+  const cap = compact ? 16 : 34;
+  const total = Math.max(10, Math.min(cap, Math.round(safeNum(totalWage) / 150) + 8));
   if (backLayer.dataset.count === String(total) && frontLayer.dataset.count === String(total)) return;
   backLayer.dataset.count = String(total);
   frontLayer.dataset.count = String(total);
@@ -546,13 +548,14 @@ function updateMoneyRain(totalWage) {
   if (!window._moneyClickBound) {
     window._moneyClickBound = true;
     document.addEventListener('click', function (e) {
-      if (e.target.closest('button, input, select, textarea, a, #music-player, .modal-overlay, .drawer-overlay')) return;
+      // 卡片（点它会开抽屉）、主题按钮、回到顶部都不撒爱心，避免每次点击都新建十几个动画元素
+      if (e.target.closest('button, input, select, textarea, a, #music-player, #music-toggle, .modal-overlay, .drawer-overlay, #total-wage-box, .t-backtop, #theme-switcher, .progress-window')) return;
       // 爱心仍然放到后层（在卡片之下），外观和原来完全一致
       const sp = document.getElementById('money-rain-back');
       if (!sp) return;
       // 点击生成一片爱心（10-15个），分散开
       const hearts = ['❤️', '💖', '💕', '💗', '💘', '💝'];
-      const count = 10 + Math.floor(Math.random() * 6);
+      const count = (window.innerWidth < 768 ? 6 : 10) + Math.floor(Math.random() * 5);
       for (let i = 0; i < count; i++) {
         const el = document.createElement('span');
         el.className = 'money-drop heart-drop';
@@ -1751,9 +1754,10 @@ if (recordList) {
     loginOverlay?.classList.add('show');
     if (adminPwdInput) {
       adminPwdInput.value = '';
-      adminPwdInput.focus();
+      /* 输入框晚 280ms 再聚焦：立刻聚焦会弹出键盘，键盘上滑正好撞上弹窗的入场动画 */
+      setTimeout(function () { adminPwdInput.focus({ preventScroll: true }); }, 280);
     }
-    disableBodyScroll();
+    /* 不锁 body：弹窗自己是全屏遮罩，锁了反而触发整页重排 */
   });
 
   loginCancel?.addEventListener('click', function (e) {

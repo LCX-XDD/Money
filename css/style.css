@@ -243,11 +243,17 @@ body::before {
   position: absolute;
   top: -60px;
   display: block;
-  will-change: transform;
   animation-name: money-fall;
   animation-timing-function: cubic-bezier(0.4, 0, 0.8, 0.6);
   animation-iteration-count: infinite;
-  filter: drop-shadow(0 4px 8px rgba(31, 90, 180, 0.15));
+  /* 投影只在桌面开：iOS 上 emoji 挂 drop-shadow，几十颗同时下落会明显掉帧 */
+  contain: layout style;
+}
+
+@media (min-width: 768px) {
+  .money-drop {
+    filter: drop-shadow(0 4px 8px rgba(31, 90, 180, 0.15));
+  }
 }
 
 /* 爱心：仍然是半透明、仍然在卡片之下（和原来一致，不参与金币的落底淡出） */
@@ -1487,7 +1493,9 @@ body.drawer-open::before {
   padding: 0;
   display: flex;
   flex-direction: column;
-  background: var(--td-panel-bg);
+  /* 叠两层同一色的半透明底：去掉毛玻璃后单层 0.55 会把底下的字透出来，叠一层约等于 0.80，且深色主题自动仍是实底 */
+  background-color: var(--td-panel-bg);
+  background-image: linear-gradient(var(--td-panel-bg), var(--td-panel-bg));
   /* 面板不做毛玻璃：iOS 上 blur 会为每一帧重新采样背后（还有金币雨在动），滑动必然抖动。
      这里背景本身够淡，去掉 blur 肉眼几乎看不出差别，但滑入顺很多。 */
   -webkit-backdrop-filter: none;
@@ -1797,12 +1805,13 @@ body.drawer-open::before {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   font-size: 14px;
   line-height: 1.5;
-  animation: alert-in 0.22s ease;
+  animation: alert-in 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+/* 与全站弹窗统一：同一条缓动、带一点点缩放，而不是 0.18s ease 硬弹出来 */
 @keyframes alert-in {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .t-alert .alert-icon {
@@ -1852,12 +1861,12 @@ body.drawer-open::before {
   border: 1px solid var(--td-border);
   border-radius: 8px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
-  animation: pop-in 0.18s ease;
+  animation: pop-in 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* 深色模式：气泡确认框用深色实底，否则白底 + 白字看不到内容 */
@@ -2205,3 +2214,17 @@ body.drawer-open::before {
 }
 
 .theme-option.active .theme-check { opacity: 1; }
+
+/* ========== 移动端减负（iOS）：这三是全页最贵的合成开销 ========== */
+@media (max-width: 767px) {
+  /* 全屏 130vmax 的渐变层一直在转，背后所有毛玻璃卡片每帧都要重新取景模糊 → 手机停转，静态多色渐变还在 */
+  body::before {
+    animation: none;
+    will-change: auto;
+  }
+
+  /* 毛玻璃半径 22px → 12px：观感几乎不变，模糊半径越小，每帧采样量越少 */
+  :root {
+    --glass-blur: blur(12px) saturate(150%);
+  }
+}
